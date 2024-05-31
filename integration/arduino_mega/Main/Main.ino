@@ -1,5 +1,6 @@
 #include <SoftwareSerial.h>
 #include <Arduino.h>
+#include <PID_v1_bc.h>
 
 // Include interfaces
 #include "ActuatorInterface.h"
@@ -21,10 +22,21 @@
 #include "AirFlowSensor.h"
 
 // Include programs
-#include "TestActuatorsAndSensors.h" // Include the header file for the test program
-#include "Drain.h"  // Include the header file for the drain program
-#include "Stop.h"   // Include the header file for the stop program
-#include "Mix.h"    // Include the header file for the mix program
+#include "TestActuatorsAndSensors.h"
+#include "Drain.h"
+#include "Stop.h"
+#include "Mix.h"
+#include "Fermentation.h"
+
+// Declare extern variable for logging
+extern SoftwareSerial espSerial;
+
+// Function declarations
+void logData(DCPump& airPump, DCPump& drainPump, PeristalticPump& nutrientPump, PeristalticPump& basePump,
+             StirringMotor& stirringMotor, HeatingPlate& heatingPlate, LEDGrowLight& ledGrowLight,
+             PT100Sensor& waterTempSensor, DS18B20TemperatureSensor& airTempSensor, PHSensor& phSensor,
+             TurbiditySensor& turbiditySensor, OxygenSensor& oxygenSensor, AirFlowSensor& airFlowSensor,
+             const String& experimentName, const String& comment);
 
 // Define the pins for SoftwareSerial
 SoftwareSerial espSerial(11, 12); // RX, TX
@@ -65,6 +77,11 @@ void setup() {
     ledGrowLight.control(false); // Initialize the LED grow light to be off
 
     Serial.println("Setup completed");
+
+    // Logging initial state
+    logData(airPump, drainPump, nutrientPump, basePump, stirringMotor, heatingPlate, ledGrowLight,
+            waterTempSensor, airTempSensor, phSensor, turbiditySensor, oxygenSensor, airFlowSensor,
+            "InitialSetup", "Initial setup completed");
 }
 
 void loop() {
@@ -96,6 +113,32 @@ void loop() {
             int speed = command.substring(spaceIndex + 1).toInt();
             
             runMix(stirringMotor, speed);
+        }
+        // Add the fermentation command
+        else if (command.startsWith("fermentation")) {
+            // Parse and extract the parameters from the command
+            int spaceIndex1 = command.indexOf(' ');
+            int spaceIndex2 = command.indexOf(' ', spaceIndex1 + 1);
+            int spaceIndex3 = command.indexOf(' ', spaceIndex2 + 1);
+            int spaceIndex4 = command.indexOf(' ', spaceIndex3 + 1);
+            int spaceIndex5 = command.indexOf(' ', spaceIndex4 + 1);
+            int spaceIndex6 = command.indexOf(' ', spaceIndex5 + 1);
+            int spaceIndex7 = command.indexOf(' ', spaceIndex6 + 1);
+            int spaceIndex8 = command.indexOf(' ', spaceIndex7 + 1);
+            int spaceIndex9 = command.indexOf(' ', spaceIndex8 + 1);
+
+            float tempSetpoint = command.substring(spaceIndex1 + 1, spaceIndex2).toFloat();
+            float phSetpoint = command.substring(spaceIndex2 + 1, spaceIndex3).toFloat();
+            float doSetpoint = command.substring(spaceIndex3 + 1, spaceIndex4).toFloat();
+            float nutrientConc = command.substring(spaceIndex4 + 1, spaceIndex5).toFloat();
+            float baseConc = command.substring(spaceIndex5 + 1, spaceIndex6).toFloat();
+            float stirSpeed = command.substring(spaceIndex6 + 1, spaceIndex7).toFloat();
+            int duration = command.substring(spaceIndex7 + 1, spaceIndex8).toInt();
+            String experimentName = command.substring(spaceIndex8 + 1, spaceIndex9);
+            String comment = command.substring(spaceIndex9 + 1);
+
+            runFermentation(airPump, drainPump, nutrientPump, basePump, stirringMotor, heatingPlate, ledGrowLight, waterTempSensor, airTempSensor, phSensor, turbiditySensor, oxygenSensor, airFlowSensor,
+                            tempSetpoint, phSetpoint, doSetpoint, nutrientConc, baseConc, stirSpeed, duration, experimentName, comment);
         }
         // Add other command cases here
         else {

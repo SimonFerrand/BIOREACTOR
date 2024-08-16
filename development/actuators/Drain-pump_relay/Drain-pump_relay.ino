@@ -28,11 +28,11 @@ void setup() {
 void loop() {
   // Example usage of the controlPump function
   controlPump(true, 50);  // Turn the pump on at 50% speed
-  delay(5000);            // Run for 5 seconds
+  /*delay(5000);            // Run for 5 seconds
   controlPump(false, 0);  // Turn the pump off
   delay(2000);            // Off for 2 seconds
   controlPump(true, 80);  // Turn the pump on at 80% speed
   delay(5000);            // Run for 5 seconds
   controlPump(false, 0);  // Turn the pump off
-  delay(2000);            // Off for 2 seconds
+  delay(2000);            // Off for 2 seconds*/
 }

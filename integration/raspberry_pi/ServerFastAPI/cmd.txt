@@ -1,0 +1,15 @@
+sudo systemctl stop apache2
+sudo systemctl status apache2
+
+cd /Raspberry/Bioreactor
+source env_bioreactor/bin/activate
+uvicorn ServerFastAPI.backend:app --host 0.0.0.0 --port 8000
+
+
+
+sudo systemctl status fastapi.service
+sudo systemctl restart fastapi.service
+sudo journalctl -u fastapi.service
+
+cd /Raspberry/Bioreactor/ServerFastAPI/frontend
+npm run serve

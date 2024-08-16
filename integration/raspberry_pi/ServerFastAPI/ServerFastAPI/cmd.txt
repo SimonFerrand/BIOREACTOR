@@ -1,0 +1,41 @@
+sudo systemctl stop apache2
+sudo systemctl status apache2
+
+cd /Raspberry/Bioreactor
+source env_bioreactor/bin/activate
+uvicorn ServerFastAPI.backend:app --host 0.0.0.0 --port 8000
+
+
+
+sudo systemctl status fastapi.service
+sudo systemctl restart fastapi.service
+sudo journalctl -u fastapi.service
+
+sudo systemctl stop fastapi.service
+
+1-Start FastAPI Backend:
+sudo systemctl start fastapi.service
+sudo systemctl status fastapi.service
+sudo journalctl -u fastapi.service -f
+
+2- Start Vue.js Frontend:
+cd /Raspberry/Bioreactor/ServerFastAPI/frontend
+npm run serve
+
+
+Backend (FastAPI): http://192.168.1.25:8000/
+Frontend (Vue.js): http://192.168.1.25:8080/
+
+
+x- restart
+cd /Raspberry/Bioreactor/ServerFastAPI/frontend
+sudo systemctl restart fastapi.service
+npm run serve
+
+
+
+
+
+
+
+

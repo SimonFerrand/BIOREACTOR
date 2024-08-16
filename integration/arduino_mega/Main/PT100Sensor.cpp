@@ -5,14 +5,16 @@
  */
 
 #include "PT100Sensor.h"
+#include "Logger.h"
 
 // Constructor for PT100Sensor
-PT100Sensor::PT100Sensor(int csPin, int diPin, int doPin, int clkPin)
-    : _thermo(csPin, diPin, doPin, clkPin) {}
+PT100Sensor::PT100Sensor(int csPin, int diPin, int doPin, int clkPin, const char* name)
+    : _thermo(csPin, diPin, doPin, clkPin), _name(name) {}
 
 // Method to initialize the PT100 sensor
 void PT100Sensor::begin() {
     _thermo.begin(MAX31865_3WIRE); // Set up the MAX31865 module for 3-wire RTD
+    Logger::log(LogLevel::INFO, String(_name) + " initialized");
 }
 
 // Method to read the temperature from the sensor

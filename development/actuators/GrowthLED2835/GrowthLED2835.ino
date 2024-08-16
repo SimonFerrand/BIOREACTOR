@@ -15,7 +15,7 @@
   This code will turn the LED light on or off based on commands received from the serial monitor.
 */
 
-const int relayPin = 27; // Pin connected to the relay
+const int relayPin = 10; // Pin connected to the relay
 
 void setup() {
   Serial.begin(115200);  // Start the serial communication at 115200 baud rate

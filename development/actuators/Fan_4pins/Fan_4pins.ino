@@ -8,7 +8,7 @@ void setup() {
   pinMode(pwmPin, OUTPUT);  // Set the PWM pin as an output
   Serial.begin(115200);       // Start serial communication at 9600 baud rate
 
-  int targetRPM = 1500;  // Target fan speed in RPM
+  int targetRPM = 250;  // Target fan speed in RPM
   int pwmValue = rpmToPWM(targetRPM);  // Calculate corresponding PWM value for the target RPM
   analogWrite(pwmPin, pwmValue);  // Apply the PWM value to the fan
 
@@ -27,7 +27,7 @@ int rpmToPWM(int targetRPM) {
   float loadPercentage;  // Variable to hold the calculated load percentage
 
   // Calculate the load percentage based on the target RPM using piecewise linear equations
-  if (targetRPM <= 450) {
+  if (targetRPM <= 200) {
     // First equation for RPMs from 0% to 32% load
     loadPercentage = (targetRPM - 390) / 1.875;
   } else {

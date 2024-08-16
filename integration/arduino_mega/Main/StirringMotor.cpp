@@ -5,30 +5,44 @@
  */
 
 #include "StirringMotor.h"
+#include "Logger.h"
 
 // Constructor for StirringMotor
-StirringMotor::StirringMotor(int pwmPin, int relayPin) {
-    _pwmPin = pwmPin;
-    _relayPin = relayPin;
-    pinMode(_pwmPin, OUTPUT);   // Set PWM pin as output
-    pinMode(_relayPin, OUTPUT); // Set relay pin as output
+StirringMotor::StirringMotor(int pwmPin, int relayPin, int minRPM, int maxRPM, const char* name)
+    : _pwmPin(pwmPin), _relayPin(relayPin), status(false), _name(name), _minRPM(minRPM), _maxRPM(maxRPM) {
+}
+
+void StirringMotor::begin() {
+    pinMode(_pwmPin, OUTPUT);
+    pinMode(_relayPin, OUTPUT);
+    digitalWrite(_relayPin, LOW);
+    analogWrite(_pwmPin, 0);
+    Logger::log(LogLevel::INFO, String(_name) + " initialized");
 }
 
 // Method to control the stirring motor
 void StirringMotor::control(bool state, int value) {
     if (state && value > 0) {
-        int pwmValue = rpmToPWM(value); // Calculate corresponding PWM value for the target RPM
+        int targetRPM = constrain(value, _minRPM, _maxRPM);
+        int pwmValue = rpmToPWM(targetRPM);
         analogWrite(_pwmPin, pwmValue); // Apply the PWM value to the motor
         digitalWrite(_relayPin, HIGH);  // Turn on the relay
-        Serial.print("Stirring Motor is ON, RPM set to: ");
-        Serial.print(value);
-        Serial.print(" corresponds to PWM value: ");
-        Serial.println(pwmValue);
+        status = true;                  // Set the status to on
+        //Serial.print("Stirring Motor is ON, RPM set to: ");
+        //Serial.print(targetRPM);
+        //Serial.print(" corresponds to PWM value: ");
+        //Serial.println(pwmValue);
     } else {
         analogWrite(_pwmPin, 0);       // Set PWM value to 0
         digitalWrite(_relayPin, LOW);  // Turn off the relay
+        status = false;                // Set the status to off
         Serial.println("Stirring Motor is OFF");
     }
+}
+
+// Method to check if the motor is on
+bool StirringMotor::isOn() const {
+    return status;
 }
 
 // Method to convert RPM to PWM value

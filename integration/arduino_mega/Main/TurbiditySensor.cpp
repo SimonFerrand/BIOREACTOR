@@ -5,13 +5,15 @@
  */
 
 #include "TurbiditySensor.h"
+#include "Logger.h"
 
 // Constructor for TurbiditySensor
-TurbiditySensor::TurbiditySensor(int pin) : _pin(pin) {}
+TurbiditySensor::TurbiditySensor(int pin, const char* name) : _pin(pin), _name(name) {}
 
 // Method to initialize the turbidity sensor
 void TurbiditySensor::begin() {
     // Nothing specific to initialize for turbidity sensor in this implementation
+    Logger::log(LogLevel::INFO, String(_name) + " initialized");
 }
 
 // Method to read the turbidity value from the sensor

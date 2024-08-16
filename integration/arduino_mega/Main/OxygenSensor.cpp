@@ -5,6 +5,7 @@
  */
 
 #include "OxygenSensor.h"
+#include "Logger.h"
 
 const uint16_t OxygenSensor::DO_Table[41] = {
     14460, 14220, 13820, 13440, 13090, 12740, 12420, 12110, 11810, 11530,
@@ -14,11 +15,12 @@ const uint16_t OxygenSensor::DO_Table[41] = {
 };
 
 // Constructor for OxygenSensor
-OxygenSensor::OxygenSensor(int pin, PT100Sensor* tempSensor) : _pin(pin), _tempSensor(tempSensor) {}
+OxygenSensor::OxygenSensor(int pin, PT100Sensor* tempSensor, const char* name) : _pin(pin), _tempSensor(tempSensor), _name(name) {}
 
 // Method to initialize the DO sensor
 void OxygenSensor::begin() {
     // Nothing specific to initialize for DO sensor in this implementation
+    Logger::log(LogLevel::INFO, String(_name) + " initialized");
 }
 
 // Method to read the DO value from the sensor

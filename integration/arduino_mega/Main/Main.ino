@@ -1,148 +1,153 @@
-#include <SoftwareSerial.h>
+/*
+ * Bioreactor Control System
+ * 
+ * This program controls a bioreactor system, managing various sensors and actuators.
+ * It communicates with an ESP32 module via serial communication to receive commands
+ * and send sensor data. The system can perform different operations like mixing,
+ * draining, fermentation, and individual PID control based on received commands.
+ * 
+ * Key components:
+ * - Sensors: pH, oxygen, turbidity, temperature (water and air), air flow
+ * - Actuators: pumps (air, drain, nutrient, base), stirring motor, heating plate, LED grow light
+ * - Communication: Serial interface with ESP32
+ * - State Machine: Manages the overall state and operations of the bioreactor
+ * 
+ * The program continuously checks for incoming commands, updates the state machine,
+ * and logs sensor data at regular intervals.
+ */
+
+// main.ino
 #include <Arduino.h>
-#include <PID_v1_bc.h>
+#include <SoftwareSerial.h>
+#include <ArduinoJson.h>
 
-// Include interfaces
-#include "ActuatorInterface.h"
-#include "SensorInterface.h"
+#include "SensorController.h"
+#include "ActuatorController.h"
+#include "StateMachine.h"
+#include "VolumeManager.h"
+#include "SafetySystem.h"
+#include "Logger.h"
+#include "PIDManager.h"
+#include "CommandHandler.h"
+#include "Communication.h"
 
-// Include actuators
-#include "PeristalticPump.h"
-#include "DCPump.h"
-#include "StirringMotor.h"
-#include "HeatingPlate.h"
-#include "LEDGrowLight.h"
+#include "TestsProgram.h"
+#include "DrainProgram.h"
+#include "MixProgram.h"
+#include "FermentationProgram.h"
 
-// Include sensors
-#include "PHSensor.h"
-#include "OxygenSensor.h"
-#include "TurbiditySensor.h"
-#include "DS18B20TemperatureSensor.h"
-#include "PT100Sensor.h"
-#include "AirFlowSensor.h"
+// Define serial port for communication with ESP32
+#define SerialESP Serial1
 
-// Include programs
-#include "TestActuatorsAndSensors.h"
-#include "Drain.h"
-#include "Stop.h"
-#include "Mix.h"
-#include "Fermentation.h"
+Communication espCommunication(SerialESP);
 
-// Declare extern variable for logging
-extern SoftwareSerial espSerial;
+// Sensor declarations
+PT100Sensor waterTempSensor(22, 23, 24, 25, "waterTempSensor");  // Water temperature sensor (CS: 22, DI: 23, DO: 24, CLK: 25)
+DS18B20TemperatureSensor airTempSensor(52, "airTempSensor");     // Air temperature sensor (Data: 52)
+DS18B20TemperatureSensor electronicTempSensor(29, "electronicTempSensor");     // Electronic temperature sensor (Data: 29)
+PHSensor phSensor(A1, &waterTempSensor, "phSensor");             // pH sensor (Analog: A1, uses water temp for compensation)
+//TurbiditySensor turbiditySensor(A2, "turbiditySensor");          // Turbidity sensor (Analog: A2)
+OxygenSensor oxygenSensor(A3, &waterTempSensor, "oxygenSensor"); // Dissolved oxygen sensor (Analog: A3, uses water temp)
+AirFlowSensor airFlowSensor(26, "airFlowSensor");                // Air flow sensor (Digital: 26)
+TurbiditySensorSEN0554 turbiditySensorSEN0554(A14, A15, "turbiditySensorSEN0554"); // SEN0554 turbidity sensor (RX: Blue, TX: green) 
 
-// Function declarations
-void logData(DCPump& airPump, DCPump& drainPump, PeristalticPump& nutrientPump, PeristalticPump& basePump,
-             StirringMotor& stirringMotor, HeatingPlate& heatingPlate, LEDGrowLight& ledGrowLight,
-             PT100Sensor& waterTempSensor, DS18B20TemperatureSensor& airTempSensor, PHSensor& phSensor,
-             TurbiditySensor& turbiditySensor, OxygenSensor& oxygenSensor, AirFlowSensor& airFlowSensor,
-             const String& experimentName, const String& comment);
+// Actuator declarations
+DCPump airPump(5, 6, 10, "airPump");        // Air pump (PWM: 5, Relay: 6, Min PWM: 10)
+DCPump drainPump(4, 30, 15, "drainPump");    // Drain pump (PWM: 4, Relay: 29, Min PWM: 15)
+DCPump samplePump(3, 28, 15, "samplePump");// Sample pump (PWM: 3, Relay: 28, Min PWM: 15)
+PeristalticPump nutrientPump(0x61, 7, 1, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 7, Min flow: 1, Max flow: 105.0)
+PeristalticPump basePump(0x60, 8, 1, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0)
+StirringMotor stirringMotor(9, 10, 390, 1000,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000)
+HeatingPlate heatingPlate(12, false, "heatingPlate");            // Heating plate (Relay: 12, Not PWM capable)
+LEDGrowLight ledGrowLight(27, "ledGrowLight");                   // LED grow light (Relay: 27)
 
-// Define the pins for SoftwareSerial
-SoftwareSerial espSerial(11, 12); // RX, TX
+// System components
+Logger logger;
+PIDManager pidManager;
+VolumeManager volumeManager(1.0, 0.95, 0.1);
+SafetySystem safetySystem(1.0, 0.95, 0.1);
+StateMachine stateMachine(logger, pidManager, volumeManager);
 
-// Create objects with specific pin assignments and values if applicable 
-    // Actuators
-DCPump airPump(5, 6, 10, "Air Pump"); // Air pump: PWM pin 5, Relay pin 6
-DCPump drainPump(3, 4, 15, "Drain Pump"); // Drain pump: PWM pin 3, Relay pin 4
-PeristalticPump nutrientPump(0x61, 7, 105.0, "Nutrient Pump"); // Nutrient pump: DAC address 0x61, Relay pin 7, max flow rate 105 ml/min
-PeristalticPump basePump(0x60, 8, 105.0, "Base Pump"); // Base pump: DAC address 0x60, Relay pin 8, max flow rate 105 ml/min
-StirringMotor stirringMotor(9, 10); // Stirring motor: PWM pin 9, Relay pin 10
-HeatingPlate heatingPlate(13, "Heating Plate"); // Heating plate (12 volt 13 Watts): Relay pin 13  
-LEDGrowLight ledGrowLight(27, "LED Grow Light"); // LED Grow Light: Relay pin 27
-    // Sensors
-PT100Sensor waterTempSensor(22, 23, 24, 25); // Water temperature sensor: CS pin 22, DI pin 23, DO pin 24, CLK pin 25
-DS18B20TemperatureSensor airTempSensor(52); // Air temperature sensor: Digital pin 52
-PHSensor phSensor(A1);
-TurbiditySensor turbiditySensor(A2);
-OxygenSensor oxygenSensor(A3, &waterTempSensor); // Dissolved Oxygen sensor: Analog pin A3, uses water temperature sensor for compensation
-AirFlowSensor airFlowSensor(26); // Air flow meter: Digital pin 26
+// Program declarations
+TestsProgram testsProgram(pidManager);
+DrainProgram drainProgram;
+MixProgram mixProgram;
+FermentationProgram fermentationProgram(pidManager, volumeManager);
+
+CommandHandler commandHandler(stateMachine, safetySystem, volumeManager, logger, pidManager);
+
+unsigned long previousMillis = 0;
+const long interval = 10000; // Interval for logging (30 seconds)
 
 void setup() {
-    Serial.begin(115200); // Initialize serial communication at 115200 baud rate
-    espSerial.begin(115200);
+    Serial.begin(115200);  // Initialize serial communication for debugging
+    espCommunication.begin(9600); // Initialize serial communication with ESP32
 
-    Serial.println("Setup started");
+    Logger::log(LogLevel::INFO, "Setup started");
 
-    // Initialize sensors and actuators
-    phSensor.begin();
-    turbiditySensor.begin();
-    oxygenSensor.begin();
-    airTempSensor.begin();
-    waterTempSensor.begin();
-    airFlowSensor.begin();
-    nutrientPump.begin();
-    basePump.begin();
-    heatingPlate.control(false); // Initialize the heating plate to be off
-    ledGrowLight.control(false); // Initialize the LED grow light to be off
+    // Initialize sensors
+    SensorController::initialize(waterTempSensor, airTempSensor, electronicTempSensor,
+                                 phSensor,
+                                 oxygenSensor, 
+                                 airFlowSensor, 
+                                 turbiditySensorSEN0554);
+    SensorController::beginAll();
 
-    Serial.println("Setup completed");
+    // Initialize actuators
+    ActuatorController::initialize(airPump, drainPump, nutrientPump, basePump,
+                                   stirringMotor, heatingPlate, ledGrowLight, samplePump);
+    ActuatorController::beginAll();
+    
+    safetySystem.setLogger(&logger); //This allows the SafetySystem to use the same logger
 
-    // Logging initial state
-    logData(airPump, drainPump, nutrientPump, basePump, stirringMotor, heatingPlate, ledGrowLight,
-            waterTempSensor, airTempSensor, phSensor, turbiditySensor, oxygenSensor, airFlowSensor,
-            "InitialSetup", "Initial setup completed");
+    // Add programs to the state machine
+    stateMachine.addProgram("Tests", &testsProgram);
+    stateMachine.addProgram("Drain", &drainProgram);
+    stateMachine.addProgram("Mix", &mixProgram);
+    stateMachine.addProgram("Fermentation", &fermentationProgram);
+
+    // Initialisation of the PIDManager to define hysteresis values
+    pidManager.initialize(2.0, 5.0, 1.0, 2.0, 5.0, 1.0, 2.0, 5.0, 1.0);
+    pidManager.setHysteresis(0.5, 0.05, 1.0);
+    Logger::log(LogLevel::INFO, "PID setup");
+
+    Logger::log(LogLevel::INFO, "Setup completed");
 }
 
 void loop() {
-    if (Serial.available() > 0) {
-        String command = Serial.readStringUntil('\n'); // Read the incoming command
-        command.trim(); // Remove any trailing whitespace
-
-        if (command.equalsIgnoreCase("tests")) {
-            runTestActuatorsAndSensors(airPump, drainPump, stirringMotor, nutrientPump, basePump, heatingPlate, ledGrowLight, waterTempSensor, airTempSensor, phSensor, turbiditySensor, oxygenSensor, airFlowSensor);
-        }
-        // Add the drain command
-        else if (command.startsWith("drain")) {
-            // Extract the rate and duration from the command
-            int spaceIndex1 = command.indexOf(' ');
-            int spaceIndex2 = command.indexOf(' ', spaceIndex1 + 1);
-            int rate = command.substring(spaceIndex1 + 1, spaceIndex2).toInt();
-            int duration = command.substring(spaceIndex2 + 1).toInt();
-            
-            runDrain(drainPump, rate, duration);
-        }
-        // Add the stop command
-        else if (command.equalsIgnoreCase("stop")) {
-            runStop(airPump, drainPump, nutrientPump, basePump, stirringMotor, heatingPlate, ledGrowLight);
-        }
-        // Add the mix command
-        else if (command.startsWith("mix")) {
-            // Extract the speed from the command
-            int spaceIndex = command.indexOf(' ');
-            int speed = command.substring(spaceIndex + 1).toInt();
-            
-            runMix(stirringMotor, speed);
-        }
-        // Add the fermentation command
-        else if (command.startsWith("fermentation")) {
-            // Parse and extract the parameters from the command
-            int spaceIndex1 = command.indexOf(' ');
-            int spaceIndex2 = command.indexOf(' ', spaceIndex1 + 1);
-            int spaceIndex3 = command.indexOf(' ', spaceIndex2 + 1);
-            int spaceIndex4 = command.indexOf(' ', spaceIndex3 + 1);
-            int spaceIndex5 = command.indexOf(' ', spaceIndex4 + 1);
-            int spaceIndex6 = command.indexOf(' ', spaceIndex5 + 1);
-            int spaceIndex7 = command.indexOf(' ', spaceIndex6 + 1);
-            int spaceIndex8 = command.indexOf(' ', spaceIndex7 + 1);
-            int spaceIndex9 = command.indexOf(' ', spaceIndex8 + 1);
-
-            float tempSetpoint = command.substring(spaceIndex1 + 1, spaceIndex2).toFloat();
-            float phSetpoint = command.substring(spaceIndex2 + 1, spaceIndex3).toFloat();
-            float doSetpoint = command.substring(spaceIndex3 + 1, spaceIndex4).toFloat();
-            float nutrientConc = command.substring(spaceIndex4 + 1, spaceIndex5).toFloat();
-            float baseConc = command.substring(spaceIndex5 + 1, spaceIndex6).toFloat();
-            float stirSpeed = command.substring(spaceIndex6 + 1, spaceIndex7).toFloat();
-            int duration = command.substring(spaceIndex7 + 1, spaceIndex8).toInt();
-            String experimentName = command.substring(spaceIndex8 + 1, spaceIndex9);
-            String comment = command.substring(spaceIndex9 + 1);
-
-            runFermentation(airPump, drainPump, nutrientPump, basePump, stirringMotor, heatingPlate, ledGrowLight, waterTempSensor, airTempSensor, phSensor, turbiditySensor, oxygenSensor, airFlowSensor,
-                            tempSetpoint, phSetpoint, doSetpoint, nutrientConc, baseConc, stirSpeed, duration, experimentName, comment);
-        }
-        // Add other command cases here
-        else {
-            Serial.println("Unknown command.");
+    // Check for incoming commands from ESP32
+    if (espCommunication.available()) {
+        String receivedData = espCommunication.readMessage();
+        if (receivedData.length() > 0) {
+            Logger::log(LogLevel::INFO, "Received from ESP32: " + receivedData);
+            espCommunication.processCommand(receivedData);
         }
     }
+
+    // Check for incoming commands from Arduino Serial Monitor
+    if (Serial.available() > 0) {
+        String command = Serial.readStringUntil('\n');
+        command.trim();
+        Logger::log(LogLevel::INFO, "Received from Serial Monitor: " + command);
+        commandHandler.executeCommand(command);
+    }
+    
+    // Update state machine
+    stateMachine.update();
+
+    // Update PID manager
+    pidManager.updateAllPIDControllers();
+
+    // Check safety limits
+    //safetySystem.checkLimits();
+
+    // Log data every interval
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+        previousMillis = currentMillis;
+        logger.logData(stateMachine.getCurrentProgram(), String(static_cast<int>(stateMachine.getCurrentState())));
+    }
+
+    // Short pause to avoid excessive CPU usage
+    delay(10);
 }

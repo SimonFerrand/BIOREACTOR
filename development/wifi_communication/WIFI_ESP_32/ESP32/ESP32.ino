@@ -23,6 +23,9 @@
  * - Install the UART Driver (if needed):
  *   - Download and install the UART driver from Silabs USB to UART Bridge VCP Drivers.
  *   - URL: https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads
+ *   - Connect your ESP32
+ *   - In Device Manager, find the unrecognized device or one with an exclamation mark under Ports (COM & LPT) or Other Devices.
+ *   - Right-click the device, select Update driver, then choose Browse my computer for drivers.
  * 
  * - Install the ESP32 Board in Arduino IDE:
  *   - Open Arduino IDE.

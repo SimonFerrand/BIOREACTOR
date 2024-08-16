@@ -5,7 +5,7 @@
 Adafruit_MCP4725 dac;
 
 // Débit désiré en ml/min
-const float desiredFlowRate = 50.0; // Exemple pour un débit de 105 ml/min avec un tube S19
+const float desiredFlowRate = 10.0; // Exemple pour un débit de 105 ml/min avec un tube S19
 
 // Pin pour le relais
 const int relayPin = 7; // Assurez-vous que ce pin est disponible et correct

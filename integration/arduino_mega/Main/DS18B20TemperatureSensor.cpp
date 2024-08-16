@@ -5,13 +5,15 @@
  */
 
 #include "DS18B20TemperatureSensor.h"
+#include "Logger.h"
 
 // Constructor for DS18B20TemperatureSensor
-DS18B20TemperatureSensor::DS18B20TemperatureSensor(int pin) : _ds(pin), _pin(pin) {}
+DS18B20TemperatureSensor::DS18B20TemperatureSensor(int pin, const char* name) : _ds(pin), _pin(pin), _name(name) {}
 
 // Method to initialize the temperature sensor
 void DS18B20TemperatureSensor::begin() {
     // Nothing specific to initialize for DS18B20 in this implementation
+    Logger::log(LogLevel::INFO, String(_name) + " initialized");
 }
 
 // Method to read the temperature from the sensor

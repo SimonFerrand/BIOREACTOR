@@ -30,6 +30,12 @@ jobs:
           arduino-cli core update-index
           arduino-cli core install arduino:avr
 
+      # Install necessary libraries (if any)
+      - name: Install Arduino libraries
+        run: |
+          arduino-cli lib install "ArduinoJson"
+          arduino-cli lib install "SoftwareSerial"
+          
       # Compile the Arduino sketch
       - name: Compile Arduino Sketch
         run: |

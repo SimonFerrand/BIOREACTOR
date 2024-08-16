@@ -11,7 +11,7 @@ on:
       - "integration/arduino_mega/**"
 
 jobs:
-  compile-examples:
+  compile:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,8 +23,6 @@ jobs:
       # Set up Arduino CLI
       - name: Set up Arduino CLI
         uses: arduino/setup-arduino-cli@v2
-        with:
-          version: latest
 
       # Install required Arduino core (e.g., arduino:avr for Uno or Mega boards)
       - name: Install Arduino core

@@ -1,0 +1,37 @@
+name: Build
+
+on: 
+  pull_request:
+    paths:
+      - "integration/arduino_mega/**"
+  push:
+    paths:
+      - "integration/arduino_mega/**"
+
+jobs:
+  compile-examples:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Set up Arduino CLI
+      - name: Set up Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+        with:
+          version: latest
+
+      # Install required Arduino core (e.g., arduino:avr for Uno or Mega boards)
+      - name: Install Arduino core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+
+      # Compile the Arduino sketch
+      - name: Compile Arduino Sketch
+        run: |
+          arduino-cli compile --fqbn arduino:avr:uno ./integration/arduino_mega/Main/Main.ino
+        shell: bash

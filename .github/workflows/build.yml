@@ -3,9 +3,11 @@ name: Build
 on: 
   pull_request:
     paths:
+      - ".github/workflows/**"
       - "integration/arduino_mega/**"
   push:
     paths:
+      - ".github/workflows/**"
       - "integration/arduino_mega/**"
 
 jobs:

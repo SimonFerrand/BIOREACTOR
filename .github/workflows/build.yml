@@ -1,0 +1,51 @@
+name: Build
+
+on: 
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "integration/arduino_mega/**"
+  push:
+    paths:
+      - ".github/workflows/**"
+      - "integration/arduino_mega/**"
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Set up Arduino CLI
+      - name: Set up Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      # Install required Arduino core (e.g., arduino:avr for Uno or Mega boards)
+      - name: Install Arduino core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+
+      # Install necessary libraries (if any)
+      - name: Install Arduino libraries
+        run: |
+          arduino-cli lib install "OneWire"
+          arduino-cli lib install "DallasTemperature"
+          arduino-cli lib install "Adafruit MAX31865 library"
+          arduino-cli lib install "Adafruit MCP4725"
+          arduino-cli lib install "DFRobot_PH"
+          arduino-cli lib install "ArduinoJson"
+          # enable usage of git-url
+          arduino-cli config set library.enable_unsafe_install true
+          arduino-cli lib install --git-url https://github.com/br3ttb/Arduino-PID-Library.git
+          
+      # Compile the Arduino sketch
+      - name: Compile Arduino Sketch
+        run: |
+          mkdir ./build_dir
+          arduino-cli compile --fqbn arduino:avr:mega --output-dir ./build_dir ./integration/arduino_mega/Main/Main.ino
+        shell: bash

@@ -2,7 +2,7 @@
 #ifndef PID_MANAGER_H
 #define PID_MANAGER_H
 
-#include <PID_v1.h>
+#include <PID_v1_bc.h>
 #include "ActuatorController.h"
 #include "SensorController.h"
 #include "VolumeManager.h"

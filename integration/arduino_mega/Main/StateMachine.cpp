@@ -1,6 +1,5 @@
 // StateMachine.cpp
 #include "StateMachine.h"
-#include <MemoryFree.h>
 
 StateMachine::StateMachine(Logger& logger, PIDManager& pidManager, VolumeManager& volumeManager)
     : currentState(ProgramState::IDLE),

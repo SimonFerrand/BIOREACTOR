@@ -33,11 +33,11 @@ jobs:
       # Install necessary libraries (if any)
       - name: Install Arduino libraries
         run: |
-          arduino-cli lib install "PID_v1"
+          arduino-cli lib install "PID_v1_bc"
           arduino-cli lib install "OneWire"
           arduino-cli lib install "DallasTemperature"
-          arduino-cli lib install "Adafruit_MAX31865"
-          arduino-cli lib install "Adafruit_MCP4725"
+          arduino-cli lib install "Adafruit MAX31865 library"
+          arduino-cli lib install "Adafruit MCP4725"
           arduino-cli lib install "DFRobot_PH"
           arduino-cli lib install "ArduinoJson"
           

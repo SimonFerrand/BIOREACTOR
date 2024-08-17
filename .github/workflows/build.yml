@@ -33,8 +33,13 @@ jobs:
       # Install necessary libraries (if any)
       - name: Install Arduino libraries
         run: |
+          arduino-cli lib install "PID_v1"
+          arduino-cli lib install "OneWire"
+          arduino-cli lib install "DallasTemperature"
+          arduino-cli lib install "Adafruit_MAX31865"
+          arduino-cli lib install "Adafruit_MCP4725"
+          arduino-cli lib install "DFRobot_PH"
           arduino-cli lib install "ArduinoJson"
-          arduino-cli lib install "SoftwareSerial"
           
       # Compile the Arduino sketch
       - name: Compile Arduino Sketch

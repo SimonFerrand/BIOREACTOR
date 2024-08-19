@@ -14,18 +14,20 @@ TurbiditySensorSEN0554::TurbiditySensorSEN0554(int rxPin, int txPin, const char*
 
 void TurbiditySensorSEN0554::begin() {
     _serial.begin(9600);
-    Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    //Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
 float TurbiditySensorSEN0554::readValue() {
     if (communicate()) {
         int rawTurbidity = _response[3];
         float adjustedTurbidity = (rawTurbidity * SCALE_FACTOR) + OFFSET;
-        //Logger::log(LogLevel::INFO, String(_name) + " - raw value: " + String(rawTurbidity) + 
-        //            ", Adjusted value: " + String(adjustedTurbidity));
+        Logger::log(LogLevel::INFO, String(_name) + " - raw value: " + String(rawTurbidity) + 
+                    ", Adjusted value: " + String(adjustedTurbidity));
         return adjustedTurbidity;
     }
-    Logger::log(LogLevel::WARNING, String(_name) + " - No sensor response");
+    //Logger::log(LogLevel::WARNING, String(_name) + " - No sensor response");
+    Logger::log(LogLevel::WARNING, String(_name) + F(" - No sensor response"));
     return -1.0f;
 }
 
@@ -42,6 +44,7 @@ bool TurbiditySensorSEN0554::communicate() {
             return true;
         } else {
             Logger::log(LogLevel::ERROR, String(_name) + " - Réponse invalide du capteur");
+            Logger::log(LogLevel::ERROR, String(_name) + F(" - Réponse invalide du capteur"));
         }
     }
     return false;

@@ -17,7 +17,8 @@ void PeristalticPump::begin() {
     pinMode(_relayPin, OUTPUT);      // Set relay pin as output
     digitalWrite(_relayPin, LOW);    // Ensure relay is off initially
     _dac.begin(_dacAddress);         // Initialize the DAC with its I2C address
-    Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    //Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
 // Controls the pump's state and flow rate
@@ -35,7 +36,8 @@ void PeristalticPump::control(bool state, int value) {
         _dac.setVoltage(0, false);
         digitalWrite(_relayPin, LOW);
         status = false;
-        Logger::log(LogLevel::INFO, String(_name) + " is OFF");
+        //Logger::log(LogLevel::INFO, String(_name) + " is OFF");
+        Logger::log(LogLevel::INFO, String(_name) + F(" is OFF"));
     }
 }
 

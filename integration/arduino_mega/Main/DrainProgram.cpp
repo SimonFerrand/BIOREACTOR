@@ -20,7 +20,8 @@ void DrainProgram::start(const String& command) {
         ActuatorController::runActuator("drainPump", rate, 0); // 0 for continuous operation
         Logger::log(LogLevel::INFO, "Drain started at rate: " + String(rate));
     } else {
-        Logger::log(LogLevel::ERROR, "Invalid drain command format");
+        //Logger::log(LogLevel::ERROR, "Invalid drain command format");
+        Logger::log(LogLevel::ERROR, F("Invalid drain command format"));
     }
 }
 
@@ -29,7 +30,8 @@ void DrainProgram::update() {
 
     if (millis() - startTime >= duration * 1000UL) {
         stop();
-        Logger::log(LogLevel::INFO, "Drain finished");
+        //Logger::log(LogLevel::INFO, "Drain finished");
+        Logger::log(LogLevel::INFO, F("Drain finished"));
     }
 }
 
@@ -37,7 +39,8 @@ void DrainProgram::pause() {
     if (_isRunning && !_isPaused) {
         ActuatorController::stopActuator("drainPump");
         _isPaused = true;
-        Logger::log(LogLevel::INFO, "Drain paused");
+        //Logger::log(LogLevel::INFO, "Drain paused");
+        Logger::log(LogLevel::INFO, F("Drain paused"));
     }
 }
 
@@ -45,7 +48,8 @@ void DrainProgram::resume() {
     if (_isRunning && _isPaused) {
         ActuatorController::runActuator("drainPump", rate, 0);
         _isPaused = false;
-        Logger::log(LogLevel::INFO, "Drain resumed");
+        //Logger::log(LogLevel::INFO, "Drain resumed");
+        Logger::log(LogLevel::INFO, F("Drain resumed"));
     }
 }
 
@@ -64,6 +68,7 @@ void DrainProgram::parseCommand(const String& command) {
         rate = command.substring(firstSpace + 1, secondSpace).toInt();
         duration = command.substring(secondSpace + 1).toInt();
     } else {
-        Logger::log(LogLevel::ERROR, "Invalid drain command format");
+        //Logger::log(LogLevel::ERROR, "Invalid drain command format");
+        Logger::log(LogLevel::ERROR, F("Invalid drain command format"));
     }
 }

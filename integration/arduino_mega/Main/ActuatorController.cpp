@@ -40,10 +40,8 @@ void ActuatorController::beginAll() {
 }
 
 void ActuatorController::runActuator(const String& actuatorName, float value, int duration) {
-    //Logger::log(LogLevel::INFO, "Attempting to find actuator: " + actuatorName); ///
     ActuatorInterface* actuator = findActuatorByName(actuatorName);
     if (actuator) {
-        //Logger::log(LogLevel::INFO, "Attempting to run actuator: " + actuatorName + " with value: " + String(value));
         actuator->control(true, value);
         Logger::log(LogLevel::INFO, "Running actuator: " + actuatorName + " with value: " + String(value));
         if (duration > 0) {
@@ -65,7 +63,8 @@ void ActuatorController::stopActuator(const String& actuatorName) {
 }
 
 void ActuatorController::stopAllActuators() {
-    Logger::log(LogLevel::INFO, "Entering stopAllActuators");
+    //Logger::log(LogLevel::INFO, "Entering stopAllActuators");
+    Logger::log(LogLevel::INFO, F("Entering stopAllActuators"));
     const ActuatorInterface* actuators[] = {
         airPump, drainPump, nutrientPump, basePump, 
         stirringMotor, heatingPlate, ledGrowLight
@@ -78,7 +77,8 @@ void ActuatorController::stopAllActuators() {
             delay(50); 
         }
     }
-    Logger::log(LogLevel::INFO, "All actuators stopped");
+    //Logger::log(LogLevel::INFO, "All actuators stopped");
+    Logger::log(LogLevel::INFO, F("All actuators stopped"));
 }
 
 bool ActuatorController::isActuatorRunning(const String& actuatorName) {

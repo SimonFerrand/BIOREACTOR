@@ -13,7 +13,8 @@ TurbiditySensor::TurbiditySensor(int pin, const char* name) : _pin(pin), _name(n
 // Method to initialize the turbidity sensor
 void TurbiditySensor::begin() {
     // Nothing specific to initialize for turbidity sensor in this implementation
-    Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    //Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
 // Method to read the turbidity value from the sensor

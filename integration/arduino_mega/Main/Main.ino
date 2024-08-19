@@ -83,7 +83,8 @@ void setup() {
     Serial.begin(115200);  // Initialize serial communication for debugging
     espCommunication.begin(9600); // Initialize serial communication with ESP32
 
-    Logger::log(LogLevel::INFO, "Setup started");
+    //Logger::log(LogLevel::INFO, "Setup started");
+    Logger::log(LogLevel::INFO, F("Setup started"));
 
     // Initialize sensors
     SensorController::initialize(waterTempSensor, airTempSensor, electronicTempSensor,
@@ -109,12 +110,14 @@ void setup() {
     // Initialisation of the PIDManager to define hysteresis values
     pidManager.initialize(2.0, 5.0, 1.0, 2.0, 5.0, 1.0, 2.0, 5.0, 1.0);
     pidManager.setHysteresis(0.5, 0.05, 1.0);
-    Logger::log(LogLevel::INFO, "PID setup");
+    //Logger::log(LogLevel::INFO, "PID setup");
+    Logger::log(LogLevel::INFO, F("PID setup"));
 
     volumeManager.setInitialVolume(0.3);           // set an initial volume of 0.2 L
     //Logger::log(LogLevel::INFO, "Setup an initial volume");
-    
-    Logger::log(LogLevel::INFO, "Setup completed");
+
+    //Logger::log(LogLevel::INFO, "Setup completed");
+    Logger::log(LogLevel::INFO, F("Setup completed"));
 }
 
 void loop() {
@@ -148,7 +151,8 @@ void loop() {
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis >= interval) {
         previousMillis = currentMillis;
-        logger.logData(stateMachine.getCurrentProgram(), String(static_cast<int>(stateMachine.getCurrentState())));
+        //logger.logData(stateMachine.getCurrentProgram(), String(static_cast<int>(stateMachine.getCurrentState())));    // Logger::log(LogLevel::INFO,
+        Logger::logData(stateMachine.getCurrentProgram(), String(static_cast<int>(stateMachine.getCurrentState())));    // Logger::log(LogLevel::INFO,
     }
 
     // Short pause to avoid excessive CPU usage

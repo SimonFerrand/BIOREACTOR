@@ -119,7 +119,8 @@ void TestsProgram::runIndividualActuatorTest() {
 
 void TestsProgram::runAllActuatorsTest() {
     _currentActuatorTest = 0;
-    Logger::log(LogLevel::INFO, "Started test of all actuators");
+    //Logger::log(LogLevel::INFO, "Started test of all actuators");
+    Logger::log(LogLevel::INFO, F("Started test of all actuators"));
 }
 
 void TestsProgram::updateAllActuatorsTest() {
@@ -131,7 +132,8 @@ void TestsProgram::updateAllActuatorsTest() {
             } else {
                 ActuatorController::stopActuator("airPump");
                 _currentActuatorTest++;
-                Logger::log(LogLevel::INFO, "Air Pump test completed");
+                //Logger::log(LogLevel::INFO, "Air Pump test completed");
+                Logger::log(LogLevel::INFO, F("Air Pump test completed"));
             }
             break;
         case 1:
@@ -140,7 +142,8 @@ void TestsProgram::updateAllActuatorsTest() {
             } else {
                 ActuatorController::stopActuator("drainPump");
                 _currentActuatorTest++;
-                Logger::log(LogLevel::INFO, "Drain Pump test completed");
+                //Logger::log(LogLevel::INFO, "Drain Pump test completed");
+                Logger::log(LogLevel::INFO, F("Drain Pump test completed"));
             }
             break;
         case 2:
@@ -149,7 +152,8 @@ void TestsProgram::updateAllActuatorsTest() {
             } else {
                 ActuatorController::stopActuator("samplePump");
                 _currentActuatorTest++;
-                Logger::log(LogLevel::INFO, "Sample Pump test completed");
+                //Logger::log(LogLevel::INFO, "Sample Pump test completed");
+                Logger::log(LogLevel::INFO, F("Sample Pump test completed"));
             }
             break;
         case 3:
@@ -158,7 +162,8 @@ void TestsProgram::updateAllActuatorsTest() {
             } else {
                 ActuatorController::stopActuator("stirringMotor");
                 _currentActuatorTest++;
-                Logger::log(LogLevel::INFO, "Stirring Motor test completed");
+                //Logger::log(LogLevel::INFO, "Stirring Motor test completed");
+                Logger::log(LogLevel::INFO, F("Stirring Motor test completed"));
             }
             break;
         case 4:
@@ -168,6 +173,7 @@ void TestsProgram::updateAllActuatorsTest() {
                 ActuatorController::stopActuator("nutrientPump");
                 _currentActuatorTest++;
                 Logger::log(LogLevel::INFO, "Nutrient Pump test completed");
+                Logger::log(LogLevel::INFO, F("Nutrient Pump test completed"));
             }
             break;
         case 5:
@@ -176,7 +182,8 @@ void TestsProgram::updateAllActuatorsTest() {
             } else {
                 ActuatorController::stopActuator("basePump");
                 _currentActuatorTest++;
-                Logger::log(LogLevel::INFO, "Base Pump test completed");
+                //Logger::log(LogLevel::INFO, "Base Pump test completed");
+                Logger::log(LogLevel::INFO, F("Base Pump test completed"));
             }
             break;
         case 6:
@@ -185,7 +192,8 @@ void TestsProgram::updateAllActuatorsTest() {
             } else {
                 ActuatorController::stopActuator("heatingPlate");
                 _currentActuatorTest++;
-                Logger::log(LogLevel::INFO, "Heating Plate test completed");
+                //Logger::log(LogLevel::INFO, "Heating Plate test completed");
+                Logger::log(LogLevel::INFO, F("Heating Plate test completed"));
             }
             break;
         case 7:
@@ -194,7 +202,8 @@ void TestsProgram::updateAllActuatorsTest() {
             } else {
                 ActuatorController::stopActuator("ledGrowLight");
                 _currentActuatorTest++;
-                Logger::log(LogLevel::INFO, "LED Grow Light test completed");
+                //Logger::log(LogLevel::INFO, "LED Grow Light test completed");
+                Logger::log(LogLevel::INFO, F("LED Grow Light test completed"));
             }
             break;
         default:
@@ -204,7 +213,8 @@ void TestsProgram::updateAllActuatorsTest() {
 }
 
 void TestsProgram::runSensorsTest() {
-    Logger::log(LogLevel::INFO, "Started sensors test");
+    //Logger::log(LogLevel::INFO, "Started sensors test");
+    Logger::log(LogLevel::INFO, F("Started sensors test"));
     Logger::logSensorData();
 }
 
@@ -220,7 +230,8 @@ void TestsProgram::runPIDTest() {
             _pidManager.startDOPID(_testValue);
             break;
         default:
-            Logger::log(LogLevel::ERROR, "Invalid PID test type");
+            //Logger::log(LogLevel::ERROR, "Invalid PID test type");
+            Logger::log(LogLevel::ERROR, F("Invalid PID test type"));
             break;
     }
     Logger::log(LogLevel::INFO, "Started PID test: " + getTestTypeName(_currentTestType));
@@ -281,7 +292,8 @@ void TestsProgram::parseCommand(const String& command) {
         } else if (pidType == "do") {
             _currentTestType = TestType::PID_DISSOLVED_OXYGEN;
         } else {
-            Logger::log(LogLevel::ERROR, "Invalid PID type");
+            //Logger::log(LogLevel::ERROR, "Invalid PID type");
+            Logger::log(LogLevel::ERROR, F("Invalid PID type"));
         }
     } else if (cmd.startsWith("test ")) {
         _currentTestType = TestType::INDIVIDUAL_ACTUATOR;
@@ -291,7 +303,8 @@ void TestsProgram::parseCommand(const String& command) {
         _testValue = command.substring(firstSpace + 1, secondSpace).toFloat();
         _testDuration = command.substring(secondSpace + 1).toInt() * 1000; // Convert to milliseconds
     } else {
-        Logger::log(LogLevel::ERROR, "Invalid test command");
+        //Logger::log(LogLevel::ERROR, "Invalid test command");
+        Logger::log(LogLevel::ERROR, F("Invalid test command"));
     }
 }
 

@@ -20,7 +20,8 @@ void DCPump::begin() {
     // Ensure the pump is off at initialization
     digitalWrite(_relayPin, LOW);
     analogWrite(_pwmPin, 0);
-    Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    //Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
 // Method to control the pump
@@ -40,7 +41,8 @@ void DCPump::control(bool state, int value) {
         analogWrite(_pwmPin, 0); // Set PWM value to 0
         digitalWrite(_relayPin, LOW); // Turn off the relay
         status = false; // Set the status to off
-        Logger::log(LogLevel::INFO, String(_name) + " is OFF");
+        //Logger::log(LogLevel::INFO, String(_name) + " is OFF");
+        Logger::log(LogLevel::INFO, String(_name) + F(" is OFF"));
     }
 }
 

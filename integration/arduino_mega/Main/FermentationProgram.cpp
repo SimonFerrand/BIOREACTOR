@@ -38,7 +38,8 @@ void FermentationProgram::configure(float tempSetpoint, float phSetpoint, float 
 
 void FermentationProgram::start(const String& command) {
     if (volumeManager.getCurrentVolume() == 0) {
-      Logger::log(LogLevel::ERROR, "Initial volume not set. Please set initial volume before starting fermentation.");
+      //Logger::log(LogLevel::ERROR, "Initial volume not set. Please set initial volume before starting fermentation.");
+      Logger::log(LogLevel::ERROR, F("Initial volume not set. Please set initial volume before starting fermentation."));
       return;
     }
     _isRunning = true;
@@ -67,6 +68,16 @@ void FermentationProgram::start(const String& command) {
     Logger::log(LogLevel::INFO, "  Min volume: " + String(volumeManager.getMinVolume()) + " L");
     Logger::log(LogLevel::INFO, "Duration set to: " + String(duration) + " seconds");
     */
+
+    Logger::log(LogLevel::INFO, String(F("Fermentation started: ")) + experimentName);
+    Logger::log(LogLevel::INFO, String(F("Comment: ")) + comment);
+    Logger::log(LogLevel::INFO, F("Fermentation parameters:"));
+    Logger::log(LogLevel::INFO, String(F("  Duration: ")) + String(duration) + F(" seconds"));
+    Logger::log(LogLevel::INFO, String(F("  Initial volume: ")) + String(volumeManager.getCurrentVolume()) + F(" L"));
+    Logger::log(LogLevel::INFO, String(F("  Max allowed volume: ")) + String(volumeManager.getMaxAllowedVolume()) + F(" L"));
+    Logger::log(LogLevel::INFO, String(F("  Min volume: ")) + String(volumeManager.getMinVolume()) + F(" L"));
+    Logger::log(LogLevel::INFO, String(F("Duration set to: ")) + String(duration) + F(" seconds"));
+
 }
 
 void FermentationProgram::update() {
@@ -98,7 +109,8 @@ void FermentationProgram::pause() {
     ActuatorController::stopActuator("nutrientPump");
     ActuatorController::stopActuator("basePump");
 
-    Logger::log(LogLevel::INFO, "Fermentation paused");
+    //Logger::log(LogLevel::INFO, "Fermentation paused");
+    Logger::log(LogLevel::INFO, F("Fermentation paused"));
 }
 
 void FermentationProgram::resume() {
@@ -111,7 +123,8 @@ void FermentationProgram::resume() {
 
     ActuatorController::runActuator("airPump", 50, 0);  // Resume air pump at 50% speed
 
-    Logger::log(LogLevel::INFO, "Fermentation resumed");
+    //Logger::log(LogLevel::INFO, "Fermentation resumed");
+    Logger::log(LogLevel::INFO, F("Fermentation resumed"));
 }
 
 void FermentationProgram::stop() {
@@ -123,7 +136,8 @@ void FermentationProgram::stop() {
     ActuatorController::stopAllActuators();
     pidManager.stop();
 
-    Logger::log(LogLevel::INFO, "Fermentation stopped");
+    //Logger::log(LogLevel::INFO, "Fermentation stopped");
+    Logger::log(LogLevel::INFO, F("Fermentation stopped"));
 }
 
 void FermentationProgram::updateVolume() {
@@ -190,7 +204,8 @@ void FermentationProgram::addNutrientsContinuously() {
         volumeManager.recordVolumeChange(nutrientToAddNow, "Nutrient");
         Logger::log(LogLevel::INFO, "Added nutrients: " + String(nutrientToAddNow) + " ml");
     } else {
-        Logger::log(LogLevel::WARNING, "Cannot add nutrients: Volume limit reached");
+        //Logger::log(LogLevel::WARNING, "Cannot add nutrients: Volume limit reached");
+        Logger::log(LogLevel::WARNING, F("Cannot add nutrients: Volume limit reached"));
     }
 }
 
@@ -202,7 +217,8 @@ void FermentationProgram::addNutrientsContinuouslyFixedRate(float fixedFlowRate)
             ActuatorController::stopActuator("nutrientPump");
             isAddingNutrients = false;
             lastNutrientActivationTime = currentTime;
-            Logger::log(LogLevel::INFO, "Stopped adding nutrients");
+            //Logger::log(LogLevel::INFO, "Stopped adding nutrients");
+            Logger::log(LogLevel::INFO, F("Stopped adding nutrients"));
         }
         return;
     }
@@ -220,7 +236,8 @@ void FermentationProgram::addNutrientsContinuouslyFixedRate(float fixedFlowRate)
     // Check if volume limit is reached or duration is exceeded
     if (currentVolume >= maxAllowedVolume || (currentTime - startTime) > (duration * 1000UL)) {
         stop();
-        Logger::log(LogLevel::INFO, "Fermentation stopped: Volume limit reached or duration exceeded");
+        //Logger::log(LogLevel::INFO, "Fermentation stopped: Volume limit reached or duration exceeded");
+        Logger::log(LogLevel::INFO, F("Fermentation stopped: Volume limit reached or duration exceeded"));
         return;
     }
     // Calculate the amount of nutrient to add

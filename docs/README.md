@@ -44,3 +44,15 @@ Test: Pour tester si tout fonctionne, vous pouvez téléverser un programme simp
 Ouvrez l'exemple Blink en allant dans Fichier > Exemples > 01.Basics > Blink.
 Cliquez sur le bouton Téléverser (la flèche vers la droite) dans l'IDE. Cela compile le sketch et le téléverse sur votre Arduino.
 Si tout est correct, vous devriez voir la LED intégrée de l'Arduino clignoter.
+
+
+Installation instructions :
+
+Open the Arduino IDE.
+Go to ‘Sketch’ > ‘Include Library’ > ‘Manage Libraries’.
+In the Library Manager, search for and install each of the libraries listed above (except those included with the Arduino IDE).
+For libraries that are not available in the Library Manager, you will need to download them manually:
+a. Download the ZIP file of the library from its GitHub repository or its official website.
+b. In the Arduino IDE, go to ‘Sketch’ > ‘Include library’ > ‘Add .ZIP library’.
+c. Select the downloaded ZIP file.
+After installing all the libraries, restart the Arduino IDE.

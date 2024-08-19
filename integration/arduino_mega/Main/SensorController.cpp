@@ -39,7 +39,7 @@ float SensorController::readSensor(const String& sensorName) {
     SensorInterface* sensor = findSensorByName(sensorName);
     if (sensor) {
         float value = sensor->readValue();
-        //Logger::log(LogLevel::INFO, "Read sensor " + sensorName + ": " + String(value));
+        Logger::log(LogLevel::INFO, "Read sensor " + sensorName + ": " + String(value));
         return value;
     }
     Logger::log(LogLevel::WARNING, "Sensor not found: " + sensorName);

@@ -13,7 +13,8 @@ DS18B20TemperatureSensor::DS18B20TemperatureSensor(int pin, const char* name) : 
 // Method to initialize the temperature sensor
 void DS18B20TemperatureSensor::begin() {
     // Nothing specific to initialize for DS18B20 in this implementation
-    Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    //Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
 // Method to read the temperature from the sensor

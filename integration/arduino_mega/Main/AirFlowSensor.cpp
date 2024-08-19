@@ -19,7 +19,8 @@ AirFlowSensor::AirFlowSensor(int pin, const char* name) : _pin(pin), _pulseCount
 void AirFlowSensor::begin() {
     pinMode(_pin, INPUT_PULLUP); // Set the flow meter pin as input with internal pull-up resistor
     attachInterrupt(digitalPinToInterrupt(_pin), countPulses, FALLING); // Attach interrupt to count pulses
-    Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    //Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
 // Method to read the flow rate from the sensor

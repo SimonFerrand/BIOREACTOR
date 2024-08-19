@@ -204,7 +204,8 @@ void PIDManager::updateTemperaturePID() {
         Logger::log(LogLevel::INFO, "Temperature PID update - Setpoint: " + String(tempSetpoint) + ", Input: " + String(tempInput) + ", Output: " + String(tempOutput) + "%");
     } else {
         stopTemperaturePID();
-        Logger::log(LogLevel::INFO, "Temperature within hysteresis range. Stopping temperature control.");
+        //Logger::log(LogLevel::INFO, "Temperature within hysteresis range. Stopping temperature control.");
+        Logger::log(LogLevel::INFO, F("Temperature within hysteresis range. Stopping temperature control."));
     }
 }
 
@@ -220,7 +221,8 @@ void PIDManager::updatePHPID() {
         Logger::log(LogLevel::INFO, "pH PID update - Setpoint: " + String(phSetpoint) + ", Input: " + String(phInput) + ", Output: " + String(flowRate));
     } else {
         stopPHPID();
-        Logger::log(LogLevel::INFO, "pH within hysteresis range. Stopping pH control.");
+        //Logger::log(LogLevel::INFO, "pH within hysteresis range. Stopping pH control.");
+        Logger::log(LogLevel::INFO, F("pH within hysteresis range. Stopping pH control."));
     }
 }
 
@@ -235,7 +237,8 @@ void PIDManager::updateDOPID() {
         Logger::log(LogLevel::INFO, "DO PID update - Setpoint: " + String(doSetpoint) + ", Input: " + String(doInput) + ", Output: " + String(doOutput));
     } else {
         stopDOPID();
-        Logger::log(LogLevel::INFO, "DO within hysteresis range. Stopping DO control.");
+        //Logger::log(LogLevel::INFO, "DO within hysteresis range. Stopping DO control.");
+        Logger::log(LogLevel::INFO, F("DO within hysteresis range. Stopping DO control."));
     }
 }
 
@@ -244,21 +247,24 @@ void PIDManager::stopTemperaturePID() {
     tempPIDRunning = false;
     tempOutput = 0;
     ActuatorController::stopActuator("heatingPlate");
-    Logger::log(LogLevel::INFO, "Temperature PID stopped");
+    //Logger::log(LogLevel::INFO, "Temperature PID stopped");
+    Logger::log(LogLevel::INFO, F("Temperature PID stopped"));
 }
 
 void PIDManager::stopPHPID() {
     phPIDRunning = false;
     phOutput = 0;
     ActuatorController::stopActuator("basePump");
-    Logger::log(LogLevel::INFO, "pH PID stopped");
+    //Logger::log(LogLevel::INFO, "pH PID stopped");
+    Logger::log(LogLevel::INFO, F("pH PID stopped"));
 }
 
 void PIDManager::stopDOPID() {
     doPIDRunning = false;
     doOutput = 0;
     ActuatorController::stopActuator("airPump");
-    Logger::log(LogLevel::INFO, "DO PID stopped");
+    //Logger::log(LogLevel::INFO, "DO PID stopped");
+    Logger::log(LogLevel::INFO, F("DO PID stopped"));
 }
 
 //void PIDManager::stopAllPID() {
@@ -266,7 +272,8 @@ void PIDManager::stop() {
     stopTemperaturePID();
     stopPHPID();
     stopDOPID();
-    Logger::log(LogLevel::INFO, "All PID controls stopped");
+    //Logger::log(LogLevel::INFO, "All PID controls stopped");
+    Logger::log(LogLevel::INFO, F("All PID controls stopped"));
 }
 
 void PIDManager::pauseAllPID() {

@@ -17,7 +17,8 @@ void StirringMotor::begin() {
     pinMode(_relayPin, OUTPUT);
     digitalWrite(_relayPin, LOW);
     analogWrite(_pwmPin, 0);
-    Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    //Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
 // Method to control the stirring motor

@@ -15,7 +15,8 @@ void StateMachine::addProgram(const String& name, ProgramBase* program) {
     if (programs.getSize() < MAX_PROGRAMS) {
         programs.insert(name, program);
     } else {
-        logger.log(LogLevel::ERROR, "Maximum number of programs reached");
+        //Logger::log(LogLevel::ERROR, "Maximum number of programs reached");
+        Logger::log(LogLevel::ERROR, F("Maximum number of programs reached"));
     }
 }
 
@@ -25,7 +26,8 @@ void StateMachine::update() {
         if (!currentProgram->isRunning()) {
             transitionToState(ProgramState::COMPLETED);
             currentProgram = nullptr; 
-            Logger::log(LogLevel::INFO, "Program completed and cleared");
+            //Logger::log(LogLevel::INFO, "Program completed and cleared");
+            Logger::log(LogLevel::INFO, F("Program completed and cleared"));
         }
     }
 }
@@ -37,9 +39,9 @@ void StateMachine::startProgram(const String& programName, const String& command
         currentProgram = *program;
         currentProgram->start(command);
         transitionToState(ProgramState::RUNNING);
-        logger.log(LogLevel::INFO, "Started program: " + programName);
+        Logger::log(LogLevel::INFO, "Started program: " + programName);
     } else {
-        logger.log(LogLevel::WARNING, "Program not found: " + programName);
+        Logger::log(LogLevel::WARNING, "Program not found: " + programName);
     }
 }
 
@@ -61,14 +63,15 @@ void StateMachine::stopProgram(const String& programName) {   //TEST
 
 void StateMachine::stopAllPrograms() {
     if (currentProgram) {
-        Logger::log(LogLevel::INFO, "Stopping current program: " + currentProgram->getName());
+        //Logger::log(LogLevel::INFO, "Stopping current program: " + currentProgram->getName());
         currentProgram->stop();
         currentProgram = nullptr; 
         transitionToState(ProgramState::STOPPED);
-        Logger::log(LogLevel::INFO, "All programs stopped");
-        //Logger::log(LogLevel::INFO, "Current state: " + programStateToString(getCurrentState()));
+        //Logger::log(LogLevel::INFO, "All programs stopped");
+        Logger::log(LogLevel::INFO, F("All programs stopped"));
         Logger::log(LogLevel::INFO, "Current state: " + String(static_cast<int>(getCurrentState())));
-        Logger::log(LogLevel::INFO, "Current program: None");  // Modifiez cette ligne
+        //Logger::log(LogLevel::INFO, "Current program: None");  // Modifiez cette ligne
+        Logger::log(LogLevel::INFO, F("Current program: None"));  // Modifiez cette ligne
     }
 }
 

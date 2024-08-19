@@ -7,13 +7,13 @@ void setup() {
   Serial.begin(115200);
 
   // Configure pin 5 as PWM output
-  pinMode(5, OUTPUT);
+  pinMode(9, OUTPUT);
 
   // Set PWM value to 100%
-  int percentage = 15;
+  int percentage = 70;
   int pwmValue = map(percentage, 0, 100, 0, 255);  // Convert from 0-100% to 0-255
   analogWrite(5, pwmValue);
-  Serial.print("PWM set to 0%: ");
+  Serial.print("PWM set to %: ");
   Serial.println(pwmValue);
 }
 

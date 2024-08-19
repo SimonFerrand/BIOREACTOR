@@ -20,7 +20,8 @@ OxygenSensor::OxygenSensor(int pin, PT100Sensor* tempSensor, const char* name) :
 // Method to initialize the DO sensor
 void OxygenSensor::begin() {
     // Nothing specific to initialize for DO sensor in this implementation
-    Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    //Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
 // Method to read the DO value from the sensor
@@ -42,5 +43,6 @@ float OxygenSensor::readValue() {
 // Method for calibration
 void OxygenSensor::calibrate() {
     uint32_t raw = analogRead(_pin);
-    Serial.println("raw:\t" + String(raw) + "\tVoltage(mv):\t" + String(raw * VREF / ADC_RES));
+    Logger::log(LogLevel::INFO, "raw:\t" + String(raw) + "\tVoltage(mv):\t" + String(raw * VREF / ADC_RES));
+    
 }

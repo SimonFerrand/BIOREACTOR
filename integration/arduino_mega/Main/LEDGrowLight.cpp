@@ -16,7 +16,8 @@ LEDGrowLight::LEDGrowLight(int relayPin, const char* name)
 
 void LEDGrowLight::begin() {
     digitalWrite(_relayPin, LOW); // Ensure the LED grow light is off at initialization
-    Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    //Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
 // Method to control the LED grow light
@@ -30,7 +31,8 @@ void LEDGrowLight::control(bool state, int value) {
         digitalWrite(_relayPin, LOW); // Turn off the relay
         status = false; // Set the status to off
         intensity = 0; // Reset intensity to 0
-        Logger::log(LogLevel::INFO, String(_name) + " is OFF");
+        //Logger::log(LogLevel::INFO, String(_name) + " is OFF");
+        Logger::log(LogLevel::INFO, String(_name) + F(" is OFF"));
     }
 }
 

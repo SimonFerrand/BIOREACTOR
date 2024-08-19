@@ -14,7 +14,8 @@ PHSensor::PHSensor(int pin, PT100Sensor* tempSensor, const char* name)
 // Method to initialize the pH sensor
 void PHSensor::begin() {
     _ph.begin();
-    Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    //Logger::log(LogLevel::INFO, String(_name) + " initialized");
+    Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
 // Method to read the pH value from the sensor

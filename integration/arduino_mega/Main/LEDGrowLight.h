@@ -53,8 +53,8 @@ public:
 private:
     int _relayPin;   // Relay pin
     const char* _name;
-    bool status;     // Track the state of the LED grow light
-    int intensity;   // Current intensity of the LED grow light (0-100)
+    bool _status;     // Track the state of the LED grow light
+    int _intensity ;   // Current intensity of the LED grow light (0-100)
 };
 
 #endif

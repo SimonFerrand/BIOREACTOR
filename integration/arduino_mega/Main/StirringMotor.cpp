@@ -9,7 +9,7 @@
 
 // Constructor for StirringMotor
 StirringMotor::StirringMotor(int pwmPin, int relayPin, int minRPM, int maxRPM, const char* name)
-    : _pwmPin(pwmPin), _relayPin(relayPin), status(false), _name(name), _minRPM(minRPM), _maxRPM(maxRPM) {
+    : _pwmPin(pwmPin), _relayPin(relayPin), _name(name), _status(false), _currentRPM(0), _minRPM(minRPM), _maxRPM(maxRPM) {
 }
 
 void StirringMotor::begin() {
@@ -23,40 +23,42 @@ void StirringMotor::begin() {
 
 // Method to control the stirring motor
 void StirringMotor::control(bool state, int value) {
-    if (state && value > 0) {
-        int targetRPM = constrain(value, _minRPM, _maxRPM);
-        int pwmValue = rpmToPWM(targetRPM);
-        analogWrite(_pwmPin, pwmValue); // Apply the PWM value to the motor
-        digitalWrite(_relayPin, HIGH);  // Turn on the relay
-        status = true;                  // Set the status to on
-        //Serial.print("Stirring Motor is ON, RPM set to: ");
-        //Serial.print(targetRPM);
-        //Serial.print(" corresponds to PWM value: ");
-        //Serial.println(pwmValue);
-    } else {
-        analogWrite(_pwmPin, 0);       // Set PWM value to 0
-        digitalWrite(_relayPin, LOW);  // Turn off the relay
-        status = false;                // Set the status to off
-        Serial.println("Stirring Motor is OFF");
+    int _targetRPM = constrain(value, _minRPM, _maxRPM);
+
+    if (state != _status || (state && _targetRPM != _currentRPM)) {
+        if (state && _targetRPM > 0) {
+            int pwmValue = rpmToPWM(_targetRPM);
+            analogWrite(_pwmPin, pwmValue);
+            digitalWrite(_relayPin, HIGH);
+            _status = true;
+            _currentRPM = _targetRPM;
+            Logger::log(LogLevel::INFO, String(_name) + F(" is ON, RPM set to: ") + String(_targetRPM));
+        } else {
+            analogWrite(_pwmPin, 0);
+            digitalWrite(_relayPin, LOW);
+            _status = false;
+            _currentRPM = 0;
+            Logger::log(LogLevel::INFO, String(_name) + F(" is OFF"));
+        }
     }
 }
 
 // Method to check if the motor is on
 bool StirringMotor::isOn() const {
-    return status;
+    return _status;
 }
 
 // Method to convert RPM to PWM value
-int StirringMotor::rpmToPWM(int targetRPM) {
+int StirringMotor::rpmToPWM(int _targetRPM) {
     float loadPercentage; // Variable to hold the calculated load percentage
 
     // Calculate the load percentage based on the target RPM using piecewise linear equations
-    if (targetRPM <= 450) {
+    if (_targetRPM <= 450) {
         // First equation for RPMs from 0% to 32% load
-        loadPercentage = (targetRPM - 390) / 1.875;
+        loadPercentage = (_targetRPM - 390) / 1.875;
     } else {
         // Second equation for RPMs from 32% to 100% load
-        loadPercentage = (targetRPM - 450) / 15.441 + 32;
+        loadPercentage = (_targetRPM - 450) / 15.441 + 32;
     }
 
     // Convert the load percentage to a PWM value (range 0 to 255)

@@ -43,7 +43,7 @@ void ActuatorController::runActuator(const String& actuatorName, float value, in
     ActuatorInterface* actuator = findActuatorByName(actuatorName);
     if (actuator) {
         actuator->control(true, value);
-        Logger::log(LogLevel::INFO, "Running actuator: " + actuatorName + " with value: " + String(value));
+        //Logger::log(LogLevel::INFO, "Running actuator: " + actuatorName + " with value: " + String(value));
         if (duration > 0) {
             delay(duration);
             stopActuator(actuatorName);
@@ -58,20 +58,20 @@ void ActuatorController::stopActuator(const String& actuatorName) {
     if (actuator) {
         actuator->control(false, 0);
         delay(50);  // Ajoutez un court délai pour la stabilisation
-        Logger::log(LogLevel::INFO, "Stopped actuator: " + actuatorName);
+        //Logger::log(LogLevel::INFO, "Stopped actuator: " + actuatorName);
     }
 }
 
 void ActuatorController::stopAllActuators() {
     //Logger::log(LogLevel::INFO, "Entering stopAllActuators");
-    Logger::log(LogLevel::INFO, F("Entering stopAllActuators"));
+    //Logger::log(LogLevel::INFO, F("Entering stopAllActuators"));
     const ActuatorInterface* actuators[] = {
         airPump, drainPump, nutrientPump, basePump, 
         stirringMotor, heatingPlate, ledGrowLight
     };
     for (const auto& actuator : actuators) {
         if (actuator->isOn()) {
-            Logger::log(LogLevel::INFO, "Stopping " + String(actuator->getName()));
+            //Logger::log(LogLevel::INFO, "Stopping " + String(actuator->getName()));
             //actuator->control(false, 0);
             const_cast<ActuatorInterface*>(actuator)->control(false, 0);
             delay(50); 

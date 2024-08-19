@@ -57,20 +57,21 @@ public:
      * Method to get the volume of liquid removed by the pump.
      * @return The volume removed in milliliters.
      */
-    float getVolumeRemoved() const { return volumeRemoved; }
+    float getVolumeRemoved() const { return _volumeRemoved; }
 
     /*
      * Method to reset the volume removed counter.
      */
-    void resetVolumeRemoved() { volumeRemoved = 0; }
+    void resetVolumeRemoved() { _volumeRemoved = 0; }
 
 private:
     int _pwmPin;    // PWM pin
     int _relayPin;  // Relay pin
     int _minPWM;    // Minimum PWM value
     const char* _name;
-    bool status; // Track the state of the pump
-    float volumeRemoved; // Track the volume removed by the pump
+    bool _status; // Track the state of the pump
+    int _currentValue;
+    float _volumeRemoved; // Track the volume removed by the pump
 };
 
 #endif

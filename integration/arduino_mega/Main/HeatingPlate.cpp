@@ -80,7 +80,7 @@ void HeatingPlate::setCycleTime(unsigned long newCycleTime) {
 #include "Logger.h"
 
 HeatingPlate::HeatingPlate(int relayPin, bool isPWMCapable, const char* name)
-    : _relayPin(relayPin), _name(name), _status(false), _isPWMCapable(isPWMCapable) {
+    : _relayPin(relayPin), _name(name), _status(false), _isPWMCapable(isPWMCapable), _currentValue(0) {
     pinMode(_relayPin, OUTPUT);
 }
 
@@ -90,14 +90,20 @@ void HeatingPlate::begin() {
 }
 
 void HeatingPlate::control(bool state, int value) {
-    if (state) {
-        if (_isPWMCapable) {
-            controlPWM(value);
+    value = constrain(value, 0, 100);
+
+    if (state != _status || (state && value != _currentValue)) {
+        if (state) {
+            if (_isPWMCapable) {
+                controlPWM(value);
+            } else {
+                controlWithCycle(value);
+            }
         } else {
-            controlWithCycle(value);
+            controlOnOff(false);
         }
-    } else {
-        controlOnOff(false);
+        _status = state;
+        _currentValue = value;
     }
 }
 
@@ -115,7 +121,8 @@ void HeatingPlate::controlPWM(int value) {
 void HeatingPlate::controlOnOff(bool state) {
     digitalWrite(_relayPin, state ? HIGH : LOW);
     _status = state;
-    Logger::log(LogLevel::INFO, String(_name) + (_status ? " is ON" : " is OFF"));
+    //Logger::log(LogLevel::INFO, String(_name) + (_status ? " is ON" : " is OFF"));
+    Logger::log(LogLevel::INFO, String(_name) + (_status ? F(" is ON") : F(" is OFF")));
 }
 
 void HeatingPlate::controlWithCycle(int percentage) {

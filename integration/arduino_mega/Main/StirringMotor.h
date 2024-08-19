@@ -63,8 +63,9 @@ public:
 private:
     int _pwmPin;   // PWM pin
     int _relayPin; // Relay pin
-    bool status;   // Track the state of the motor
     const char* _name;
+    bool _status;   // Track the state of the motor
+    int _currentRPM;
     int _minRPM;   // Minimum RPM
     int _maxRPM;   // Maximum RPM
 
@@ -73,7 +74,7 @@ private:
      * @param targetRPM: The desired RPM for the motor.
      * @return: Corresponding PWM value.
      */
-    int rpmToPWM(int targetRPM);
+    int rpmToPWM(int _targetRPM);
 };
 
 #endif

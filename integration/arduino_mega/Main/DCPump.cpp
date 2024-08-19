@@ -10,7 +10,7 @@
 
 // Constructor for DCPump
 DCPump::DCPump(int pwmPin, int relayPin, int minPWM, const char* name)
-    : _pwmPin(pwmPin), _relayPin(relayPin), _minPWM(minPWM), status(false), _name(name), volumeRemoved(0) {
+    : _pwmPin(pwmPin), _relayPin(relayPin), _minPWM(minPWM), _name(name), _status(false),  _currentValue(0), _volumeRemoved(0) {
     pinMode(_pwmPin, OUTPUT); // Set PWM pin as output
     pinMode(_relayPin, OUTPUT); // Set relay pin as output
 }
@@ -26,27 +26,33 @@ void DCPump::begin() {
 
 // Method to control the pump
 void DCPump::control(bool state, int value) {
-    if (state && value >= _minPWM && value <= 100) {
-        int pwmValue = map(value, _minPWM, 100, 26, 255); // Map speed percentage to PWM value
-        analogWrite(_pwmPin, pwmValue); // Set the PWM value
-        digitalWrite(_relayPin, HIGH); // Turn on the relay
-        status = true; // Set the status to on
-        Logger::log(LogLevel::INFO, String(_name) + " is ON, Speed set to: " + String(value));
+    value = constrain(value, 0, 100);
 
-        // Calculate volume removed
-        float flowRate = value * 0.1;  // Example: 0.1 ml/min per unit of value
-        float duration = 1.0 / 60.0;  // 1 second in minutes
-        volumeRemoved += flowRate * duration;
-    } else {
-        analogWrite(_pwmPin, 0); // Set PWM value to 0
-        digitalWrite(_relayPin, LOW); // Turn off the relay
-        status = false; // Set the status to off
-        //Logger::log(LogLevel::INFO, String(_name) + " is OFF");
-        Logger::log(LogLevel::INFO, String(_name) + F(" is OFF"));
+    if (state != _status || (state && value != _currentValue)) {
+        if (state && value >= _minPWM) {
+            int pwmValue = map(value, _minPWM, 100, 26, 255); // Map speed percentage to PWM value
+            analogWrite(_pwmPin, pwmValue); // Set the PWM value
+            digitalWrite(_relayPin, HIGH); // Turn on the relay
+            _status = true; // Set the status to on
+            _currentValue = value;
+            //Logger::log(LogLevel::INFO, String(_name) + " is ON, Speed set to: " + String(value));
+            Logger::log(LogLevel::INFO, String(_name) + F(" is ON, Speed set to: ") + String(value));
+
+            float flowRate = value * 0.1; // Example: 0.1 ml/min per unit of value
+            float duration = 1.0 / 60.0; // 1 second in minutes
+            _volumeRemoved += flowRate * duration;
+        } else {
+            analogWrite(_pwmPin, 0); // Set PWM value to 0
+            digitalWrite(_relayPin, LOW); // Turn off the relay
+            _status = false; // Set the status to off
+            _currentValue = 0;
+            //Logger::log(LogLevel::INFO, String(_name) + " is OFF");
+            Logger::log(LogLevel::INFO, String(_name) + F(" is OFF"));
+        }
     }
 }
 
 // Method to check if the pump is on
 bool DCPump::isOn() const {
-    return status;
+    return _status;
 }

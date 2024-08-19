@@ -9,7 +9,7 @@
 
 // Constructor for LEDGrowLight
 LEDGrowLight::LEDGrowLight(int relayPin, const char* name)
-    : _relayPin(relayPin), _name(name), status(false), intensity(0) {
+    : _relayPin(relayPin), _name(name), _status(false), _intensity(0) {
     pinMode(_relayPin, OUTPUT); // Set relay pin as output
     digitalWrite(_relayPin, LOW); // Ensure relay is off initially
 }
@@ -21,6 +21,7 @@ void LEDGrowLight::begin() {
 }
 
 // Method to control the LED grow light
+/*
 void LEDGrowLight::control(bool state, int value) {
     if (state) {
         intensity = constrain(value, 0, 100); // Constrain intensity to 0-100%
@@ -35,8 +36,29 @@ void LEDGrowLight::control(bool state, int value) {
         Logger::log(LogLevel::INFO, String(_name) + F(" is OFF"));
     }
 }
+*/
+void LEDGrowLight::control(bool state, int value) {
+    value = constrain(value, 0, 100);  // Assurez-vous que la valeur est entre 0 et 100
+
+    if (state != _currentState || (state && value != _currentValue)) {
+        if (state) {
+            digitalWrite(_relayPin, HIGH);
+            _status = true;
+            _intensity = value;
+            Logger::log(LogLevel::INFO, String(_name) + " is ON with intensity: " + String(_intensity) + "%");
+        } else {
+            digitalWrite(_relayPin, LOW);
+            _status = false;
+            _intensity = 0;
+            Logger::log(LogLevel::INFO, String(_name) + " is OFF");
+        }
+        
+        _currentState = state;
+        _currentValue = value;
+    }
+}
 
 // Method to check if the LED grow light is on
 bool LEDGrowLight::isOn() const {
-    return status;
+    return _status;
 }

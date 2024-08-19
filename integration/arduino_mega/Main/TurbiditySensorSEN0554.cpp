@@ -22,8 +22,7 @@ float TurbiditySensorSEN0554::readValue() {
     if (communicate()) {
         int rawTurbidity = _response[3];
         float adjustedTurbidity = (rawTurbidity * SCALE_FACTOR) + OFFSET;
-        Logger::log(LogLevel::INFO, String(_name) + " - raw value: " + String(rawTurbidity) + 
-                    ", Adjusted value: " + String(adjustedTurbidity));
+        //Logger::log(LogLevel::INFO, String(_name) + " - raw value: " + String(rawTurbidity) + ", Adjusted value: " + String(adjustedTurbidity));     
         return adjustedTurbidity;
     }
     //Logger::log(LogLevel::WARNING, String(_name) + " - No sensor response");

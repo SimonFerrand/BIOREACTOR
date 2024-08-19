@@ -50,8 +50,8 @@ public:
 
     const char* getName() const override { return _name; }
 
-    float getVolumeAdded() const { return volumeAdded; }
-    void resetVolumeAdded() { volumeAdded = 0; }
+    float getVolumeAdded() const { return _volumeAdded; }
+    void resetVolumeAdded() { _volumeAdded = 0; }
 
     float getMaxFlowRate() const { return _maxFlowRate; }
     float getMinFlowRate() const { return _minFlowRate; }
@@ -64,15 +64,16 @@ private:
     float _minFlowRate;     // Minimum flow rate of the pump
     const char* _name;
     Adafruit_MCP4725 _dac;  // DAC instance
-    bool status;            // Track the state of the pump
-    float volumeAdded;      // Track the volume added by the pump
+    bool _status;            // Track the state of the pump
+    float _currentFlowRate;
+    float _volumeAdded;      // Track the volume added by the pump
     
     /*
      * Converts flow rate in ml/min to DAC value.
      * @param flowRate: Desired flow rate in ml/min.
      * @return: Corresponding DAC value.
      */
-    uint16_t flowRateToDAC(float flowRate);
+    uint16_t flowRateToDAC(float _flowRate);
 };
 
 #endif

@@ -71,6 +71,7 @@ private:
     const char* _name;
     bool _status;
     bool _isPWMCapable;
+    int _currentValue;
     
     unsigned long _cycleTime = 10000;
     unsigned long _lastCycleStart = 0;

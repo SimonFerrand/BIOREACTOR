@@ -10,7 +10,7 @@
 
 // Constructor for DCPump
 DCPump::DCPump(int pwmPin, int relayPin, int minPWM, const char* name)
-    : _pwmPin(pwmPin), _relayPin(relayPin), _minPWM(minPWM), _name(name), _status(false),  _currentValue(0), _volumeRemoved(0) {
+    : _pwmPin(pwmPin), _relayPin(relayPin), _minPWM(minPWM), _name(name), _status(false),  _currentValue(0), _volumeAdded(0) {
     pinMode(_pwmPin, OUTPUT); // Set PWM pin as output
     pinMode(_relayPin, OUTPUT); // Set relay pin as output
 }
@@ -36,11 +36,11 @@ void DCPump::control(bool state, int value) {
             _status = true; // Set the status to on
             _currentValue = value;
             //Logger::log(LogLevel::INFO, String(_name) + " is ON, Speed set to: " + String(value));
-            Logger::log(LogLevel::INFO, String(_name) + F(" is ON, Speed set to: ") + String(value));
+            Logger::log(LogLevel::INFO, String(_name) + F(" is ON, Speed set to: ") + String(value)+ F("%"));
 
             float flowRate = value * 0.1; // Example: 0.1 ml/min per unit of value
             float duration = 1.0 / 60.0; // 1 second in minutes
-            _volumeRemoved += flowRate * duration;
+            _volumeAdded += (flowRate /1000) * duration; // convertir in liters
         } else {
             analogWrite(_pwmPin, 0); // Set PWM value to 0
             digitalWrite(_relayPin, LOW); // Turn off the relay

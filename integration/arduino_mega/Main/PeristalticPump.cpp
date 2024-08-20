@@ -33,7 +33,7 @@ void PeristalticPump::control(bool state, int value) {
             _status = true;
             _currentFlowRate = _flowRate;
             float duration = 1.0 / 60.0;
-            _volumeAdded += _flowRate * duration;
+            _volumeAdded += (_flowRate / 1000) * duration;  // convert to litre
             Logger::log(LogLevel::INFO, String(_name) + F(" is ON with flow rate: ") + String(_flowRate) + F(" ml/min"));
         } else {
             _dac.setVoltage(0, false);

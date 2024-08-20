@@ -27,11 +27,15 @@ public:
     void initializeStirringSpeed();
     void setNutrientFixedFlowRate(float rate) { nutrientFixedFlowRate = rate; }
 
-    void setPIDEnabled(bool enabled) { isPIDEnabled = enabled; }
+    
 
     // Time settings for continuous nutrient addition (in milliseconds)
     static const unsigned long NUTRIENT_ACTIVATION_TIME = 30000; //60000;  // 1 minute
     static const unsigned long NUTRIENT_PAUSE_TIME = 15000; //240000;      // 4 minutes
+    static constexpr float DEFAULT_NUTRIENT_FLOW_RATE = 100.0; // ml/min
+
+    void setPIDEnabled(bool enabled);
+    //void setPIDEnabled(bool enabled) { isPIDEnabled = enabled; }
 
 private:
     PIDManager& pidManager;
@@ -56,13 +60,13 @@ private:
 
     void addNutrientsContinuously();
     void addNutrientsContinuouslyFixedRate(float fixedFlowRate);
-    float nutrientFixedFlowRate;
     unsigned long lastNutrientActivationTime;
     bool isAddingNutrients;
 
     bool isPIDEnabled;
 
     static const int MIN_STIRRING_SPEED = 500;
+    float nutrientFixedFlowRate = DEFAULT_NUTRIENT_FLOW_RATE;
 };
 
 #endif // FERMENTATION_PROGRAM_H

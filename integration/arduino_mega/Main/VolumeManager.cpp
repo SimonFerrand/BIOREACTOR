@@ -9,15 +9,15 @@ VolumeManager::VolumeManager(float totalVolume, float maxVolumePercent, float mi
 void VolumeManager::updateVolume() {
     updateVolumeFromActuators();
     float volumeChange = addedNaOH + addedNutrient + addedMicroalgae - removedVolume;
-    currentVolume += volumeChange;
-    currentVolume = max(minVolume, min(currentVolume, totalVolume * maxVolumePercent));
-
+    if (abs(volumeChange) > 0.0001) { // Ignore very small changes
+        currentVolume += volumeChange;
+        currentVolume = max(minVolume, min(currentVolume, totalVolume * maxVolumePercent));
+        //Logger::log(LogLevel::INFO, "Volume updated: Current=" + String(currentVolume, 4) + " L, Change=" + String(volumeChange, 4) + " L");
+    }
     addedNaOH = 0;
     addedNutrient = 0;
     addedMicroalgae = 0;
-    removedVolume = 0;
-
-    Logger::log(LogLevel::INFO, "Current volume updated: " + String(currentVolume) + " L");
+    removedVolume = 0;       
 }
 
 void VolumeManager::manuallyAdjustVolume(float volume, const String& source) {
@@ -53,6 +53,9 @@ void VolumeManager::recordVolumeChange(float volume, const String& source) {
     else if (source == "Nutrient") addedNutrient += volume;
     else if (source == "Microalgae") addedMicroalgae += volume;
     else if (source == "Removed") removedVolume += volume;
+    Logger::log(LogLevel::INFO, "Volume change recorded: " + String(volume, 6) + 
+            " L from " + source + ", Total change: " + 
+            String(addedNaOH + addedNutrient + addedMicroalgae - removedVolume, 6) + " L");
 }
 
 void VolumeManager::updateVolumeFromActuators() {
@@ -71,4 +74,19 @@ void VolumeManager::updateVolumeFromActuators() {
 
 bool VolumeManager::isSafeToAddVolume(float volume) const {
     return (currentVolume + volume) <= (totalVolume * maxVolumePercent);
+}
+
+String VolumeManager::getVolumeInfo() const {
+  
+    String info = "Volume Information:\n";
+    info += "Current Volume: " + String(getCurrentVolume()) + " L\n";
+    info += "Total Volume: " + String(getTotalVolume()) + " L\n";
+    info += "Max Allowed Volume: " + String(getMaxAllowedVolume()) + " L\n";
+    info += "Min Volume: " + String(getMinVolume()) + " L\n";
+    info += "Available Volume: " + String(getAvailableVolume()) + " L\n";
+    info += "Added NaOH: " + String(getAddedNaOH()) + " L\n";
+    info += "Added Nutrient: " + String(getAddedNutrient()) + " L\n";
+    info += "Added Microalgae: " + String(getAddedMicroalgae()) + " L\n";
+    info += "Removed Volume: " + String(getRemovedVolume()) + " L\n";
+    return info;
 }

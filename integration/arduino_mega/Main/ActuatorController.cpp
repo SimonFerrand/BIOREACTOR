@@ -109,7 +109,7 @@ float ActuatorController::getVolumeAdded(const String& actuatorName) {
 
 float ActuatorController::getVolumeRemoved(const String& actuatorName) {
     if (actuatorName == "drainPump" && drainPump) {
-        return drainPump->getVolumeRemoved();
+        return drainPump->getVolumeAdded();
     }
     return 0.0f;
 }
@@ -124,7 +124,7 @@ void ActuatorController::resetVolumeAdded(const String& actuatorName) {
 
 void ActuatorController::resetVolumeRemoved(const String& actuatorName) {
     if (actuatorName == "drainPump" && drainPump) {
-        drainPump->resetVolumeRemoved();
+        drainPump->resetVolumeAdded();
     }
 }
 

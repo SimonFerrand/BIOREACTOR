@@ -30,6 +30,8 @@ void CommandHandler::executeCommand(const String& command) {
         handleSetCommand(command);
     } else if (command.startsWith("ph ")) {
         handlePHCalibrationCommand(command);
+    }else if (command == "volume info") {
+        handleVolumeInfoCommand();
     } else {
         logger.log(LogLevel::WARNING, "Unknown command: " + command);
     }
@@ -83,6 +85,11 @@ void CommandHandler::handlePHCalibrationCommand(const String& command) {
     } else {
         logger.log(LogLevel::WARNING, "Invalid pH calibration command: " + cmd);
     }
+}
+
+void CommandHandler::handleVolumeInfoCommand() {
+    String volumeInfo = volumeManager.getVolumeInfo();
+    logger.log(LogLevel::INFO, volumeInfo);
 }
 
 /*
@@ -168,6 +175,8 @@ void CommandHandler::printHelp() {
     Serial.println(F("ph ENTERPH - Enter pH calibration mode"));
     Serial.println(F("ph CALPH - Calibrate with buffer solution"));
     Serial.println(F("ph EXITPH - Save and exit pH calibration mode"));
+    Serial.println(F("volume info - Get all volume informations"));
+    Serial.println(F("set_pid_enabled - set pid enabled during Fermentation program (true, false "));
     Serial.println(F("-----------------------------------------------------------------------------------------------------------------------"));
 }
 

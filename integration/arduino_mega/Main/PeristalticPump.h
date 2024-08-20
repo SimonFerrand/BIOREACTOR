@@ -50,7 +50,7 @@ public:
 
     const char* getName() const override { return _name; }
 
-    float getVolumeAdded() const { return _volumeAdded; }
+    float getVolumeAdded() const { return _volumeAdded; }  // in liters
     void resetVolumeAdded() { _volumeAdded = 0; }
 
     float getMaxFlowRate() const { return _maxFlowRate; }

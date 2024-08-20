@@ -55,14 +55,14 @@ public:
 
     /*
      * Method to get the volume of liquid removed by the pump.
-     * @return The volume removed in milliliters.
+     * @return The volume removed in liters.
      */
-    float getVolumeRemoved() const { return _volumeRemoved; }
+    float getVolumeAdded() const { return _volumeAdded; }
 
     /*
      * Method to reset the volume removed counter.
      */
-    void resetVolumeRemoved() { _volumeRemoved = 0; }
+    void resetVolumeAdded() { _volumeAdded = 0; }
 
 private:
     int _pwmPin;    // PWM pin
@@ -71,7 +71,9 @@ private:
     const char* _name;
     bool _status; // Track the state of the pump
     int _currentValue;
+    float _volumeAdded;
     float _volumeRemoved; // Track the volume removed by the pump
+    
 };
 
 #endif

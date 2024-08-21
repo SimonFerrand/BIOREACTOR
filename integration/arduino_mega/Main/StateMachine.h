@@ -20,7 +20,7 @@ enum class ProgramState {
 
 class StateMachine {
 public:
-    StateMachine(Logger& logger, PIDManager& pidManager, VolumeManager& volumeManager);
+    StateMachine(PIDManager& pidManager, VolumeManager& volumeManager);
     void addProgram(const String& name, ProgramBase* program);
     void update();
     void startProgram(const String& programName, const String& command);
@@ -34,7 +34,6 @@ private:
     SimpleMap<String, ProgramBase*, MAX_PROGRAMS> programs;
     ProgramState currentState;
     ProgramBase* currentProgram;
-    Logger& logger;
     PIDManager& pidManager;
     VolumeManager& volumeManager;
 

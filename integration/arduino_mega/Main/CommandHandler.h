@@ -11,8 +11,8 @@
 class CommandHandler {
 public:
     CommandHandler(StateMachine& stateMachine, SafetySystem& safetySystem, 
-                   VolumeManager& volumeManager, Logger& logger,
-                   PIDManager& pidManager);
+                   VolumeManager& volumeManager, PIDManager& pidManager);
+                   
 
     void executeCommand(const String& command);
     void printHelp();
@@ -22,7 +22,6 @@ private:
     StateMachine& stateMachine;
     SafetySystem& safetySystem;
     VolumeManager& volumeManager;
-    Logger& logger;
     PIDManager& pidManager;
 
     void handleAdjustVolume(const String& command);

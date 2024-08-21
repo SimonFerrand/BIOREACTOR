@@ -1,10 +1,9 @@
 // StateMachine.cpp
 #include "StateMachine.h"
 
-StateMachine::StateMachine(Logger& logger, PIDManager& pidManager, VolumeManager& volumeManager)
+StateMachine::StateMachine(PIDManager& pidManager, VolumeManager& volumeManager)
     : currentState(ProgramState::IDLE),
       currentProgram(nullptr),
-      logger(logger),
       pidManager(pidManager),
       volumeManager(volumeManager)
 {
@@ -38,6 +37,10 @@ void StateMachine::startProgram(const String& programName, const String& command
         currentProgram = *program;
         currentProgram->start(command);
         transitionToState(ProgramState::RUNNING);
+        
+        // Utilisez Logger::logProgramEvent
+        Logger::logProgramEvent(programName, "Started", 0, 0, 0, 0, 0, 0, "", "");
+
         Logger::log(LogLevel::INFO, "Started program: " + programName);
     } else {
         Logger::log(LogLevel::WARNING, "Program not found: " + programName);

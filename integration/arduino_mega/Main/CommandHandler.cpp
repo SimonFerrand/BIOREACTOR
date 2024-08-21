@@ -2,14 +2,14 @@
 #include "CommandHandler.h"
 
 CommandHandler::CommandHandler(StateMachine& stateMachine, SafetySystem& safetySystem, 
-                               VolumeManager& volumeManager, Logger& logger,
-                               PIDManager& pidManager)
+                               VolumeManager& volumeManager, PIDManager& pidManager)
+                              
     : stateMachine(stateMachine), safetySystem(safetySystem), 
-      volumeManager(volumeManager), logger(logger),
-      pidManager(pidManager) {}
+      volumeManager(volumeManager), pidManager(pidManager) {}
+      
 
 void CommandHandler::executeCommand(const String& command) {
-    logger.log(LogLevel::INFO, "Executing command: " + command);
+    Logger::log(LogLevel::INFO, "Executing command: " + command);
 
     if (command == "help") {
         printHelp();
@@ -33,7 +33,7 @@ void CommandHandler::executeCommand(const String& command) {
     }else if (command == "volume info") {
         handleVolumeInfoCommand();
     } else {
-        logger.log(LogLevel::WARNING, "Unknown command: " + command);
+        Logger::log(LogLevel::WARNING, "Unknown command: " + command);
     }
 }
 
@@ -44,9 +44,9 @@ void CommandHandler::handleAdjustVolume(const String& command) {
         String source = command.substring(firstSpace + 1, secondSpace);
         float amount = command.substring(secondSpace + 1).toFloat();
         volumeManager.manuallyAdjustVolume(amount, source);
-        logger.log(LogLevel::INFO, "Manual volume adjustment: " + source + " " + String(amount));
+        Logger::log(LogLevel::INFO, "Manual volume adjustment: " + source + " " + String(amount));
     } else {
-        logger.log(LogLevel::WARNING, "Invalid adjust_volume command format");
+        Logger::log(LogLevel::WARNING, F("Invalid adjust_volume command format"));
     }
 }
 
@@ -56,18 +56,18 @@ void CommandHandler::handleSetCommand(const String& command) {
     } else if (command.startsWith("set_check_interval")) {
         int interval = command.substring(19).toInt();
         safetySystem.setCheckInterval(interval * 1000); // Convert to milliseconds
-        logger.log(LogLevel::INFO, "Safety check interval set to " + String(interval) + " seconds");
+        Logger::log(LogLevel::INFO, "Safety check interval set to " + String(interval) + " seconds");
     } else if (command.startsWith("set_initial_volume")) {
         int spaceIndex = command.indexOf(' ');
         if (spaceIndex != -1) {
             float initialVolume = command.substring(spaceIndex + 1).toFloat();
             volumeManager.setInitialVolume(initialVolume);
-            logger.log(LogLevel::INFO, "Initial culture volume set to " + String(initialVolume) + " L");
+            Logger::log(LogLevel::INFO, "Initial culture volume set to " + String(initialVolume) + " L");
         } else {
-            logger.log(LogLevel::WARNING, "Invalid set_initial_volume command. Usage: set_initial_volume <volume_in_liters>");
+            Logger::log(LogLevel::WARNING, F("Invalid set_initial_volume command. Usage: set_initial_volume <volume_in_liters>"));
         }
     } else {
-        logger.log(LogLevel::WARNING, "Unknown set command: " + command);
+        Logger::log(LogLevel::WARNING, "Unknown set command: " + command);
     }
 }
 
@@ -78,22 +78,23 @@ void CommandHandler::handlePHCalibrationCommand(const String& command) {
         PHSensor* phSensor = (PHSensor*)SensorController::findSensorByName("phSensor");
         if (phSensor) {
             phSensor->calibration(cmd.c_str());
-            logger.log(LogLevel::INFO, "pH calibration command: " + cmd);
+            Logger::log(LogLevel::INFO, "pH calibration command: " + cmd);
         } else {
-            logger.log(LogLevel::WARNING, "pH sensor not found");
+            Logger::log(LogLevel::WARNING, F("pH sensor not found"));
         }
     } else {
-        logger.log(LogLevel::WARNING, "Invalid pH calibration command: " + cmd);
+        Logger::log(LogLevel::WARNING, "Invalid pH calibration command: " + cmd);
     }
 }
 
 void CommandHandler::handleVolumeInfoCommand() {
     String volumeInfo = volumeManager.getVolumeInfo();
-    logger.log(LogLevel::INFO, volumeInfo);
+    Logger::log(LogLevel::INFO, volumeInfo);
 }
 
-/*
+  /*
 void CommandHandler::printHelp() {
+
     Serial.println();
     Serial.println("------------------------------------------------- Available commands: -------------------------------------------------");
     Serial.println("help - Display this help message");

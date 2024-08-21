@@ -12,7 +12,7 @@ public:
     SafetySystem(float totalVolume, float maxVolumePercent, float minVolume);
     void checkLimits();
     bool shouldStop() const { return stopRequired; }
-    void setLogger(Logger* logger) { this->logger = logger; } //This allows the SafetySystem to use the same logger as the rest of this application, ensuring consistent logging.
+    static void setLogLevel(LogLevel level);
     void parseCommand(const String& command);
     void setCheckInterval(unsigned long interval) { checkInterval = interval; }
 
@@ -31,7 +31,7 @@ private:
     float maxVolumePercent;
     float minVolume;
     bool stopRequired;
-    Logger* logger;
+    
 
     bool alarmEnabled;
     bool warningEnabled;

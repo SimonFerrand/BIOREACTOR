@@ -30,6 +30,7 @@
 #include "PIDManager.h"
 #include "CommandHandler.h"
 #include "Communication.h"
+#include "DataCollector.h"
 
 #include "TestsProgram.h"
 #include "DrainProgram.h"
@@ -38,8 +39,6 @@
 
 // Define serial port for communication with ESP32
 #define SerialESP Serial1
-
-Communication espCommunication(SerialESP);
 
 // Sensor declarations
 PT100Sensor waterTempSensor(22, 23, 24, 25, "waterTempSensor");  // Water temperature sensor (CS: 22, DI: 23, DO: 24, CLK: 25)
@@ -62,11 +61,12 @@ HeatingPlate heatingPlate(12, false, "heatingPlate");            // Heating plat
 LEDGrowLight ledGrowLight(27, "ledGrowLight");                   // LED grow light (Relay: 27)
 
 // System components
-Logger logger;
-PIDManager pidManager;
 VolumeManager volumeManager(0.6, 0.95, 0.1);
+DataCollector dataCollector(volumeManager);
+Communication espCommunication(SerialESP, dataCollector);
+PIDManager pidManager;
 SafetySystem safetySystem(1.0, 0.95, 0.1);
-StateMachine stateMachine(logger, pidManager, volumeManager);
+StateMachine stateMachine(pidManager, volumeManager);
 
 // Program declarations
 TestsProgram testsProgram(pidManager);
@@ -74,7 +74,7 @@ DrainProgram drainProgram;
 MixProgram mixProgram;
 FermentationProgram fermentationProgram(pidManager, volumeManager);
 
-CommandHandler commandHandler(stateMachine, safetySystem, volumeManager, logger, pidManager);
+CommandHandler commandHandler(stateMachine, safetySystem, volumeManager, pidManager);
 
 unsigned long previousMillis = 0;
 const long interval = 30000; // Interval for logging (30 seconds)
@@ -83,8 +83,10 @@ void setup() {
     Serial.begin(115200);  // Initialize serial communication for debugging
     espCommunication.begin(9600); // Initialize serial communication with ESP32
 
+    Logger::initialize(dataCollector);
     //Logger::log(LogLevel::INFO, "Setup started");
     Logger::log(LogLevel::INFO, F("Setup started"));
+    
 
     // Initialize sensors
     SensorController::initialize(waterTempSensor, airTempSensor, electronicTempSensor,
@@ -99,7 +101,6 @@ void setup() {
                                    stirringMotor, heatingPlate, ledGrowLight, samplePump);
     ActuatorController::beginAll();
     
-    safetySystem.setLogger(&logger); //This allows the SafetySystem to use the same logger
 
     // Add programs to the state machine
     stateMachine.addProgram("Tests", &testsProgram);
@@ -153,6 +154,9 @@ void loop() {
         previousMillis = currentMillis;
         //logger.logData(stateMachine.getCurrentProgram(), String(static_cast<int>(stateMachine.getCurrentState())));    // Logger::log(LogLevel::INFO,
         Logger::logData(stateMachine.getCurrentProgram(), String(static_cast<int>(stateMachine.getCurrentState())));    // Logger::log(LogLevel::INFO,
+        espCommunication.sendSensorData();
+        espCommunication.sendActuatorData();
+        espCommunication.sendVolumeData();
     }
 
     // Short pause to avoid excessive CPU usage

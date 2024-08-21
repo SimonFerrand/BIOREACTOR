@@ -3,7 +3,7 @@
 
 SafetySystem::SafetySystem(float totalVolume, float maxVolumePercent, float minVolume)
     : totalVolume(totalVolume), maxVolumePercent(maxVolumePercent), minVolume(minVolume), 
-      stopRequired(false), logger(nullptr), alarmEnabled(false), warningEnabled(false),
+      stopRequired(false), alarmEnabled(false), warningEnabled(false),
       lastCheckTime(0), checkInterval(30000) {} // 30 seconds by default
 
 void SafetySystem::checkLimits() {
@@ -84,11 +84,9 @@ void SafetySystem::checkElectronicTemperature() {
 }
 
 void SafetySystem::logAlert(const String& message, LogLevel level) {
-    if (logger) {
-        if ((level == LogLevel::ERROR && alarmEnabled) || 
-            (level == LogLevel::WARNING && warningEnabled)) {
-            logger->log(level, message);
-        }
+    if ((level == LogLevel::ERROR && alarmEnabled) || 
+        (level == LogLevel::WARNING && warningEnabled)) {
+        Logger::log(level, message);
     }
 }
 
@@ -96,12 +94,12 @@ void SafetySystem::parseCommand(const String& command) {
     if (command.startsWith("warnings ")) {
         String value = command.substring(8);
         warningEnabled = (value == "true");
-        logger->log(LogLevel::INFO, "Warnings set to " + String(warningEnabled ? "enabled" : "disabled"));
+        Logger::log(LogLevel::INFO, "Warnings set to " + String(warningEnabled ? "enabled" : "disabled"));
     } else if (command.startsWith("alarms ")) {
         String value = command.substring(6);
         alarmEnabled = (value == "true");
-        logger->log(LogLevel::INFO, "Alarms set to " + String(alarmEnabled ? "enabled" : "disabled"));
+        Logger::log(LogLevel::INFO, "Alarms set to " + String(alarmEnabled ? "enabled" : "disabled"));
     } else {
-        logger->log(LogLevel::WARNING, "Unknown command: " + command);
+        Logger::log(LogLevel::WARNING, "Unknown command: " + command);
     }
 }

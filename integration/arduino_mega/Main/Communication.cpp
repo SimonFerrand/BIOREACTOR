@@ -1,9 +1,11 @@
+// Communication.cpp
 #include "Communication.h"
 #include "CommandHandler.h"
 
 extern CommandHandler commandHandler;
 
-Communication::Communication(HardwareSerial& serial) : _serial(serial) {}
+Communication::Communication(HardwareSerial& serial, DataCollector& dataCollector) 
+    : _serial(serial), _dataCollector(dataCollector) {}
 
 void Communication::begin(unsigned long baud) {
     _serial.begin(baud);
@@ -33,7 +35,7 @@ void Communication::processCommand(const String& command) {
         return;  // Do not process empty commands
     }
 
-    StaticJsonDocument<200> doc;
+    JsonDocument doc;
     DeserializationError error = deserializeJson(doc, command);
 
     if (error) {
@@ -68,7 +70,22 @@ void Communication::processCommand(const String& command) {
         } else if (program == "stop") {
             commandHandler.executeCommand("stop");
         } else {
-            Logger::log(LogLevel::WARNING, "Unknown program: " + program);
+            Serial.println("Unknown program: " + program);
         }
     }
+}
+
+void Communication::sendSensorData() {
+    String sensorData = _dataCollector.collectSensorData();
+    sendMessage(sensorData);
+}
+
+void Communication::sendActuatorData() {
+    String actuatorData = _dataCollector.collectActuatorData();
+    sendMessage(actuatorData);
+}
+
+void Communication::sendVolumeData() {
+    String volumeData = _dataCollector.collectVolumeData();
+    sendMessage(volumeData);
 }

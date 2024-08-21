@@ -26,9 +26,7 @@ public:
     void parseCommand(const String& command) override;
     void initializeStirringSpeed();
     void setNutrientFixedFlowRate(float rate) { nutrientFixedFlowRate = rate; }
-
     
-
     // Time settings for continuous nutrient addition (in milliseconds)
     static const unsigned long NUTRIENT_ACTIVATION_TIME = 30000; //60000;  // 1 minute
     static const unsigned long NUTRIENT_PAUSE_TIME = 15000; //240000;      // 4 minutes
@@ -36,6 +34,15 @@ public:
 
     void setPIDEnabled(bool enabled);
     //void setPIDEnabled(bool enabled) { isPIDEnabled = enabled; }
+
+    float getTempSetpoint() const { return tempSetpoint; }
+    float getPHSetpoint() const { return phSetpoint; }
+    float getDOSetpoint() const { return doSetpoint; }
+    float getNutrientConc() const { return nutrientConc; }
+    float getBaseConc() const { return baseConc; }
+    int getDuration() const { return duration; }
+    String getExperimentName() const { return experimentName; }
+    String getComment() const { return comment; }
 
 private:
     PIDManager& pidManager;

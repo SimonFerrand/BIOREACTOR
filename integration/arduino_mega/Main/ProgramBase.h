@@ -3,6 +3,7 @@
 #define PROGRAM_BASE_H
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
 class ProgramBase {
 public:
@@ -31,6 +32,8 @@ public:
     virtual String getName() const = 0;
 
     virtual void parseCommand(const String& command) = 0;
+
+    virtual void getParameters(JsonDocument& doc) const = 0;
 
     // Virtual destructor
     virtual ~ProgramBase() {}

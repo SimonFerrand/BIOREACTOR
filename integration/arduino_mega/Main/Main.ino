@@ -66,7 +66,7 @@ DataCollector dataCollector(volumeManager);
 Communication espCommunication(SerialESP, dataCollector);
 PIDManager pidManager;
 SafetySystem safetySystem(1.0, 0.95, 0.1);
-StateMachine stateMachine(pidManager, volumeManager);
+StateMachine stateMachine(pidManager, volumeManager, espCommunication);
 
 // Program declarations
 TestsProgram testsProgram(pidManager);
@@ -152,11 +152,17 @@ void loop() {
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis >= interval) {
         previousMillis = currentMillis;
-        //logger.logData(stateMachine.getCurrentProgram(), String(static_cast<int>(stateMachine.getCurrentState())));    // Logger::log(LogLevel::INFO,
-        Logger::logData(stateMachine.getCurrentProgram(), String(static_cast<int>(stateMachine.getCurrentState())));    // Logger::log(LogLevel::INFO,
-        espCommunication.sendSensorData();
-        espCommunication.sendActuatorData();
-        espCommunication.sendVolumeData();
+
+        //Logger::logData(stateMachine.getCurrentProgram(), String(static_cast<int>(stateMachine.getCurrentState())));    
+        //espCommunication.sendAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));
+
+        //String allData = dataCollector.collectAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));
+        //Logger::logAllData(allData);
+        //espCommunication.sendAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));
+
+        Logger::logAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));
+        espCommunication.sendAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));
+        
     }
 
     // Short pause to avoid excessive CPU usage

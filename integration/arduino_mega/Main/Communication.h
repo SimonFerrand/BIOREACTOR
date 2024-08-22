@@ -17,7 +17,9 @@ public:
     void sendSensorData();
     void sendActuatorData();
     void sendVolumeData();
-
+    void sendAllData(const String& currentProgram, int currentState);
+    void sendProgramEvent(const String& programName, ProgramBase* program);
+    
 private:
     HardwareSerial& _serial;
     DataCollector& _dataCollector;

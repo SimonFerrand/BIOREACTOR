@@ -8,6 +8,7 @@
 #include "PIDManager.h"
 #include "VolumeManager.h"
 #include "SimpleMap.h"
+#include "Communication.h"
 
 enum class ProgramState {
     IDLE,
@@ -20,7 +21,7 @@ enum class ProgramState {
 
 class StateMachine {
 public:
-    StateMachine(PIDManager& pidManager, VolumeManager& volumeManager);
+    StateMachine(PIDManager& pidManager, VolumeManager& volumeManager, Communication& espCommunication);
     void addProgram(const String& name, ProgramBase* program);
     void update();
     void startProgram(const String& programName, const String& command);
@@ -36,6 +37,7 @@ private:
     ProgramBase* currentProgram;
     PIDManager& pidManager;
     VolumeManager& volumeManager;
+    Communication& espCommunication;
 
     void transitionToState(ProgramState newState);
 };

@@ -29,18 +29,7 @@ void Logger::logData(const String& currentProgram, const String& programStatus) 
         log(LogLevel::INFO, "Program: " + currentProgram + ", Status: " + programStatus);
         log(LogLevel::INFO, "Sensor Data: " + sensorData);
         log(LogLevel::INFO, "Actuator Data: " + actuatorData);
-    }
-}
-
-void Logger::logProgramEvent(const String& programName, const String& status, 
-                             float tempSetpoint, float phSetpoint, float doSetpoint,
-                             float nutrientConc, float baseConc, int duration,
-                             const String& experimentName, const String& comment) {
-    if (_dataCollector) {
-        String eventData = _dataCollector->collectProgramEvent(programName, status, tempSetpoint, phSetpoint, 
-                                                              doSetpoint, nutrientConc, baseConc, duration, 
-                                                              experimentName, comment);
-        log(LogLevel::INFO, "Program Event: " + eventData);
+        Serial.println();
     }
 }
 
@@ -73,5 +62,21 @@ void Logger::logVolumeData() {
     if (_dataCollector) {
         String volumeData = _dataCollector->collectVolumeData();
         log(LogLevel::INFO, "Volume Data: " + volumeData);
+    }
+}
+
+void Logger::logAllData(const String& currentProgram, int currentState) {
+    if (_dataCollector) {
+        String allData = _dataCollector->collectAllData(currentProgram, currentState);
+        log(LogLevel::INFO, "Periodic Event :" + allData);
+    } else {
+        log(LogLevel::ERROR, "DataCollector not initialized");
+    }
+}
+
+void Logger::logProgramEvent(const String& programName, ProgramBase* program) {
+    if (_dataCollector) {
+        String eventData = _dataCollector->collectProgramEvent(programName, program);
+        log(LogLevel::INFO, "Program Event: " + eventData);
     }
 }

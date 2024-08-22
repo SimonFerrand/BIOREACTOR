@@ -61,29 +61,6 @@ const char webSocketPath[] = "/ws";
 #endif // CONFIG_H
  */
 
-
-/*
- * ESP32-S3 Code
- * 
- * This code receives data from the Arduino Mega via serial communication and sends it to a web server.
- * It also receives commands from the web server and sends them to the Arduino Mega.
- * 
- * Connections:
- * - RX (pin 18) of ESP32-S3 to TX of Arduino Mega
- * - TX (pin 19) of ESP32-S3 to RX of Arduino Mega
- * - GND of ESP32-S3 to GND of Arduino Mega
- * 
- * Libraries:
- * - ArduinoJson: To handle JSON parsing and serialization
- * - WiFi: To handle WiFi connections
- * - HTTPClient: To handle HTTP requests
- * - NTPClient: To get the current time
- * - WebSocketsClient: To handle WebSocket communication
- * - Crypto: To handle encryption and decryption
- * - AES: To use AES encryption
- * - config.h: Contains the WiFi and WebSocket server credentials, and the shared secret key
- */
-
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -206,7 +183,7 @@ void setup() {
 
   // Initialize the WebSocket connection
   webSocket.setExtraHeaders("X-Client-Type: ESP32");
-  webSocket.begin("192.168.1.25", 8000, "/ws");
+  webSocket.begin(webSocketServer, webSocketPort, webSocketPath);
   webSocket.onEvent(webSocketEvent);
   webSocket.setReconnectInterval(5000);
 }
@@ -223,7 +200,7 @@ void loop() {
     if (!webSocket.isConnected()) {
       Serial.println("WebSocket disconnected. Attempting to reconnect...");
       webSocket.disconnect();
-      webSocket.begin("192.168.1.25", 8000, "/ws");
+      webSocket.begin(webSocketServer, webSocketPort, webSocketPath);
     } else {
       Serial.println("WebSocket is connected");
     }
@@ -257,85 +234,31 @@ void loop() {
       Serial.print("Received from Arduino Mega: ");
       Serial.println(receivedData);
 
-      // Parse the received data and send it to the web server
-      JsonDocument doc;
-      DeserializationError error = deserializeJson(doc, receivedData);
-      if (!error) {
-        Serial.println("Valid JSON received");
-        Serial.println(receivedData);
+      // Send the received data directly to the web server without modification
+      if (WiFi.status() == WL_CONNECTED) {
+        HTTPClient http;
+        http.begin("http://192.168.1.25:8000/sensor_data");
+        http.addHeader("Content-Type", "application/json");
 
-        if (WiFi.status() == WL_CONNECTED) {
-          HTTPClient http;
-          http.begin("http://192.168.1.25:8000/sensor_data");
-          http.addHeader("Content-Type", "application/json");
+        // Prepare the JSON data to be sent to the web server
+        // Remove the trailing newline character and add the timestamp
+        String jsonData = "{\"arduino_value\": " + receivedData.substring(0, receivedData.length() - 1) + 
+                          ", \"timestamp\": \"" + timeClient.getFormattedTime() + "\"}";
+        Serial.print("Sending JSON to server: ");
+        Serial.println(jsonData);
 
-          // Prepare the JSON data to be sent to the web server
-          if (doc.containsKey("ev") && doc["ev"] == "startup") {
-            // Handle startup data
-            doc["event"] = doc["ev"];
-            doc["programType"] = doc["pt"];
-            doc["rateOrSpeed"] = doc["rate"];
-            doc["duration"] = doc["dur"];
-            doc["tempSetpoint"] = doc["tSet"];
-            doc["phSetpoint"] = doc["phSet"];
-            doc["doSetpoint"] = doc["doSet"];
-            doc["nutrientConc"] = doc["nutC"];
-            doc["baseConc"] = doc["baseC"];
-            doc["experimentName"] = doc["expN"];
-            doc["comment"] = doc["comm"];
-          } else {
-            // Handle regular data
-            doc["event"] = "data";
-            doc["programType"] = doc["prog"];
-            doc["rateOrSpeed"] = 0;
-            doc["duration"] = 0;
-            doc["tempSetpoint"] = 0.0;
-            doc["phSetpoint"] = 0.0;
-            doc["doSetpoint"] = 0.0;
-            doc["nutrientConc"] = 0.0;
-            doc["baseConc"] = 0.0;
-            doc["experimentName"] = "";
-            doc["comment"] = "";
-          }
-
-          // Add additional sensor data to the JSON document
-          doc["currentProgram"] = doc["prog"];
-          doc["programStatus"] = doc["stat"];
-          doc["airPumpStatus"] = doc["ap"];
-          doc["drainPumpStatus"] = doc["dp"];
-          doc["nutrientPumpStatus"] = doc["np"];
-          doc["basePumpStatus"] = doc["bp"];
-          doc["stirringMotorStatus"] = doc["sm"];
-          doc["heatingPlateStatus"] = doc["hp"];
-          doc["ledGrowLightStatus"] = doc["lg"];
-          doc["waterTemp"] = doc["wT"];
-          doc["airTemp"] = doc["aT"];
-          doc["ph"] = doc["pH"];
-          doc["turbidity"] = doc["tb"];
-          doc["oxygen"] = doc["ox"];
-          doc["airFlow"] = doc["af"];
-
-          // Convert the JSON document to a string and add the timestamp
-          String jsonData;
-          serializeJson(doc, jsonData);
-          jsonData = "{\"sensor_value\": " + jsonData + ", \"timestamp\": \"" + timeClient.getFormattedTime() + "\"}";
-          Serial.print("Sending JSON to server: ");
-          Serial.println(jsonData);
-
-          // Send the JSON data to the web server using an HTTP POST request
-          int httpResponseCode = http.POST(jsonData);
-          if (httpResponseCode > 0) {
-            String response = http.getString();
-            Serial.println("Server response: " + response);
-          } else {
-            Serial.print("Error on sending POST: ");
-            Serial.println(httpResponseCode);
-          }
-          http.end();
+        // Send the JSON data to the web server using an HTTP POST request
+        int httpResponseCode = http.POST(jsonData);
+        if (httpResponseCode > 0) {
+          String response = http.getString();
+          Serial.println("Server response: " + response);
+        } else {
+          Serial.print("Error on sending POST: ");
+          Serial.println(httpResponseCode);
         }
-      } else {
-        Serial.println("Invalid JSON format received: " + receivedData);
+        http.end();
       }
+
       receivedData = "";
     }
   }

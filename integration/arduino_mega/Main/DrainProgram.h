@@ -18,6 +18,7 @@ public:
     bool isPaused() const override { return _isPaused; }
     String getName() const { return "Drain"; }
     void parseCommand(const String& command) override;
+    void getParameters(JsonDocument& doc) const override;
 
 private:
     int rate;

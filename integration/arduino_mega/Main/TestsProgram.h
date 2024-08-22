@@ -29,6 +29,7 @@ public:
     bool isPaused() const override { return _isPaused; }
     String getName() const override { return "Tests"; }
     void parseCommand(const String& command) override;
+    void getParameters(JsonDocument& doc) const override;
 
 private:
     TestType _currentTestType;

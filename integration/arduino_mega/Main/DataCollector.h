@@ -7,6 +7,7 @@
 #include "SensorController.h"
 #include "ActuatorController.h"
 #include "VolumeManager.h"
+#include "ProgramBase.h"
 
 class DataCollector {
 public:
@@ -14,10 +15,7 @@ public:
     DataCollector(VolumeManager& volumeManager);
 
     // Collect program event data
-    String collectProgramEvent(const String& programName, const String& status, 
-                               float tempSetpoint, float phSetpoint, float doSetpoint,
-                               float nutrientConc, float baseConc, int duration,
-                               const String& experimentName, const String& comment);
+    String collectProgramEvent(const String& programName, ProgramBase* program);
 
     // Collect sensor data
     String collectSensorData();
@@ -30,6 +28,9 @@ public:
 
     // Collect PID data
     String collectPIDData(const String& pidType, float setpoint, float input, float output);
+
+    // Colelct sensor, actuator and volume data
+    String collectAllData(const String& currentProgram, int currentState);
 
 private:
     VolumeManager& _volumeManager;

@@ -63,3 +63,7 @@ void MixProgram::parseCommand(const String& command) {
         Logger::log(LogLevel::ERROR, F("Invalid mix command format"));
     }
 }
+
+void MixProgram::getParameters(JsonDocument& doc) const {
+    doc["speed"] = speed;
+}

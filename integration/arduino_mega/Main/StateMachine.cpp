@@ -1,11 +1,13 @@
 // StateMachine.cpp
 #include "StateMachine.h"
 
-StateMachine::StateMachine(PIDManager& pidManager, VolumeManager& volumeManager)
+
+StateMachine::StateMachine(PIDManager& pidManager, VolumeManager& volumeManager, Communication& espCommunication)
     : currentState(ProgramState::IDLE),
       currentProgram(nullptr),
       pidManager(pidManager),
-      volumeManager(volumeManager)
+      volumeManager(volumeManager),
+      espCommunication(espCommunication)
 {
 }
 
@@ -38,8 +40,9 @@ void StateMachine::startProgram(const String& programName, const String& command
         currentProgram->start(command);
         transitionToState(ProgramState::RUNNING);
         
-        // Utilisez Logger::logProgramEvent
-        Logger::logProgramEvent(programName, "Started", 0, 0, 0, 0, 0, 0, "", "");
+        // log and send the data
+        Logger::logProgramEvent(programName, currentProgram);
+        espCommunication.sendProgramEvent(programName, currentProgram);
 
         Logger::log(LogLevel::INFO, "Started program: " + programName);
     } else {
@@ -59,6 +62,8 @@ void StateMachine::stopProgram(const String& programName) {   //TEST
         transitionToState(ProgramState::STOPPED);
         // Log the action of stopping the program
         Logger::log(LogLevel::INFO, "Stopped program: " + programName);
+        espCommunication.sendAllData(getCurrentProgram(), static_cast<int>(getCurrentState()));
+        
     }
 }
 
@@ -72,8 +77,9 @@ void StateMachine::stopAllPrograms() {
         //Logger::log(LogLevel::INFO, "All programs stopped");
         Logger::log(LogLevel::INFO, F("All programs stopped"));
         Logger::log(LogLevel::INFO, "Current state: " + String(static_cast<int>(getCurrentState())));
-        //Logger::log(LogLevel::INFO, "Current program: None");  // Modifiez cette ligne
-        Logger::log(LogLevel::INFO, F("Current program: None"));  // Modifiez cette ligne
+        //Logger::log(LogLevel::INFO, "Current program: None");  
+        Logger::log(LogLevel::INFO, F("Current program: None"));  
+        espCommunication.sendAllData(getCurrentProgram(), static_cast<int>(getCurrentState()));
     }
 }
 

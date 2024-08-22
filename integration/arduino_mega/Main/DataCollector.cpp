@@ -3,23 +3,14 @@
 
 DataCollector::DataCollector(VolumeManager& volumeManager) : _volumeManager(volumeManager) {}
 
-String DataCollector::collectProgramEvent(const String& programName, const String& status, 
-                                          float tempSetpoint, float phSetpoint, float doSetpoint,
-                                          float nutrientConc, float baseConc, int duration,
-                                          const String& experimentName, const String& comment) {
+String DataCollector::collectProgramEvent(const String& programName, ProgramBase* program) {
     JsonDocument doc;
 
-    doc["ev"] = "program";
     doc["program"] = programName;
-    doc["status"] = status;
-    doc["tempSetpoint"] = tempSetpoint;
-    doc["phSetpoint"] = phSetpoint;
-    doc["doSetpoint"] = doSetpoint;
-    doc["nutrientConc"] = nutrientConc;
-    doc["baseConc"] = baseConc;
-    doc["duration"] = duration;
-    doc["experimentName"] = experimentName;
-    doc["comment"] = comment;
+
+    if (program != nullptr) {
+        program->getParameters(doc);
+    }
 
     String output;
     serializeJson(doc, output);
@@ -77,7 +68,6 @@ String DataCollector::collectVolumeData() {
 String DataCollector::collectPIDData(const String& pidType, float setpoint, float input, float output) {
     JsonDocument doc;
     
-    doc["ev"] = "pid";
     doc["type"] = pidType;
     doc["set"] = setpoint;
     doc["in"] = input;
@@ -86,4 +76,32 @@ String DataCollector::collectPIDData(const String& pidType, float setpoint, floa
     String jsonOutput;
     serializeJson(doc, jsonOutput);
     return jsonOutput;
+}
+
+String DataCollector::collectAllData(const String& currentProgram, int currentState) {
+    JsonDocument doc;
+
+    // Add program information
+    JsonObject StateData = doc.createNestedObject("StateData");
+    doc["currentProgram"] = currentProgram;
+    doc["programState"] = static_cast<int>(currentState);
+
+    // Collect sensor data
+    JsonObject sensorData = doc.createNestedObject("sensorData");
+    String sensorDataStr = collectSensorData();
+    deserializeJson(sensorData, sensorDataStr);
+
+    // Collect actuator data
+    JsonObject actuatorData = doc.createNestedObject("actuatorData");
+    String actuatorDataStr = collectActuatorData();
+    deserializeJson(actuatorData, actuatorDataStr);
+
+    // Collect volume data
+    JsonObject volumeData = doc.createNestedObject("volumeData");
+    String volumeDataStr = collectVolumeData();
+    deserializeJson(volumeData, volumeDataStr);
+
+    String output;
+    serializeJson(doc, output);
+    return output;
 }

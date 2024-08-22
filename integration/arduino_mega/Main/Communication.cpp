@@ -89,3 +89,13 @@ void Communication::sendVolumeData() {
     String volumeData = _dataCollector.collectVolumeData();
     sendMessage(volumeData);
 }
+
+void Communication::sendAllData(const String& currentProgram, int currentState) {
+    String allData = _dataCollector.collectAllData(currentProgram, currentState);
+    sendMessage(allData);
+}
+
+void Communication::sendProgramEvent(const String& programName, ProgramBase* program) {
+    String eventData = _dataCollector.collectProgramEvent(programName, program);
+    sendMessage(eventData);
+}

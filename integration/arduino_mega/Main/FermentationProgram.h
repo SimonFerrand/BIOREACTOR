@@ -43,6 +43,8 @@ public:
     int getDuration() const { return duration; }
     String getExperimentName() const { return experimentName; }
     String getComment() const { return comment; }
+    
+    void getParameters(JsonDocument& doc) const override;
 
 private:
     PIDManager& pidManager;

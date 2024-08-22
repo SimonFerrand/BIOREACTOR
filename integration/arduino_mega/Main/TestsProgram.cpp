@@ -325,3 +325,8 @@ void TestsProgram::stopPIDTest() {
     ActuatorController::stopActuator("stirringMotor");
     Logger::log(LogLevel::INFO, "Stopped PID test: " + getTestTypeName(_currentTestType) + " and stirring motor");
 }
+
+void TestsProgram ::getParameters(JsonDocument& doc) const {
+    doc["testVal"] = _testValue;
+    doc["testDur"] = _testDuration;
+}

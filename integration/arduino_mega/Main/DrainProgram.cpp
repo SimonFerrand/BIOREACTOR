@@ -2,6 +2,7 @@
 #include "DrainProgram.h"
 #include <Arduino.h>
 #include "Logger.h"
+#include "ProgramBase.h"
 
 DrainProgram::DrainProgram() : rate(0), duration(0), startTime(0) {}
 
@@ -71,4 +72,9 @@ void DrainProgram::parseCommand(const String& command) {
         //Logger::log(LogLevel::ERROR, "Invalid drain command format");
         Logger::log(LogLevel::ERROR, F("Invalid drain command format"));
     }
+}
+
+void DrainProgram ::getParameters(JsonDocument& doc) const {
+      doc["rate"] = rate;
+      doc["dur"] = duration;
 }

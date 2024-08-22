@@ -311,3 +311,13 @@ void FermentationProgram::setPIDEnabled(bool enabled) {
         Logger::log(LogLevel::INFO, F("PID control disabled"));
     }
 }
+
+void FermentationProgram::getParameters(JsonDocument& doc) const {
+    doc["tSet"] = tempSetpoint;
+    doc["phSet"] = phSetpoint;
+    doc["doSet"] = doSetpoint;
+    doc["nutC"] = nutrientConc;
+    doc["baseC"] = baseConc;
+    doc["expN"] = experimentName;
+    doc["comm"] = comment;
+}

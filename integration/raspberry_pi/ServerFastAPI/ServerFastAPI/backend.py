@@ -11,6 +11,20 @@ import asyncio
 import logging
 from logging.handlers import RotatingFileHandler
 
+def flatten_dict(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+class BioreactorData(BaseModel):
+    arduino_value: dict
+    timestamp: str
+
 # Configuration du logging
 log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log_file = '/Raspberry/Bioreactor/ServerFastAPI/backend.log'
@@ -51,79 +65,70 @@ def ensure_csv_header():
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow([
-                "Backend_Time", "ESP_Time", "event", "programType", "rateOrSpeed", "duration",
-                "tempSetpoint", "phSetpoint", "doSetpoint", "nutrientConc", "baseConc", 
-                "experimentName", "comment", "currentProgram", "programStatus",
-                "airPumpStatus", "drainPumpStatus", "nutrientPumpStatus", "basePumpStatus",
-                "stirringMotorStatus", "heatingPlateStatus", "ledGrowLightStatus",
-                "waterTemp", "airTemp", "ph", "turbidity", "oxygen", "airFlow"
+                "Backend_Time", "ESP_Time", "Event_Type",
+                "currentProgram", "CurrentState",
+                "waterTemp", "airTemp", "elecTemp", "pH",
+                "turbidity", "oxygen", "airFlow",
+                "airPump", "drainPump", "samplePump",
+                "nutrientPump", "basePump", "stirringMotor",
+                "heatingPlate", "ledGrowLight",
+                "currentVolume", "availableVolume", "addedNaOH",
+                "addedNutrient", "addedMicroalgae", "removedVolume",
+                "program", "speed", "rate", "duration", 
+                "tempSetpoint", "pHSetpoint", "DOSetpoint",
+                "nutrientConc", "baseConc", "experimentName", "comment"
             ])
 
-class SensorData(BaseModel):
-    sensor_value: dict = Field(..., example={
-        "prog": "None", "stat": "Idle", "ap": 0, "dp": 0, "np": 0, "bp": 0,
-        "sm": 0, "hp": 0, "lg": 0, "wT": 0.0, "aT": 0.0, "pH": 0.0, "tb": 0.0,
-        "ox": 0.0, "af": 0.0,
-        "event": "data", "programType": "", "rateOrSpeed": 0, "duration": 0,
-        "tempSetpoint": 0.0, "phSetpoint": 0.0, "doSetpoint": 0.0, "nutrientConc": 0.0, 
-        "baseConc": 0.0, "experimentName": "", "comment": "", 
-        "currentProgram": "None", "programStatus": "", "airPumpStatus": 0,
-        "drainPumpStatus": 0, "nutrientPumpStatus": 0, "basePumpStatus": 0,
-        "stirringMotorStatus": 0, "heatingPlateStatus": 0, "ledGrowLightStatus": 0,
-        "waterTemp": 0.0, "airTemp": 0.0, "ph": 0.0, "turbidity": 0.0, "oxygen": 0.0, "airFlow": 0.0
-    })
-    timestamp: str = Field(..., example="2023-05-06T12:00:00Z")
 
 @app.post("/sensor_data")
-async def receive_data(data: SensorData):
-    logger.info("Received sensor data")
-    ensure_csv_header()  # Ensure the header is present
+async def receive_data(data: BioreactorData):
+    logger.info("Received bioreactor data")
+    ensure_csv_header()
 
     backend_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     try:
-        sensor_data = data.sensor_value
-        # Ensure all required fields are present
-        required_fields = [
-            "event", "programType", "rateOrSpeed", "duration",
-            "tempSetpoint", "phSetpoint", "doSetpoint", "nutrientConc", "baseConc", 
-            "experimentName", "comment", "currentProgram", "programStatus",
-            "airPumpStatus", "drainPumpStatus", "nutrientPumpStatus", "basePumpStatus",
-            "stirringMotorStatus", "heatingPlateStatus", "ledGrowLightStatus",
-            "waterTemp", "airTemp", "ph", "turbidity", "oxygen", "airFlow"
-        ]
+        bioreactor_data = data.arduino_value
+
+        # Determine the type of data received
+        if "sensorData" in bioreactor_data:
+            event_type = "periodic"
+        elif "program" in bioreactor_data:
+            event_type = "program_event"
+        else:
+            event_type = "unknown"
+
+        # Flatten the nested dictionary
+        flat_data = flatten_dict(bioreactor_data)
+
+        # Prepare the row to be written to CSV
+        row = [backend_time, data.timestamp, event_type]
         
-        for field in required_fields:
-            if field not in sensor_data:
-                logger.error(f"Missing field in sensor data: {field}")
-                raise HTTPException(status_code=400, detail=f"Missing field: {field}")
+        # Define the order of fields as per the CSV header
+        field_order = [
+            "currentProgram", "programState",
+            "sensorData_waterTemp", "sensorData_airTemp", "sensorData_elecTemp", "sensorData_pH",
+            "sensorData_turbidity", "sensorData_oxygen", "sensorData_airFlow",
+            "actuatorData_airPump", "actuatorData_drainPump", "actuatorData_samplePump",
+            "actuatorData_nutrientPump", "actuatorData_basePump", "actuatorData_stirringMotor",
+            "actuatorData_heatingPlate", "actuatorData_ledGrowLight",
+            "volumeData_currentVolume", "volumeData_availableVolume", "volumeData_addedNaOH",
+            "volumeData_addedNutrient", "volumeData_addedMicroalgae", "volumeData_removedVolume",
+            "program", "speed", "rate", "duration", 
+            "tempSetpoint", "pHSetpoint", "DOSetpoint",
+            "nutrientConc", "baseConc", "experimentName", "comment"
+        ]
+
+        for field in field_order:
+            row.append(str(flat_data.get(field, "")))
 
         with open(filename, 'a', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow([
-                backend_time, data.timestamp,
-                sensor_data.get("event", ""),
-                sensor_data.get("programType", ""), sensor_data.get("rateOrSpeed", 0),
-                sensor_data.get("duration", 0), sensor_data.get("tempSetpoint", 0.0), 
-                sensor_data.get("phSetpoint", 0.0), sensor_data.get("doSetpoint", 0.0),
-                sensor_data.get("nutrientConc", 0.0), sensor_data.get("baseConc", 0.0),
-                sensor_data.get("experimentName", ""), sensor_data.get("comment", ""),
-                sensor_data.get("currentProgram", ""), sensor_data.get("programStatus", ""),
-                sensor_data.get("airPumpStatus", 0), sensor_data.get("drainPumpStatus", 0), 
-                sensor_data.get("nutrientPumpStatus", 0), sensor_data.get("basePumpStatus", 0),
-                sensor_data.get("stirringMotorStatus", 0), sensor_data.get("heatingPlateStatus", 0), 
-                sensor_data.get("ledGrowLightStatus", 0), sensor_data.get("waterTemp", 0.0), 
-                sensor_data.get("airTemp", 0.0), sensor_data.get("ph", 0.0), 
-                sensor_data.get("turbidity", 0.0), sensor_data.get("oxygen", 0.0), 
-                sensor_data.get("airFlow", 0.0)
-            ])
+            writer.writerow(row)
 
-        logger.info("Sensor data successfully saved")
+        logger.info("Bioreactor data successfully saved")
         return {"status": "success", "message": "Data received"}
 
-    except ValidationError as e:
-        logger.error(f"Validation error: {str(e)}")
-        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         logger.error(f"Error processing data: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Error processing data: {e}")

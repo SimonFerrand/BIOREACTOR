@@ -23,14 +23,14 @@ FermentationProgram::FermentationProgram(PIDManager& pidManager, VolumeManager& 
 }
 
 void FermentationProgram::configure(float tempSetpoint, float phSetpoint, float doSetpoint,
-                                    float nutrientConc, float baseConc, int duration,
+                                    float nutrientConc, float baseConc, float durationHours,
                                     const String& experimentName, const String& comment) {
     this->tempSetpoint = tempSetpoint;
     this->phSetpoint = phSetpoint;
     this->doSetpoint = doSetpoint;
     this->nutrientConc = nutrientConc;
     this->baseConc = baseConc;
-    this->duration = duration;
+    this->duration = static_cast<unsigned long>(durationHours * 3600000.0); // Convert hours to milliseconds
     this->experimentName = experimentName;
     this->comment = comment;
 
@@ -181,7 +181,7 @@ void FermentationProgram::checkCompletion() {
     stop();
     Logger::log(LogLevel::INFO, "Fermentation completed. Elapsed time: " + String(elapsedTime/1000) + " s");
     Logger::log(LogLevel::INFO, F("Fermentation stopped: Duration exceeded"));
-    Logger::log(LogLevel::INFO, "Duration set: " + String(duration) + " seconds");
+    Logger::log(LogLevel::INFO, "Duration set: " + String(duration/3600000.0, 2) + " hours");
     Logger::log(LogLevel::INFO, "Actual duration: " + String((currentTime - startTime) / 1000) + " seconds");
   }
 }
@@ -197,7 +197,7 @@ void FermentationProgram::initializeStirringSpeed() {
 void FermentationProgram::parseCommand(const String& command) {
     String params[8]; // Table for storing parameters
     int paramCount = 0;
-    int lastIndex = command.indexOf(' ') + 1; // Start after ‘fermentation
+    int lastIndex = command.indexOf(' ') + 1; // Start after 'fermentation'
     // Separate the command into parameters
     while (lastIndex < command.length() && paramCount < 8) {
         int spaceIndex = command.indexOf(' ', lastIndex);
@@ -213,12 +213,14 @@ void FermentationProgram::parseCommand(const String& command) {
         float do_setpoint = params[2].toFloat();
         float nutrient_conc = params[3].toFloat();
         float base_conc = params[4].toFloat();
-        int dur = params[5].toInt();
+        float durationHours = params[5].toFloat();
         String experimentName = params[6];
         String comment = (paramCount > 7) ? params[7] : "";
-        configure(temp, ph, do_setpoint, nutrient_conc, base_conc, dur, experimentName, comment);
+        
+        configure(temp, ph, do_setpoint, nutrient_conc, base_conc, durationHours, experimentName, comment);
+        
         //Logger::log(LogLevel::INFO, "Fermentation command parsed successfully");
-        //Logger::log(LogLevel::INFO, "ParseCommand - Duration parsed: " + String(dur));
+        //Logger::log(LogLevel::INFO, "ParseCommand - Duration parsed: " + String(durationHours) + " hours");
     } else {
         Logger::log(LogLevel::ERROR, F("Invalid fermentation command format"));
     }
@@ -341,6 +343,7 @@ void FermentationProgram::getParameters(JsonDocument& doc) const {
     doc["doSet"] = doSetpoint;
     doc["nutC"] = nutrientConc;
     doc["baseC"] = baseConc;
+    doc["dur"] = getDuration();  // This will return the duration in hours
     doc["expN"] = experimentName;
     doc["comm"] = comment;
 }

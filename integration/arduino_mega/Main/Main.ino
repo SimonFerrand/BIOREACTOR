@@ -119,6 +119,7 @@ void setup() {
 
     //Logger::log(LogLevel::INFO, "Setup completed");
     Logger::log(LogLevel::INFO, F("Setup completed"));
+    Serial.println();
 }
 
 void loop() {

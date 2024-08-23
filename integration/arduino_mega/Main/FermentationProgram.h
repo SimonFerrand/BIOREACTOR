@@ -12,7 +12,7 @@ class FermentationProgram : public ProgramBase {
 public:
     FermentationProgram(PIDManager& pidManager, VolumeManager& volumeManager);
     void configure(float tempSetpoint, float phSetpoint, float doSetpoint,
-                   float nutrientConc, float baseConc, int duration,
+                   float nutrientConc, float baseConc, float durationHours,
                    const String& experimentName, const String& comment);
 
     void start(const String& command) override;
@@ -40,12 +40,14 @@ public:
     float getDOSetpoint() const { return doSetpoint; }
     float getNutrientConc() const { return nutrientConc; }
     float getBaseConc() const { return baseConc; }
-    int getDuration() const { return duration; }
+    float getDuration() const { return duration / 3600000.0; } // Convert milliseconds into hours
     String getExperimentName() const { return experimentName; }
     String getComment() const { return comment; }
     
     void getParameters(JsonDocument& doc) const override;
 
+    
+     
 private:
     PIDManager& pidManager;
     VolumeManager& volumeManager;
@@ -54,7 +56,7 @@ private:
     float doSetpoint;
     float nutrientConc;
     float baseConc;
-    int duration;
+    unsigned long duration;
     String experimentName;
     String comment;
 

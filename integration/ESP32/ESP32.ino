@@ -64,18 +64,13 @@ const char webSocketPath[] = "/ws";
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
 #include <WebSocketsClient.h>
 #include "config.h"
+#include <ezTime.h>
 
 // Define the pins for Serial2 communication with the Arduino Mega
 const int rxPin = 18;
 const int txPin = 19;
-
-// Create an NTP client to get the current time
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", 0, 60000); // Update the time every 60 seconds
 
 // Create a WebSocket client to communicate with the WebSocket server
 WebSocketsClient webSocket;
@@ -86,6 +81,8 @@ unsigned long lastMessageTime = 0;
 // Variables to handle WebSocket reconnection attempts
 unsigned long lastWebSocketReconnectAttempt = 0;
 const unsigned long webSocketReconnectInterval = 5000; // Attempt to reconnect every 5 seconds
+
+Timezone myTZ;
 
 // Function to handle WebSocket events
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
@@ -178,8 +175,9 @@ void setup() {
   Serial.println("\nWiFi connected");
   Serial.println("IP address: " + WiFi.localIP().toString());
 
-  // Initialize the NTP client to get the current time
-  timeClient.begin();
+  // Setting the time zone
+  waitForSync();
+  myTZ.setLocation(F("Europe/Paris"));  // Remplacez par votre fuseau horaire
 
   // Initialize the WebSocket connection
   webSocket.setExtraHeaders("X-Client-Type: ESP32");
@@ -242,8 +240,8 @@ void loop() {
 
         // Prepare the JSON data to be sent to the web server
         // Remove the trailing newline character and add the timestamp
-        String jsonData = "{\"arduino_value\": " + receivedData.substring(0, receivedData.length() - 1) + 
-                          ", \"timestamp\": \"" + timeClient.getFormattedTime() + "\"}";
+        String jsonData = "{\"arduino_value\":" + receivedData.substring(0, receivedData.length() - 1) +
+                  ",\"timestamp\":\"" + myTZ.dateTime("H:i:s") + "\"}";
         Serial.print("Sending JSON to server: ");
         Serial.println(jsonData);
 

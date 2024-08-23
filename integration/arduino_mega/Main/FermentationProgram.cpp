@@ -16,7 +16,9 @@ FermentationProgram::FermentationProgram(PIDManager& pidManager, VolumeManager& 
       duration(0),
       startTime(0),
       pauseStartTime(0),
-      isPIDEnabled(false) //PID activated by default ; false/true
+      isPIDEnabled(false), //PID activated by default ; false/true
+      lastNutrientActivationTime(0),
+      currentStirringSpeed(0)
 {
 }
 
@@ -148,7 +150,18 @@ void FermentationProgram::stop() {
 
     ActuatorController::stopAllActuators();
     pidManager.stop();
-    //Logger::log(LogLevel::INFO, "Fermentation stopped");
+    
+    // Attendre que tous les actuateurs soient arrêtés
+    unsigned long stopStartTime = millis();
+    while (isAnyActuatorRunning() && millis() - stopStartTime < 5000) {
+        // Attendre jusqu'à 5 secondes pour que tous les actuateurs s'arrêtent
+        delay(100);
+    }
+
+    if (isAnyActuatorRunning()) {
+        Logger::log(LogLevel::WARNING, F("Some actuators failed to stop within the timeout period"));
+    }
+
     //Logger::log(LogLevel::INFO, F("Fermentation stopped"));
 }
 
@@ -239,59 +252,69 @@ void FermentationProgram::addNutrientsContinuously() {
 
 void FermentationProgram::addNutrientsContinuouslyFixedRate(float fixedFlowRate) {
     unsigned long currentTime = millis();
-    if (isAddingNutrients) {
-        // Check whether it's time to stop adding nutrients
-        if (currentTime - lastNutrientActivationTime >= NUTRIENT_ACTIVATION_TIME) {
+
+    // Vérifier si le programme est toujours en cours d'exécution
+    if (!_isRunning || _isPaused) {
+        if (ActuatorController::isActuatorRunning("nutrientPump")) {
+            unsigned long runTime = currentTime - lastNutrientActivationTime;
+            float addedVolume = (fixedFlowRate / 60.0) * (runTime / 1000.0);
             ActuatorController::stopActuator("nutrientPump");
-            isAddingNutrients = false;
-            lastNutrientActivationTime = currentTime;
-            Logger::log(LogLevel::INFO, F("Stopped adding nutrients"));
+            volumeManager.recordVolumeChange(addedVolume / 1000.0, "Nutrient"); // Convert to litres
+            volumeManager.updateVolume();
+            Logger::log(LogLevel::INFO, F("Nutrient pump stopped due to program stop/pause"));
+            Logger::log(LogLevel::INFO, "Added volume: " + String(addedVolume, 3) + " ml");
         }
         return;
     }
-    // Check that we are still in the pause period
-    if (currentTime - lastNutrientActivationTime < (NUTRIENT_ACTIVATION_TIME + NUTRIENT_PAUSE_TIME)) {
+
+    // Vérifier si nous ajoutons actuellement des nutriments
+    if (ActuatorController::isActuatorRunning("nutrientPump")) {
+        // Vérifier s'il est temps d'arrêter l'ajout de nutriments
+        if (currentTime - lastNutrientActivationTime >= plannedNutrientActivationTime) {
+            ActuatorController::stopActuator("nutrientPump");
+            float addedVolume = (fixedFlowRate / 60.0) * (plannedNutrientActivationTime / 1000.0);
+            volumeManager.recordVolumeChange(addedVolume / 1000.0, "Nutrient"); // Convert to litres
+            volumeManager.updateVolume();
+            Logger::log(LogLevel::INFO, F("Stopped adding nutrients"));
+            Logger::log(LogLevel::INFO, "Added volume: " + String(addedVolume, 3) + " ml");
+            Logger::log(LogLevel::INFO, "Current volume: " + String(volumeManager.getCurrentVolume(), 3) + " L");
+            lastNutrientActivationTime = currentTime;
+        }
         return;
     }
-    // Check if fermentation is underway
-    if (!_isRunning || _isPaused) {
+
+    // Vérifier que nous sommes toujours dans la période de pause
+    if (currentTime - lastNutrientActivationTime < (plannedNutrientActivationTime + NUTRIENT_PAUSE_TIME)) {
         return;
     }
-    // Obtain the current volume and the maximum authorised volume
+
+    // Vérifications avant d'ajouter des nutriments
     float currentVolume = volumeManager.getCurrentVolume();
     float maxAllowedVolume = volumeManager.getMaxAllowedVolume();
     if (currentVolume >= maxAllowedVolume) {
         stop();
         Logger::log(LogLevel::INFO, F("Fermentation stopped: Volume limit reached"));
-        Logger::log(LogLevel::INFO, "Current volume: " + String(currentVolume) + " L");
-        Logger::log(LogLevel::INFO, "Max allowed volume: " + String(maxAllowedVolume) + " L");
         return;
     }
 
-    // Check duration
     if ((currentTime - startTime) > (duration * 1000UL)) {
         stop();
         Logger::log(LogLevel::INFO, F("Fermentation stopped: Duration exceeded"));
-        Logger::log(LogLevel::INFO, "Duration set: " + String(duration) + " seconds");
-        Logger::log(LogLevel::INFO, "Actual duration: " + String((currentTime - startTime) / 1000) + " seconds");
         return;
     }
-    // Calculate the volume of nutrients to add
-    float maxPossibleAddition = (fixedFlowRate / 60.0) * (NUTRIENT_ACTIVATION_TIME / 1000.0); // convert in second & ml
+
+    // Calculer le volume de nutriments à ajouter
+    float maxPossibleAddition = (fixedFlowRate / 60.0) * (NUTRIENT_ACTIVATION_TIME / 1000.0);
     float availableVolume = volumeManager.getAvailableVolume() * 1000; // Convert to ml
     float nutrientToAdd = min(maxPossibleAddition, availableVolume);
-    // Start adding nutrients if there is room
+
+    // Commencer à ajouter des nutriments s'il y a de la place
     if (nutrientToAdd > 0) {
-        Logger::log(LogLevel::INFO, "Adding nutrients: " + String(nutrientToAdd, 3) + " ml");
-        Logger::log(LogLevel::INFO, "Current volume before addition: " + String(currentVolume, 3) + " L");
-        unsigned long adjustedActivationTime = static_cast<unsigned long>((nutrientToAdd / maxPossibleAddition) * NUTRIENT_ACTIVATION_TIME);
-        ActuatorController::runActuator("nutrientPump", fixedFlowRate, adjustedActivationTime);
-        volumeManager.recordVolumeChange(nutrientToAdd / 1000.0, "Nutrient"); // Convert to litres for VolumeManager
-        volumeManager.updateVolume(); //Forcing an update of the volume immediately after addition
-        Logger::log(LogLevel::INFO, "Nutrient pump activated for " + String(adjustedActivationTime) + " ms");
-        Logger::log(LogLevel::INFO, "Current volume after addition: " + String(volumeManager.getCurrentVolume(), 3) + " L");
-        isAddingNutrients = true;
+        Logger::log(LogLevel::INFO, "Starting nutrient addition: " + String(nutrientToAdd, 3) + " ml");
+        plannedNutrientActivationTime = static_cast<unsigned long>((nutrientToAdd / maxPossibleAddition) * NUTRIENT_ACTIVATION_TIME);
+        ActuatorController::runActuator("nutrientPump", fixedFlowRate, 0); // 0 pour une durée continue
         lastNutrientActivationTime = currentTime;
+        Logger::log(LogLevel::INFO, "Nutrient pump activated for planned duration: " + String(plannedNutrientActivationTime) + " ms");
     } else {
         Logger::log(LogLevel::INFO, "No nutrients added: insufficient available volume");
     }
@@ -320,4 +343,15 @@ void FermentationProgram::getParameters(JsonDocument& doc) const {
     doc["baseC"] = baseConc;
     doc["expN"] = experimentName;
     doc["comm"] = comment;
+}
+
+bool FermentationProgram::isAnyActuatorRunning() const {
+    return ActuatorController::isActuatorRunning("airPump") ||
+           ActuatorController::isActuatorRunning("drainPump") ||
+           ActuatorController::isActuatorRunning("samplePump") ||
+           ActuatorController::isActuatorRunning("nutrientPump") ||
+           ActuatorController::isActuatorRunning("basePump") ||
+           ActuatorController::isActuatorRunning("stirringMotor") ||
+           ActuatorController::isActuatorRunning("heatingPlate") ||
+           ActuatorController::isActuatorRunning("ledGrowLight");
 }

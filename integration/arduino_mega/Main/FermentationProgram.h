@@ -71,6 +71,8 @@ private:
     void addNutrientsContinuouslyFixedRate(float fixedFlowRate);
     unsigned long lastNutrientActivationTime;
     bool isAddingNutrients;
+    bool isAnyActuatorRunning() const;
+    unsigned long plannedNutrientActivationTime;
 
     bool isPIDEnabled;
 

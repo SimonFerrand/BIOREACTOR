@@ -77,7 +77,7 @@ FermentationProgram fermentationProgram(pidManager, volumeManager);
 CommandHandler commandHandler(stateMachine, safetySystem, volumeManager, pidManager);
 
 unsigned long previousMillis = 0;
-const long interval = 30000; // Interval for logging (30 seconds)
+const long interval = 26500; // Interval for logging (30 seconds)
 
 void setup() {
     Serial.begin(115200);  // Initialize serial communication for debugging
@@ -155,19 +155,21 @@ void loop() {
     // Check safety limits
     //safetySystem.checkLimits();
 
+    // Update sampling
+    //SensorController::updateSampling();
+
     // Log data every interval
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis >= interval) {
         previousMillis = currentMillis;
 
-        //Logger::logData(stateMachine.getCurrentProgram(), String(static_cast<int>(stateMachine.getCurrentState())));    
-        //espCommunication.sendAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));
+        // Take a fresh sample
+        SensorController::takeSample();
 
-        //String allData = dataCollector.collectAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));
-        //Logger::logAllData(allData);
-        //espCommunication.sendAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));
-
+        // log all data
         Logger::logAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));
+
+        // send all data to server
         espCommunication.sendAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));
         
     }

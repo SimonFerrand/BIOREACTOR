@@ -46,8 +46,8 @@ public:
     
     void getParameters(JsonDocument& doc) const override;
 
-    
-     
+    void updateTurbidity();
+
 private:
     PIDManager& pidManager;
     VolumeManager& volumeManager;
@@ -80,6 +80,7 @@ private:
 
     static const int MIN_STIRRING_SPEED = 500;
     float nutrientFixedFlowRate = DEFAULT_NUTRIENT_FLOW_RATE;
+
 };
 
 #endif // FERMENTATION_PROGRAM_H

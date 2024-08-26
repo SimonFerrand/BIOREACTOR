@@ -14,6 +14,7 @@ void MixProgram::start(const String& command) {
         _isPaused = false;
         
         ActuatorController::runActuator("stirringMotor", speed, 0); // 0 for continuous operation
+        //ActuatorController::runActuator("airPump", 80, 0); 
         Logger::log(LogLevel::INFO, "Mixing started at speed: " + String(speed));
     } else {
         //Logger::log(LogLevel::ERROR, "Invalid mix command format");
@@ -47,6 +48,7 @@ void MixProgram::resume() {
 void MixProgram::stop() {
     if (_isRunning) {
         ActuatorController::stopActuator("stirringMotor");
+        //ActuatorController::stopActuator("airPump");
         _isRunning = false;
         _isPaused = false;
         //Logger::log(LogLevel::INFO, "Mixing stopped");

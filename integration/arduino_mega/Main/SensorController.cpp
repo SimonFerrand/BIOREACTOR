@@ -1,4 +1,6 @@
+#include "SensorController.h"
 #include "Logger.h"
+#include "ActuatorController.h"
 
 // Static pointers, initialized to nullptr
 PT100Sensor* SensorController::waterTempSensor = nullptr;
@@ -66,3 +68,11 @@ SensorInterface* SensorController::findSensorByName(const String& name) {
     if (name == turbiditySensorSEN0554->getName()) return turbiditySensorSEN0554;
     return nullptr;
 }
+
+void SensorController::takeSample() {
+    // Start the sample pump
+    ActuatorController::runActuator("samplePump", 100, PUMP_RUNTIME);
+    // Wait until the sample is stable
+    delay(STABILIZATION_TIME);
+}
+

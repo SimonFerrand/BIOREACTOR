@@ -23,6 +23,8 @@ public:
     
     static SensorInterface* findSensorByName(const String& name);
 
+    static void takeSample();
+
 private:
     static PT100Sensor* waterTempSensor;
     static DS18B20TemperatureSensor* airTempSensor;
@@ -32,7 +34,10 @@ private:
     static AirFlowSensor* airFlowSensor;
     static TurbiditySensorSEN0554* turbiditySensorSEN0554;
 
-    
+    static const unsigned long PUMP_RUNTIME = 3000; // 5 seconds to prime the pump
+    static const unsigned long STABILIZATION_TIME = 1500; // 1 seconds to stabilise the sample
+
+
 };
 
 #endif // SENSOR_CONTROLLER_H

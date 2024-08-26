@@ -36,7 +36,7 @@ void DCPump::control(bool state, int value) {
             _status = true; // Set the status to on
             _currentValue = value;
             //Logger::log(LogLevel::INFO, String(_name) + " is ON, Speed set to: " + String(value));
-            Logger::log(LogLevel::INFO, String(_name) + F(" is ON, Speed set to: ") + String(value)+ F("%"));
+            //Logger::log(LogLevel::INFO, String(_name) + F(" is ON, Speed set to: ") + String(value)+ F("%"));
 
             float flowRate = value * 0.1; // Example: 0.1 ml/min per unit of value
             float duration = 1.0 / 60.0; // 1 second in minutes
@@ -47,7 +47,7 @@ void DCPump::control(bool state, int value) {
             _status = false; // Set the status to off
             _currentValue = 0;
             //Logger::log(LogLevel::INFO, String(_name) + " is OFF");
-            Logger::log(LogLevel::INFO, String(_name) + F(" is OFF"));
+            //Logger::log(LogLevel::INFO, String(_name) + F(" is OFF"));
         }
     }
 }

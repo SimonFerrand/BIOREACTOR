@@ -49,6 +49,7 @@ bool StirringMotor::isOn() const {
 }
 
 // Method to convert RPM to PWM value
+
 int StirringMotor::rpmToPWM(int _targetRPM) {
     float loadPercentage; // Variable to hold the calculated load percentage
 

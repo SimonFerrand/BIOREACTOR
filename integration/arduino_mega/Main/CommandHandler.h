@@ -31,6 +31,8 @@ private:
     void handlePHCalibrationCommand(const String& command);
 
     void handleVolumeInfoCommand();
+
+    void handleO2CalibrationCommand(const String& command);
 };
 
 #endif // COMMAND_HANDLER_H

@@ -120,6 +120,11 @@ void setup() {
     //Logger::log(LogLevel::INFO, "Setup completed");
     Logger::log(LogLevel::INFO, F("Setup completed"));
     Serial.println();
+
+        // Ajouter ces lignes pour lancer l'air pump et le stirring motor à 100%
+    //ActuatorController::runActuator("airPump", 100, 0);  // 100% speed, 0 duration (continuous)
+    //ActuatorController::runActuator("stirringMotor", 500, 0);  // Max RPM, 0 duration (continuous)
+
 }
 
 void loop() {
@@ -139,12 +144,13 @@ void loop() {
         Logger::log(LogLevel::INFO, "Received from Serial Monitor: " + command);
         commandHandler.executeCommand(command);
     }
-    
+
     // Update state machine
     stateMachine.update();
 
     // Update PID manager
     pidManager.updateAllPIDControllers();
+
 
     // Check safety limits
     //safetySystem.checkLimits();

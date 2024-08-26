@@ -34,60 +34,48 @@ For Gravity: Analog Dissolved Oxygen Sensor / Meter Kit for Arduino
 #define OXYGENSENSOR_H
 
 #include "SensorInterface.h"
-#include "PT100Sensor.h" // Include PT100Sensor for temperature compensation
+#include "PT100Sensor.h"
+#include <EEPROM.h>
 #include <Arduino.h>
 
 class OxygenSensor : public SensorInterface {
 public:
-    /*
-     * Constructor for OxygenSensor.
-     * @param pin: The analog pin connected to the DO sensor.
-     * @param tempSensor: Pointer to a PT100 sensor object for temperature compensation.
-     */
     OxygenSensor(int pin, PT100Sensor* tempSensor, const char* name);
-
-    /*
-     * Method to initialize the DO sensor.
-     */
-    void begin();
-
-    /*
-     * Method to read the DO value from the sensor.
-     * @return: The DO concentration in mg/L.
-     */
+    void begin() override;
     float readValue() override;
-
-    /*
-     * Method for calibration
-     */ 
-    void calibrate(); 
-
     const char* getName() const override { return _name; }
-    
+
+    void startCalibration(int points);
+    void saveCalibrationPoint();
+    void finishCalibration();
+    String getCalibrationStatus() const;
+    void resetCalibration();
+
 private:
-    int _pin;                       // Analog pin connected to the DO sensor
-    PT100Sensor* _tempSensor;       // Pointer to the PT100 temperature sensor
-
-    // Calibration constants
-    static const uint16_t VREF = 5000; // Reference voltage (millivolts)
-    static const uint16_t ADC_RES = 1024; // ADC resolution
-
-    // Calibration mode selection: 0 for single-point, 1 for two-point
-    static const uint8_t TWO_POINT_CALIBRATION = 1;
-
-    // Single point calibration
-    static const uint16_t CAL1_V = 1600; // Calibration voltage (millivolts)
-    static const uint8_t CAL1_T = 25; // Calibration temperature (°C)
-
-    // Two-point calibration
-    static const uint16_t CAL2_V = 1300; // Calibration voltage (millivolts)
-    static const uint8_t CAL2_T = 15; // Calibration temperature (°C)
-
-    // Table of saturated dissolved oxygen levels for different temperatures
-    static const uint16_t DO_Table[41];
-
+    int _pin;
+    PT100Sensor* _tempSensor;
     const char* _name;
+
+    static const uint16_t VREF = 5000;
+    static const uint16_t ADC_RES = 1024;
+
+    static const int MAX_CALIBRATION_POINTS = 3;
+    int calibrationPoints;
+    uint16_t calibrationVoltages[MAX_CALIBRATION_POINTS];
+    uint8_t calibrationTemperatures[MAX_CALIBRATION_POINTS];
+
+    enum class CalibrationState {
+        NONE,
+        IN_PROGRESS,
+        COMPLETED
+    };
+    CalibrationState calibrationState;
+    int currentCalibrationPoint;
+
+    void saveCalibrationToEEPROM();
+    void loadCalibrationFromEEPROM();
+
+    static const uint16_t DO_Table[41];
 };
 
 #endif
-

@@ -30,8 +30,10 @@ void CommandHandler::executeCommand(const String& command) {
         handleSetCommand(command);
     } else if (command.startsWith("ph ")) {
         handlePHCalibrationCommand(command);
-    }else if (command == "volume info") {
+    } else if (command == "volume info") {
         handleVolumeInfoCommand();
+    } else if (command.startsWith("o2 calibrate")) {
+        handleO2CalibrationCommand(command);
     } else {
         Logger::log(LogLevel::WARNING, "Unknown command: " + command);
     }
@@ -90,6 +92,28 @@ void CommandHandler::handlePHCalibrationCommand(const String& command) {
 void CommandHandler::handleVolumeInfoCommand() {
     String volumeInfo = volumeManager.getVolumeInfo();
     Logger::log(LogLevel::INFO, volumeInfo);
+}
+
+void CommandHandler::handleO2CalibrationCommand(const String& command) {
+    OxygenSensor* o2Sensor = (OxygenSensor*)SensorController::findSensorByName("oxygenSensor");
+    if (o2Sensor) {
+        if (command.startsWith("o2 calibrate start")) {
+            int points = command.substring(19).toInt();
+            o2Sensor->startCalibration(points);
+        } else if (command == "o2 calibrate save") {
+            o2Sensor->saveCalibrationPoint();
+        } else if (command == "o2 calibrate finish") {
+            o2Sensor->finishCalibration();
+        } else if (command == "o2 calibrate status") {
+            Logger::log(LogLevel::INFO, o2Sensor->getCalibrationStatus());
+        } else if (command == "o2 calibrate reset") {
+            o2Sensor->resetCalibration();
+        } else {
+            Logger::log(LogLevel::WARNING, String(F("Invalid O2 calibration command: ")) + command);
+        }
+    } else {
+        Logger::log(LogLevel::WARNING, F("Oxygen sensor not found"));
+    }
 }
 
   /*
@@ -178,6 +202,11 @@ void CommandHandler::printHelp() {
     Serial.println(F("ph EXITPH - Save and exit pH calibration mode"));
     Serial.println(F("volume info - Get all volume informations"));
     Serial.println(F("set_pid_enabled - set pid enabled during Fermentation program (true, false "));
+    Serial.println(F("o2 calibrate start <points> - Start O2 calibration with specified number of points (1-3)"));
+    Serial.println(F("o2 calibrate save - Save current O2 calibration point"));
+    Serial.println(F("o2 calibrate finish - Finish and save O2 calibration"));
+    Serial.println(F("o2 calibrate status - Display current O2 calibration status"));
+    Serial.println(F("o2 calibrate reset - Reset O2 calibration data"));
     Serial.println(F("-----------------------------------------------------------------------------------------------------------------------"));
 }
 

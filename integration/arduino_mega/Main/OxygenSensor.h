@@ -16,6 +16,7 @@ For Gravity: Analog Dissolved Oxygen Sensor / Meter Kit for Arduino
     - Signal Pin to an analog pin on the Arduino (A1 in this case).
     - V+ to 5V on the Arduino.
     - GND to GND on the Arduino.
+    On the Arduino Mega, external interrupts are only available on certain specific pins. The pins that support interrupts are: 2, 3, 18, 19, 20, 21 (interrupts 0, 1, 5, 4, 3, 2 respectively).
 2. Prepare the Probe
     For a new dissolved oxygen probe, 0.5 mol/L NaOH solution should be added into the membrane cap first as the filling solution. If the probe has been used for some time and the error grows greatly, it is time to change the filling solution. The following tutorial details how to fill the probe with the NaOH solution.
     - Unscrew the membrane cap from the probe and fill about 2/3 volume of the cap with 0.5 mol/L NaOH solution. Make sure the probe is in vertical position with respect to the horizontal plane. Carefully screw the cap back to the probe. It would be nice if a little bit solution overflows out of the cap to ensure the probe is fully filled with NaOH solution.

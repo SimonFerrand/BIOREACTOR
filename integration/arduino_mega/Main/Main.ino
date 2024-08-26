@@ -47,7 +47,7 @@ DS18B20TemperatureSensor electronicTempSensor(29, "electronicTempSensor");     /
 PHSensor phSensor(A1, &waterTempSensor, "phSensor");             // pH sensor (Analog: A1, uses water temp for compensation)
 //TurbiditySensor turbiditySensor(A2, "turbiditySensor");          // Turbidity sensor (Analog: A2)
 OxygenSensor oxygenSensor(A3, &waterTempSensor, "oxygenSensor"); // Dissolved oxygen sensor (Analog: A3, uses water temp)
-AirFlowSensor airFlowSensor(26, "airFlowSensor");                // Air flow sensor (Digital: 26)
+AirFlowSensor airFlowSensor(2, "airFlowSensor");                // Air flow sensor (Digital: 26)
 TurbiditySensorSEN0554 turbiditySensorSEN0554(A14, A15, "turbiditySensorSEN0554"); // SEN0554 turbidity sensor (RX: Blue, TX: green) 
 
 // Actuator declarations
@@ -55,13 +55,13 @@ DCPump airPump(5, 6, 10, "airPump");        // Air pump (PWM: 5, Relay: 6, Min P
 DCPump drainPump(4, 30, 15, "drainPump");    // Drain pump (PWM: 4, Relay: 29, Min PWM: 15)
 DCPump samplePump(3, 28, 15, "samplePump");// Sample pump (PWM: 3, Relay: 28, Min PWM: 15)
 PeristalticPump nutrientPump(0x61, 7, 1, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 7, Min flow: 1, Max flow: 105.0)
-PeristalticPump basePump(0x60, 8, 1, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0)
+PeristalticPump basePump(0x60, 8, 1, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0) ; NaOH @10%
 StirringMotor stirringMotor(9, 10, 390, 1000,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000)
 HeatingPlate heatingPlate(12, false, "heatingPlate");            // Heating plate (Relay: 12, Not PWM capable)
 LEDGrowLight ledGrowLight(27, "ledGrowLight");                   // LED grow light (Relay: 27)
 
 // System components
-VolumeManager volumeManager(0.6, 0.95, 0.1);
+VolumeManager volumeManager(0.75, 0.95, 0.1);
 DataCollector dataCollector(volumeManager);
 Communication espCommunication(SerialESP, dataCollector);
 PIDManager pidManager;
@@ -110,7 +110,7 @@ void setup() {
 
     // Initialisation of the PIDManager to define hysteresis values
     pidManager.initialize(2.0, 5.0, 1.0, 2.0, 5.0, 1.0, 2.0, 5.0, 1.0);
-    pidManager.setHysteresis(0.5, 0.05, 1.0);
+    pidManager.setHysteresis(0.8, 0.25, 2.5); // Température Hystérésis : 0.5 à 1.0 °C; pH Hystérésis : 0.2 à 0.3; Oxygène Dissous Hystérésis : 2.0 à 3.0 % sat
     //Logger::log(LogLevel::INFO, "PID setup");
     Logger::log(LogLevel::INFO, F("PID setup"));
 
@@ -122,7 +122,7 @@ void setup() {
     Serial.println();
 
         // Ajouter ces lignes pour lancer l'air pump et le stirring motor à 100%
-    //ActuatorController::runActuator("airPump", 100, 0);  // 100% speed, 0 duration (continuous)
+    //ActuatorController::runActuator("airPump", 50, 0);  // 100% speed, 0 duration (continuous)
     //ActuatorController::runActuator("stirringMotor", 500, 0);  // Max RPM, 0 duration (continuous)
 
 }

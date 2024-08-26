@@ -6,6 +6,8 @@
      - Red Wire (Power): Connect to 5V on the Arduino.
      - Black Wire (Ground): Connect to GND on the Arduino.
      - Yellow Wire (Signal): Connect to a digital input pin (e.g., pin 2) on the Arduino.
+
+     On the Arduino Mega, external interrupts are only available on certain specific pins. The pins that support interrupts are: 2, 3, 18, 19, 20, 21 (interrupts 0, 1, 5, 4, 3, 2 respectively).
   
   2. The air flow meter provides a pulsed output proportional to the flow rate.
      This code will count the pulses over a specific time period to calculate the flow rate.
@@ -14,9 +16,12 @@
   Measurement error: ±2%.
   Pulses per liter: 5880 pulses/L. (=>Frequency: F = 98 * Q (L / Min)). F = (98 * Q) ± 2% avec Q = L / MIN
   Pressure conversion: 0.8 MPa = 8 bar
+
+
+  
 */
 
-const int flowMeterPin = 26; // Pin connected to the flow meter's signal wire
+const int flowMeterPin = 2; // Pin connected to the flow meter's signal wire
 volatile unsigned long pulseCount = 0;
 unsigned long lastTime = 0;
 const unsigned long interval = 1000; // Interval to calculate flow rate (in milliseconds)

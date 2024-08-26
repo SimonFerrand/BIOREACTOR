@@ -212,16 +212,30 @@ void PIDManager::updateTemperaturePID() {
 void PIDManager::updatePHPID() {
     if (!phPIDRunning) return;
     
+    static unsigned long lastAdjustmentTime = 0;
+    const unsigned long adjustmentDelay = 60000; // 1 minute delay between adjustments
+    
     phInput = SensorController::readSensor("phSensor");
     
-    if (abs(phInput - phSetpoint) > phHysteresis) {
+    if (abs(phInput - phSetpoint) > phHysteresis && millis() - lastAdjustmentTime > adjustmentDelay) {
         phPID.Compute();
         double flowRate = convertPIDOutputToFlowRate(phOutput);
-        ActuatorController::runActuator("basePump", flowRate, 0);  
-        Logger::log(LogLevel::INFO, "pH PID update - Setpoint: " + String(phSetpoint) + ", Input: " + String(phInput) + ", Output: " + String(flowRate));
-    } else {
+        
+        // Limit the flow rate
+        const double maxAllowedFlowRate = 10.0; // ml/min, adjust as needed
+        flowRate = min(flowRate, maxAllowedFlowRate);
+        
+        // Activate pump for a short duration
+        const unsigned long pumpDuration = 1000; // 1 second
+        ActuatorController::runActuator("basePump", flowRate, pumpDuration);
+        
+        lastAdjustmentTime = millis();
+        
+        Logger::log(LogLevel::INFO, "pH PID update - Setpoint: " + String(phSetpoint) + 
+                    ", Input: " + String(phInput) + ", Output: " + String(flowRate) + 
+                    ", Duration: " + String(pumpDuration));
+    } else if (abs(phInput - phSetpoint) <= phHysteresis) {
         stopPHPID();
-        //Logger::log(LogLevel::INFO, "pH within hysteresis range. Stopping pH control.");
         Logger::log(LogLevel::INFO, F("pH within hysteresis range. Stopping pH control."));
     }
 }
@@ -235,13 +249,16 @@ void PIDManager::updateDOPID() {
         doPID.Compute();
         ActuatorController::runActuator("airPump", doOutput, 0);  // 0 pour une durée continue
         Logger::log(LogLevel::INFO, "DO PID update - Setpoint: " + String(doSetpoint) + ", Input: " + String(doInput) + ", Output: " + String(doOutput));
+    /*} else if (doInput >= doSetpoint) {
+        // If the O2 level is sufficient, reduce the pump speed to minimum
+        ActuatorController::runActuator("airPump", 10, 0); // 10% as minimum speed
+        Logger::log(LogLevel::INFO, F("DO sufficient. Running air pump at minimum speed."));*/
     } else {
         stopDOPID();
         //Logger::log(LogLevel::INFO, "DO within hysteresis range. Stopping DO control.");
         Logger::log(LogLevel::INFO, F("DO within hysteresis range. Stopping DO control."));
     }
 }
-
 
 void PIDManager::stopTemperaturePID() {
     tempPIDRunning = false;

@@ -125,18 +125,27 @@ void HeatingPlate::controlOnOff(bool state) {
     Logger::log(LogLevel::INFO, String(_name) + (_status ? F(" is ON") : F(" is OFF")));
 }
 
+// This function implements a simple duty cycle control for the heating plate.
+// It's used when the heating plate doesn't support PWM and only has on/off control.
+// The function creates a PWM-like effect by turning the heater on and off
+// over a fixed time period (cycle time) based on the desired power percentage.
 void HeatingPlate::controlWithCycle(int percentage) {
-    _dutyCycle = percentage / 100.0;
+    _dutyCycle = percentage / 100.0;  // Convert percentage to a decimal (0.0 to 1.0)
     unsigned long now = millis();
+    
+    // Check if we've completed a full cycle
     if (now - _lastCycleStart >= _cycleTime) {
-        _lastCycleStart = now;
+        _lastCycleStart = now;  // Reset the cycle start time
     }
+    
+    // Determine if the heater should be on or off based on the current point in the cycle
     if (now - _lastCycleStart < _cycleTime * _dutyCycle) {
-        digitalWrite(_relayPin, HIGH);
+        digitalWrite(_relayPin, HIGH);  // Turn heater ON
         _status = true;
     } else {
-        digitalWrite(_relayPin, LOW);
+        digitalWrite(_relayPin, LOW);   // Turn heater OFF
         _status = false;
     }
+    
     Logger::log(LogLevel::INFO, String(_name) + " Duty Cycle: " + String(_dutyCycle * 100) + "%");
 }

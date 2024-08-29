@@ -56,7 +56,7 @@ DCPump drainPump(4, 30, 15, "drainPump");    // Drain pump (PWM: 4, Relay: 29, M
 DCPump samplePump(3, 28, 15, "samplePump");// Sample pump (PWM: 3, Relay: 28, Min PWM: 15)
 PeristalticPump nutrientPump(0x61, 7, 1, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 7, Min flow: 1, Max flow: 105.0)
 PeristalticPump basePump(0x60, 8, 1, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0) ; NaOH @10%
-StirringMotor stirringMotor(9, 10, 390, 1000,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000)
+StirringMotor stirringMotor(9, 10, 390, 550,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000)
 HeatingPlate heatingPlate(12, false, "heatingPlate");            // Heating plate (Relay: 12, Not PWM capable)
 LEDGrowLight ledGrowLight(27, "ledGrowLight");                   // LED grow light (Relay: 27)
 

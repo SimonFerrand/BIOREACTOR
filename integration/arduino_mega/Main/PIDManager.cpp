@@ -178,33 +178,46 @@ void PIDManager::updateTemperaturePID() {
         if (isStartupPhase && abs(tempInput - tempSetpoint) < 2.0) {
             switchToMaintainMode();
         }
-        ActuatorController::runActuator("heatingPlate", true, tempOutput);
-        Logger::log(LogLevel::INFO, "Temperature PID update - Setpoint: " + String(tempSetpoint) + ", Input: " + String(tempInput) + ", Output: " + String(tempOutput));
-        //Logger::logPIDData("Temperature", tempSetpoint, tempInput, tempOutput);
-    } else {
-        // Si nous sommes dans la zone d'hystérésis, on peut choisir de ne pas modifier la sortie
-        // ou de la mettre à zéro, selon votre logique de contrôle préférée
-        // tempOutput = 0;
-        Logger::log(LogLevel::INFO, "Temperature within hysteresis range. No change in output.");
-    }
-}
-*/
-void PIDManager::updateTemperaturePID() {
-    if (!tempPIDRunning) return;
-    
-    tempInput = SensorController::readSensor("waterTempSensor");
-    
-    if (abs(tempInput - tempSetpoint) > tempHysteresis) {
-        tempPID.Compute();
-        if (isStartupPhase && abs(tempInput - tempSetpoint) < 2.0) {
-            switchToMaintainMode();
-        }
            
         ActuatorController::runActuator("heatingPlate", tempOutput, 0);  
         Logger::log(LogLevel::INFO, "Temperature PID update - Setpoint: " + String(tempSetpoint) + ", Input: " + String(tempInput) + ", Output: " + String(tempOutput) + "%");
     } else {
         stopTemperaturePID();
         //Logger::log(LogLevel::INFO, "Temperature within hysteresis range. Stopping temperature control.");
+        Logger::log(LogLevel::INFO, F("Temperature within hysteresis range. Stopping temperature control."));
+    }
+}
+*/
+
+void PIDManager::updateTemperaturePID() {
+    if (!tempPIDRunning) return;
+    
+    tempInput = SensorController::readSensor("waterTempSensor");
+    
+    if (abs(tempInput - tempSetpoint) > tempHysteresis) {
+        tempPID.Compute();  // Calculez toujours la sortie PID
+
+        if (isStartupPhase) {
+            if (tempInput < tempSetpoint - 2.0) {
+                // Si la température est significativement inférieure à la cible, chauffez à pleine puissance
+                ActuatorController::runActuator("heatingPlate", 100, 0);
+                Logger::log(LogLevel::INFO, "Aggressive heating: 100%");
+            } else {
+                ActuatorController::runActuator("heatingPlate", tempOutput, 0);
+            }
+            
+            if (abs(tempInput - tempSetpoint) < 1.0) {
+                switchToMaintainMode();
+            }
+        } else {
+            ActuatorController::runActuator("heatingPlate", tempOutput, 0);
+        }
+        
+        Logger::log(LogLevel::INFO, "Temperature PID update - Setpoint: " + String(tempSetpoint) + 
+                    ", Input: " + String(tempInput) + ", Output: " + String(tempOutput) + "%, Startup: " + 
+                    String(isStartupPhase ? "Yes" : "No"));
+    } else {
+        stopTemperaturePID();
         Logger::log(LogLevel::INFO, F("Temperature within hysteresis range. Stopping temperature control."));
     }
 }

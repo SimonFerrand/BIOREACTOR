@@ -44,11 +44,11 @@ float PHSensor::readValue() {
     float phValue = _ph.readPH(_voltage, temperature); // Calculate pH value with temperature compensation
     //Logger::log(LogLevel::INFO, String(_name) + F(" - Tension: ") + String(_voltage) + F(" mV, Température: ") + String(temperature) + F("°C, pH: ") + String(phValue));
     
-    float manualPH = manualPHCalculation(_voltage);
-    Logger::log(LogLevel::INFO, String(_name) + " - Reading: Voltage=" + 
-                String(_voltage) + "mV, Temp=" + String(temperature) + 
-                "°C, Library pH=" + String(phValue) + 
-                ", Manual pH=" + String(manualPH));
+    //float manualPH = manualPHCalculation(_voltage);
+    //Logger::log(LogLevel::INFO, String(_name) + " - Reading: Voltage=" + 
+    //            String(_voltage) + "mV, Temp=" + String(temperature) + 
+    //            "°C, Library pH=" + String(phValue) + 
+    //            ", Manual pH=" + String(manualPH));
 
     return phValue;
 }

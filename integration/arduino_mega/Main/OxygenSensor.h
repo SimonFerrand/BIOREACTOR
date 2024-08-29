@@ -39,6 +39,9 @@ For Gravity: Analog Dissolved Oxygen Sensor / Meter Kit for Arduino
 #include <EEPROM.h>
 #include <Arduino.h>
 
+#define PH_EEPROM_ADDR 0
+#define O2_EEPROM_ADDR 100
+
 class OxygenSensor : public SensorInterface {
 public:
     OxygenSensor(int pin, PT100Sensor* tempSensor, const char* name);

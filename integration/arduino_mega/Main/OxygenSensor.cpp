@@ -16,10 +16,10 @@ const uint16_t OxygenSensor::DO_Table[41] = {
 
 OxygenSensor::OxygenSensor(int pin, PT100Sensor* tempSensor, const char* name)
     : _pin(pin), _tempSensor(tempSensor), _name(name), calibrationState(CalibrationState::NONE) {
-    loadCalibrationFromEEPROM();
 }
 
 void OxygenSensor::begin() {
+    loadCalibrationFromEEPROM();
     Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
 
@@ -129,25 +129,55 @@ void OxygenSensor::resetCalibration() {
 }
 
 void OxygenSensor::saveCalibrationToEEPROM() {
-    int addr = 0;
-    EEPROM.put(addr, calibrationPoints); addr += sizeof(int);
+    int addr = O2_EEPROM_ADDR;
+    EEPROM.put(addr, calibrationPoints);
+    addr += sizeof(int);
+    
     for (int i = 0; i < calibrationPoints; i++) {
-        EEPROM.put(addr, calibrationVoltages[i]); addr += sizeof(uint16_t);
-        EEPROM.put(addr, calibrationTemperatures[i]); addr += sizeof(uint8_t);
+        EEPROM.put(addr, calibrationVoltages[i]);
+        addr += sizeof(uint16_t);
+        EEPROM.put(addr, calibrationTemperatures[i]);
+        addr += sizeof(uint8_t);
     }
+    
+    Logger::log(LogLevel::INFO, F("O2 calibration saved to EEPROM"));
 }
 
 void OxygenSensor::loadCalibrationFromEEPROM() {
-    int addr = 0;
-    EEPROM.get(addr, calibrationPoints); addr += sizeof(int);
+    int addr = O2_EEPROM_ADDR;
+    EEPROM.get(addr, calibrationPoints);
+    addr += sizeof(int);
+    
+    Logger::log(LogLevel::INFO, "Loaded calibrationPoints: " + String(calibrationPoints));
+    
     if (calibrationPoints > 0 && calibrationPoints <= MAX_CALIBRATION_POINTS) {
+        bool validData = true;
         for (int i = 0; i < calibrationPoints; i++) {
-            EEPROM.get(addr, calibrationVoltages[i]); addr += sizeof(uint16_t);
-            EEPROM.get(addr, calibrationTemperatures[i]); addr += sizeof(uint8_t);
+            EEPROM.get(addr, calibrationVoltages[i]);
+            addr += sizeof(uint16_t);
+            EEPROM.get(addr, calibrationTemperatures[i]);
+            addr += sizeof(uint8_t);
+            
+            if (calibrationVoltages[i] == 0 || calibrationVoltages[i] > 5000 || 
+                calibrationTemperatures[i] < 0 || calibrationTemperatures[i] > 100) {
+                validData = false;
+                break;
+            }
+            
+            Logger::log(LogLevel::INFO, "Loaded O2 calibration point " + String(i) + 
+                        ": Voltage=" + String(calibrationVoltages[i]) + 
+                        ", Temp=" + String(calibrationTemperatures[i]));
         }
-        calibrationState = CalibrationState::COMPLETED;
-        Logger::log(LogLevel::INFO, F("O2 calibration loaded from EEPROM"));
+        
+        if (validData) {
+            calibrationState = CalibrationState::COMPLETED;
+            Logger::log(LogLevel::INFO, F("O2 calibration loaded from EEPROM"));
+        } else {
+            Logger::log(LogLevel::WARNING, F("Invalid O2 calibration data in EEPROM"));
+            resetCalibration();
+        }
     } else {
+        Logger::log(LogLevel::WARNING, "Invalid O2 calibrationPoints: " + String(calibrationPoints));
         resetCalibration();
     }
 }

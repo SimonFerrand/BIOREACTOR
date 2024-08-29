@@ -62,6 +62,11 @@ ATTENTION : After completing the measurement, disconnect the pH probe from the s
 #include <Arduino.h>
 #include "PT100Sensor.h" // Include PT100Sensor for temperature compensation
 
+#define PH_EEPROM_ADDR 0
+#define O2_EEPROM_ADDR 100
+
+#define PHVALUEADDR 0x00    // Adresse de début pour les données de calibration pH dans l'EEPROM
+
 class PHSensor : public SensorInterface {
 public:
     /*
@@ -91,12 +96,15 @@ public:
 
     void calibration(const char* cmd);
 
+    void displayCalibrationValues();
+    float manualPHCalculation(float voltage);
+
 private:
     int _pin;
     const char* _name;
     DFRobot_PH _ph;
     float _voltage;
-    float _temperature;
+    float temperature;
     PT100Sensor* _tempSensor; // Pointer to the PT100 temperature sensor
 };
 

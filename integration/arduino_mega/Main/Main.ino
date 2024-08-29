@@ -77,7 +77,22 @@ FermentationProgram fermentationProgram(pidManager, volumeManager);
 CommandHandler commandHandler(stateMachine, safetySystem, volumeManager, pidManager);
 
 unsigned long previousMillis = 0;
-const long interval = 26500; // Interval for logging (30 seconds)
+const long measurement_interval = 26500; // Interval for logging (30 seconds)
+
+void initializeEEPROM() {
+    byte value;
+    EEPROM.get(0, value);
+    if (value == 255) { // EEPROM vierge
+        // Initialisez avec des valeurs par défaut
+        // Pour le capteur d'oxygène
+        int defaultCalibrationPoints = 0;
+        EEPROM.put(O2_EEPROM_ADDR, defaultCalibrationPoints);
+        // Pour le pH mètre, si nécessaire
+        // ...
+        
+        Logger::log(LogLevel::INFO, F("EEPROM initialized with default values"));
+    }
+}
 
 void setup() {
     Serial.begin(115200);  // Initialize serial communication for debugging
@@ -125,6 +140,8 @@ void setup() {
     //ActuatorController::runActuator("airPump", 50, 0);  // 100% speed, 0 duration (continuous)
     //ActuatorController::runActuator("stirringMotor", 500, 0);  // Max RPM, 0 duration (continuous)
 
+    initializeEEPROM();
+
 }
 
 void loop() {
@@ -155,16 +172,13 @@ void loop() {
     // Check safety limits
     //safetySystem.checkLimits();
 
-    // Update sampling
-    //SensorController::updateSampling();
-
     // Log data every interval
     unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= interval) {
+    if (currentMillis - previousMillis >= measurement_interval) {
         previousMillis = currentMillis;
 
         // Take a fresh sample
-        SensorController::takeSample();
+        //SensorController::takeSample();
 
         // log all data
         Logger::logAllData(stateMachine.getCurrentProgram(), static_cast<int>(stateMachine.getCurrentState()));

@@ -43,6 +43,8 @@
  *
  * - Partition Scheme
  *   - If you have space problems uploading the code, do the following: "Select Minimal SPIFFS (3.8MB APP with 256KB SPIFFS) in Tools > Partition Scheme".
+ *
+ * -note : Voltage matching: If you are communicating between two boards operating at different voltages (for example, 5V for the Arduino Mega and 3.3V for the ESP32 or Teensy 4.1), you need to lower the voltage of the TX (transmission) signal from the Arduino to a level acceptable to the ESP32. By using a resistor or voltage divider, you protect the ESP32 circuit from overvoltages that could damage the pins
  */
 
  /*

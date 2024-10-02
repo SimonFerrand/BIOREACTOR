@@ -71,8 +71,8 @@ const char webSocketPath[] = "/ws";
 #include <ezTime.h>
 
 // Define the pins for Serial2 communication with the Arduino Mega
-const int rxPin = 18;
-const int txPin = 19;
+const int rxPin = 19;
+const int txPin = 18;
 
 // Create a WebSocket client to communicate with the WebSocket server
 WebSocketsClient webSocket;

@@ -26,7 +26,7 @@ float TurbiditySensorSEN0554::readValue() {
         return adjustedTurbidity;
     }
     //Logger::log(LogLevel::WARNING, String(_name) + " - No sensor response");
-    Logger::log(LogLevel::WARNING, String(_name) + F(" - No sensor response"));
+    //Logger::log(LogLevel::WARNING, String(_name) + F(" - No sensor response"));
     return -1.0f;
 }
 
@@ -43,7 +43,7 @@ bool TurbiditySensorSEN0554::communicate() {
             return true;
         } else {
             //Logger::log(LogLevel::ERROR, String(_name) + " - Réponse invalide du capteur");
-            Logger::log(LogLevel::ERROR, String(_name) + F(" - Réponse invalide du capteur"));
+            //Logger::log(LogLevel::ERROR, String(_name) + F(" - Réponse invalide du capteur"));
         }
     }
     return false;

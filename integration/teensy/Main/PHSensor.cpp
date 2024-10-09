@@ -39,7 +39,7 @@ void PHSensor::displayCalibrationValues() {
 
 // Method to read the pH value from the sensor
 float PHSensor::readValue() {
-    _voltage = analogRead(_pin) / 1024.0 * 5000; // Convert analog reading to millivolts
+    _voltage = analogRead(_pin) / 1024.0 * 3300; // Convert analog reading to millivolts / 5000 for 5.0V and 3300 for 3.3V
     float temperature = _tempSensor->readValue();
     float phValue = _ph.readPH(_voltage, temperature); // Calculate pH value with temperature compensation
     //Logger::log(LogLevel::INFO, String(_name) + F(" - Tension: ") + String(_voltage) + F(" mV, Température: ") + String(temperature) + F("°C, pH: ") + String(phValue));

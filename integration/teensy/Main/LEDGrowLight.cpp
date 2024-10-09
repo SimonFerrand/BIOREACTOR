@@ -11,11 +11,11 @@
 LEDGrowLight::LEDGrowLight(int relayPin, const char* name)
     : _relayPin(relayPin), _name(name), _status(false), _intensity(0) {
     pinMode(_relayPin, OUTPUT); // Set relay pin as output
-    digitalWrite(_relayPin, LOW); // Ensure relay is off initially
+    digitalWrite(_relayPin, HIGH); // Ensure relay is off initially
 }
 
 void LEDGrowLight::begin() {
-    digitalWrite(_relayPin, LOW); // Ensure the LED grow light is off at initialization
+    digitalWrite(_relayPin, HIGH); // Ensure the LED grow light is off at initialization
     //Logger::log(LogLevel::INFO, String(_name) + " initialized");
     Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }
@@ -25,11 +25,11 @@ void LEDGrowLight::begin() {
 void LEDGrowLight::control(bool state, int value) {
     if (state) {
         intensity = constrain(value, 0, 100); // Constrain intensity to 0-100%
-        digitalWrite(_relayPin, HIGH); // Turn on the relay
+        digitalWrite(_relayPin, LOW); // Turn on the relay
         status = true; // Set the status to on
         Logger::log(LogLevel::INFO, String(_name) + " is ON with intensity: " + String(intensity) + "%");
     } else {
-        digitalWrite(_relayPin, LOW); // Turn off the relay
+        digitalWrite(_relayPin, HIGH); // Turn off the relay
         status = false; // Set the status to off
         intensity = 0; // Reset intensity to 0
         //Logger::log(LogLevel::INFO, String(_name) + " is OFF");
@@ -42,12 +42,12 @@ void LEDGrowLight::control(bool state, int value) {
 
     if (state != _currentState || (state && value != _currentValue)) {
         if (state) {
-            digitalWrite(_relayPin, HIGH);
+            digitalWrite(_relayPin, LOW);
             _status = true;
             _intensity = value;
             Logger::log(LogLevel::INFO, String(_name) + " is ON with intensity: " + String(_intensity) + "%");
         } else {
-            digitalWrite(_relayPin, LOW);
+            digitalWrite(_relayPin, HIGH);
             _status = false;
             _intensity = 0;
             Logger::log(LogLevel::INFO, String(_name) + " is OFF");

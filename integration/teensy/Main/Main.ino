@@ -42,10 +42,10 @@
 #define SerialTurbidity Serial8 // (RX: Blue = 34, TX: green = 35) 
 
 // Sensor declarations
-PT100Sensor waterTempSensor(10, 11, 12, 13, "waterTempSensor");  // Water temperature sensor (CS: 22, DI: 23, DO: 24, CLK: 25)
+PT100Sensor waterTempSensor(10, 11, 12, 13, "waterTempSensor");  // Water temperature sensor (CS: 10, DI: 11, DO: 12, CLK: 13)
 DS18B20TemperatureSensor airTempSensor(39, "airTempSensor");     // Air temperature sensor (Data: 52)
 DS18B20TemperatureSensor electronicTempSensor(20, "electronicTempSensor");     // Electronic temperature sensor (Data: 29)
-PHSensor phSensor(A7, &waterTempSensor, "phSensor");             // pH sensor (Analog: A1, uses water temp for compensation)
+PHSensor phSensor(A16, &waterTempSensor, "phSensor");             // pH sensor (Analog: A1, uses water temp for compensation)
 //TurbiditySensor turbiditySensor(A2, "turbiditySensor");          // Turbidity sensor (Analog: A2)
 OxygenSensor oxygenSensor(A8, &waterTempSensor, "oxygenSensor"); // Dissolved oxygen sensor (Analog: A3, uses water temp)
 AirFlowSensor airFlowSensor(2, "airFlowSensor");                // Air flow sensor (Digital: 26)
@@ -53,10 +53,10 @@ TurbiditySensorSEN0554 turbiditySensorSEN0554(&SerialTurbidity, "turbiditySensor
 
 // Actuator declarations
 DCPump airPump(23, 6, 10, "airPump");        // Air pump (PWM: 5, Relay: 6, Min PWM: 10) - 12V
-DCPump drainPump(15, 3, 15, "drainPump");    // Drain pump (PWM: 4, Relay: 29, Min PWM: 15) - 24V
+DCPump drainPump(41, 3, 15, "drainPump");    // Drain pump (PWM: 4, Relay: 29, Min PWM: 15) - 24V
 DCPump samplePump(7, 2, 15, "samplePump");// Sample pump (PWM: 3, Relay: 28, Min PWM: 15) - 24V
-PeristalticPump nutrientPump(0x61, 0, 1, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 7, Min flow: 1, Max flow: 105.0) - 24V
-PeristalticPump basePump(0x60, 1, 1, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0) ; NaOH @10% - 24V
+PeristalticPump nutrientPump(0x61, 0, 1, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 7, Min flow: 1, Max flow: 105.0) - 24V ; Allocate IC2 address by soldering A0 input to Vcc on MCP4725 board 
+PeristalticPump basePump(0x60, 1, 1, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0) ; NaOH @10% - 24V 
 StirringMotor stirringMotor(16, 5, 390, 550,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000) - 12V
 HeatingPlate heatingPlate(4, false, "heatingPlate");            // Heating plate (Relay: 12, Not PWM capable) - 24V
 LEDGrowLight ledGrowLight(32, "ledGrowLight");                   // LED grow light (Relay: 27) 
@@ -78,7 +78,7 @@ FermentationProgram fermentationProgram(pidManager, volumeManager);
 CommandHandler commandHandler(stateMachine, safetySystem, volumeManager, pidManager);
 
 unsigned long previousMillis = 0;
-const long measurement_interval = 26500; // Interval for logging (30 seconds)
+const long measurement_interval = 15000; // Interval for logging (30 seconds)
 
 void initializeEEPROM() {
     byte value;
@@ -96,6 +96,12 @@ void initializeEEPROM() {
 }
 
 void setup() {
+
+      // Initialize actuators
+    ActuatorController::initialize(airPump, drainPump, nutrientPump, basePump,
+                                   stirringMotor, heatingPlate, ledGrowLight, samplePump);
+    ActuatorController::beginAll();
+    
     Serial.begin(115200);  // Initialize serial communication for debugging
     espCommunication.begin(9600); // Initialize serial communication with ESP32
     SerialTurbidity.begin(9600); // // Initialize serial communication with turbiditySensorSEN0554
@@ -105,6 +111,10 @@ void setup() {
     //Logger::log(LogLevel::INFO, "Setup started");
     Logger::log(LogLevel::INFO, F("Setup started"));
     
+    // Initialize actuators
+    ActuatorController::initialize(airPump, drainPump, nutrientPump, basePump,
+                                   stirringMotor, heatingPlate, ledGrowLight, samplePump);
+    ActuatorController::beginAll();
 
     // Initialize sensors
     SensorController::initialize(waterTempSensor, airTempSensor, electronicTempSensor,
@@ -113,12 +123,6 @@ void setup() {
                                  airFlowSensor, 
                                  turbiditySensorSEN0554);
     SensorController::beginAll();
-
-    // Initialize actuators
-    ActuatorController::initialize(airPump, drainPump, nutrientPump, basePump,
-                                   stirringMotor, heatingPlate, ledGrowLight, samplePump);
-    ActuatorController::beginAll();
-    
 
     // Add programs to the state machine
     stateMachine.addProgram("Tests", &testsProgram);

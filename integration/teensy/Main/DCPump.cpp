@@ -18,7 +18,7 @@ DCPump::DCPump(int pwmPin, int relayPin, int minPWM, const char* name)
 // Method to initialize the pump
 void DCPump::begin() {
     // Ensure the pump is off at initialization
-    digitalWrite(_relayPin, LOW);
+    digitalWrite(_relayPin, HIGH);
     analogWrite(_pwmPin, 0);
     //Logger::log(LogLevel::INFO, String(_name) + " initialized");
     Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
@@ -32,7 +32,7 @@ void DCPump::control(bool state, int value) {
         if (state && value >= _minPWM) {
             int pwmValue = map(value, _minPWM, 100, 26, 255); // Map speed percentage to PWM value
             analogWrite(_pwmPin, pwmValue); // Set the PWM value
-            digitalWrite(_relayPin, HIGH); // Turn on the relay
+            digitalWrite(_relayPin, LOW); // Turn on the relay
             _status = true; // Set the status to on
             _currentValue = value;
             //Logger::log(LogLevel::INFO, String(_name) + " is ON, Speed set to: " + String(value));
@@ -43,7 +43,7 @@ void DCPump::control(bool state, int value) {
             _volumeAdded += (flowRate /1000) * duration; // convertir in liters
         } else {
             analogWrite(_pwmPin, 0); // Set PWM value to 0
-            digitalWrite(_relayPin, LOW); // Turn off the relay
+            digitalWrite(_relayPin, HIGH); // Turn off the relay
             _status = false; // Set the status to off
             _currentValue = 0;
             //Logger::log(LogLevel::INFO, String(_name) + " is OFF");

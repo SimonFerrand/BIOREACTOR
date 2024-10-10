@@ -20,5 +20,6 @@ void PT100Sensor::begin() {
 
 // Method to read the temperature from the sensor
 float PT100Sensor::readValue() {
-    return _thermo.temperature(100, 430); // Parameters are Rref and RTD nominal resistance
+    float temperature = _thermo.temperature(100, 430); // Parameters are Rref and RTD nominal resistance
+    return round(temperature * 10) / 10.0; // Round to 1 decimal place
 }

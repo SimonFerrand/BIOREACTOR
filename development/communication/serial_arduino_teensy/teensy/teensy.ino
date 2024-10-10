@@ -1,9 +1,10 @@
 #include <Arduino.h>
 
+
 void setup() {
   Serial.begin(115200);  // Communication série avec l'ordinateur
   Serial3.begin(9600);   // Communication série avec l'Arduino Uno (broches 14 et 15)
-  
+
   Serial.println("Teensy 4.1 prêt à recevoir les données de pH et d'oxygène sur Serial3");
 }
 

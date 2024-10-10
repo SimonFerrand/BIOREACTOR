@@ -74,18 +74,19 @@ void CommandHandler::handleSetCommand(const String& command) {
 }
 
 void CommandHandler::handlePHCalibrationCommand(const String& command) {
-    String cmd = command.substring(3);
-    cmd.trim();
-    if (cmd == "ENTERPH" || cmd == "CALPH" || cmd == "EXITPH") {
-        PHSensor* phSensor = (PHSensor*)SensorController::findSensorByName("phSensor");
-        if (phSensor) {
-            phSensor->calibration(cmd.c_str());
-            Logger::log(LogLevel::INFO, "pH calibration command: " + cmd);
+    PHSensor* phSensor = (PHSensor*)SensorController::findSensorByName("phSensor");
+    if (phSensor) {
+        if (command == "ph ENTERPH") {
+            phSensor->enterCalibration();
+        } else if (command == "ph CALPH") {
+            phSensor->calibrate();
+        } else if (command == "ph EXITPH") {
+            phSensor->exitCalibration();
         } else {
-            Logger::log(LogLevel::WARNING, F("pH sensor not found"));
+            Logger::log(LogLevel::WARNING, "Invalid pH calibration command: " + command);
         }
     } else {
-        Logger::log(LogLevel::WARNING, "Invalid pH calibration command: " + cmd);
+        Logger::log(LogLevel::WARNING, "pH sensor not found");
     }
 }
 
@@ -197,8 +198,8 @@ void CommandHandler::printHelp() {
     Serial.println(F("set_check_interval <seconds> - Set safety check interval"));
     Serial.println(F("adjust_volume <source> <amount> - Manually adjust volume (source: NaOH, Nutrient, Microalgae, Removed; amount in liter)"));
     Serial.println(F("set_initial_volume <volume> - Set the initial culture volume (in liters)"));
-    Serial.println(F("ph ENTERPH - Enter pH calibration mode"));
-    Serial.println(F("ph CALPH - Calibrate with buffer solution"));
+    Serial.println(F("ph ENTERPH - Enter pH calibration mode : put the probe into the 4.0 or 7.0 standard buffer solution" ));
+    Serial.println(F("ph CALPH - Calibrate with buffer solution : standard buffer solution will be detected automatically "));
     Serial.println(F("ph EXITPH - Save and exit pH calibration mode"));
     Serial.println(F("volume info - Get all volume informations"));
     Serial.println(F("set_pid_enabled - set pid enabled during Fermentation program (true, false "));

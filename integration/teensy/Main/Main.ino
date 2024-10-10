@@ -40,14 +40,15 @@
 // Define serial port for communication 
 #define SerialESP Serial7 // (RX = 28, TX=29)
 #define SerialTurbidity Serial8 // (RX: Blue = 34, TX: green = 35) 
+#define SerialSensoTransmitter Serial3 // For communication with SensoTransmitter (pH & O2 sensor) on Arduino Uno
 
 // Sensor declarations
 PT100Sensor waterTempSensor(10, 11, 12, 13, "waterTempSensor");  // Water temperature sensor (CS: 10, DI: 11, DO: 12, CLK: 13)
 DS18B20TemperatureSensor airTempSensor(39, "airTempSensor");     // Air temperature sensor (Data: 52)
 DS18B20TemperatureSensor electronicTempSensor(20, "electronicTempSensor");     // Electronic temperature sensor (Data: 29)
-PHSensor phSensor(A16, &waterTempSensor, "phSensor");             // pH sensor (Analog: A1, uses water temp for compensation)
+PHSensor phSensor(&SerialSensoTransmitter, &waterTempSensor, "phSensor");             // pH sensor (Analog: A1, uses water temp for compensation)
 //TurbiditySensor turbiditySensor(A2, "turbiditySensor");          // Turbidity sensor (Analog: A2)
-OxygenSensor oxygenSensor(A8, &waterTempSensor, "oxygenSensor"); // Dissolved oxygen sensor (Analog: A3, uses water temp)
+OxygenSensor oxygenSensor(&SerialSensoTransmitter, &waterTempSensor, "oxygenSensor"); // Dissolved oxygen sensor (Analog: A3, uses water temp)
 AirFlowSensor airFlowSensor(2, "airFlowSensor");                // Air flow sensor (Digital: 26)
 TurbiditySensorSEN0554 turbiditySensorSEN0554(&SerialTurbidity, "turbiditySensorSEN0554"); // SEN0554 turbidity sensor (RX: Blue, TX: green) 
 
@@ -80,21 +81,6 @@ CommandHandler commandHandler(stateMachine, safetySystem, volumeManager, pidMana
 unsigned long previousMillis = 0;
 const long measurement_interval = 15000; // Interval for logging (30 seconds)
 
-void initializeEEPROM() {
-    byte value;
-    EEPROM.get(0, value);
-    if (value == 255) { // EEPROM vierge
-        // Initialisez avec des valeurs par défaut
-        // Pour le capteur d'oxygène
-        int defaultCalibrationPoints = 0;
-        EEPROM.put(O2_EEPROM_ADDR, defaultCalibrationPoints);
-        // Pour le pH mètre, si nécessaire
-        // ...
-        
-        Logger::log(LogLevel::INFO, F("EEPROM initialized with default values"));
-    }
-}
-
 void setup() {
 
       // Initialize actuators
@@ -105,7 +91,8 @@ void setup() {
     Serial.begin(115200);  // Initialize serial communication for debugging
     espCommunication.begin(9600); // Initialize serial communication with ESP32
     SerialTurbidity.begin(9600); // // Initialize serial communication with turbiditySensorSEN0554
-    EEPROM.begin(); // Initialize EEPROM memory
+    SerialSensoTransmitter.begin(9600); // Initialize communication with the pH and O2 transmitter on Arduino Uno
+    
 
     Logger::initialize(dataCollector);
     //Logger::log(LogLevel::INFO, "Setup started");
@@ -147,7 +134,7 @@ void setup() {
     //ActuatorController::runActuator("airPump", 50, 0);  // 100% speed, 0 duration (continuous)
     //ActuatorController::runActuator("stirringMotor", 500, 0);  // Max RPM, 0 duration (continuous)
 
-    initializeEEPROM();
+    
 
 }
 

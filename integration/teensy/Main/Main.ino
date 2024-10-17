@@ -99,7 +99,7 @@ void setup() {
 
     // Initialize actuators
     ActuatorController::initialize(airPump, drainPump, nutrientPump, basePump,
-                                   stirringMotor, heatingPlate, ledGrowLight, samplePump);
+                                   stirringMotor, heatingPlate, ledGrowLight, samplePump, fillPump);
     ActuatorController::beginAll();
     
     // Initialize serial communication
@@ -113,11 +113,6 @@ void setup() {
     //Logger::log(LogLevel::INFO, "Setup started");
     Logger::log(LogLevel::INFO, F("Setup started"));
     
-    // Initialize actuators
-    ActuatorController::initialize(airPump, drainPump, nutrientPump, basePump,
-                                   stirringMotor, heatingPlate, ledGrowLight, samplePump);
-    ActuatorController::beginAll();
-
     // Initialize sensors
     SensorController::initialize(waterTempSensor, airTempSensor, electronicTempSensor,
                                  phSensor,
@@ -149,8 +144,7 @@ void setup() {
     //ActuatorController::runActuator("airPump", 50, 0);  // 100% speed, 0 duration (continuous)
     //ActuatorController::runActuator("stirringMotor", 500, 0);  // Max RPM, 0 duration (continuous)
 
-    
-
+  
 }
 
 void loop() {

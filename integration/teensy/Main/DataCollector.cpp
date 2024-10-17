@@ -41,6 +41,7 @@ String DataCollector::collectActuatorData() {
     doc["samplePump"] = ActuatorController::isActuatorRunning("samplePump");
     doc["nutrientPump"] = ActuatorController::isActuatorRunning("nutrientPump");
     doc["basePump"] = ActuatorController::isActuatorRunning("basePump");
+    doc["fillPump"] = ActuatorController::isActuatorRunning("fillPump");
     doc["stirringMotor"] = ActuatorController::isActuatorRunning("stirringMotor");
     doc["heatingPlate"] = ActuatorController::isActuatorRunning("heatingPlate");
     doc["ledGrowLight"] = ActuatorController::isActuatorRunning("ledGrowLight");

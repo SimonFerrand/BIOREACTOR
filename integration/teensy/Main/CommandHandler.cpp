@@ -117,51 +117,6 @@ void CommandHandler::handleO2CalibrationCommand(const String& command) {
     }
 }
 
-  /*
-void CommandHandler::printHelp() {
-
-    Serial.println();
-    Serial.println("------------------------------------------------- Available commands: -------------------------------------------------");
-    Serial.println("help - Display this help message");
-    Serial.println("test sensors - Start continuous sensor data reading");
-    Serial.println("test <actuator> <value> <duration> - Test a specific actuator");
-    Serial.println("  Available actuators:");
-    Serial.print("    basePump <flow_rate_0_");
-    Serial.print(ActuatorController::getPumpMaxFlowRate("basePump"), 1);  // 1 decimal place
-    Serial.println("_ml_per_min> <duration_seconds>");
-    Serial.print("    nutrientPump <flow_rate_0_");
-    Serial.print(ActuatorController::getPumpMaxFlowRate("nutrientPump"), 1);  // 1 decimal place
-    Serial.println("_ml_per_min> <duration_seconds>");
-    Serial.println("    airPump <speed_0_100%> <duration_seconds>");
-    Serial.println("    drainPump <speed_0_100%> <duration_seconds>");
-    Serial.println("    samplePump <speed_0_100%> <duration_seconds>");
-    Serial.print("    stirringMotor <speed_");
-    Serial.print(ActuatorController::getStirringMotorMinRPM());
-    Serial.print("_");
-    Serial.print(ActuatorController::getStirringMotorMaxRPM());
-    Serial.println("> <duration_seconds>");
-    Serial.println("    heatingPlate <power_0_100%> <duration_seconds>");
-    Serial.println("    ledGrowLight <intensity_0_100%> <duration_seconds>");
-    Serial.println("tests - Run all predefined tests");
-    Serial.println("drain <rate> <duration> - Start draining");
-    Serial.println("stop - Stop all actuators and PIDs");
-    Serial.println("mix <speed> - Start mixing");
-    Serial.println("fermentation <temp> <ph> <do> <nutrient_conc> <base_conc> <duration> <experiment_name> <comment> - Start fermentation");
-    Serial.println("test pid <type> <setpoint> - Start PID control (type: temp, ph, or do)");
-    Serial.println("alarm false - Disable safety alarms");
-    Serial.println("alarm true - Enable safety alarms");
-    Serial.println("warning false - Disable safety warnings");
-    Serial.println("warning true - Enable safety warnings");
-    Serial.println("set_check_interval <seconds> - Set safety check interval");
-    Serial.println("adjust_volume <source> <amount> - Manually adjust volume (source: NaOH, Nutrient, Microalgae, Removed; amount in liter");
-    Serial.println("set_initial_volume <volume> - Set the initial culture volume (in liters)");
-    Serial.println("ph ENTERPH - Enter pH calibration mode");
-    Serial.println("ph CALPH - Calibrate with buffer solution");
-    Serial.println("ph EXITPH - Save and exit pH calibration mode");
-    Serial.println("-----------------------------------------------------------------------------------------------------------------------");
-}
-*/
-
 void CommandHandler::printHelp() {
     Serial.println();
     Serial.println(F("------------------------------------------------- Available commands: -------------------------------------------------"));
@@ -178,6 +133,7 @@ void CommandHandler::printHelp() {
     Serial.println(F("    airPump <speed_0_100%> <duration_seconds>"));
     Serial.println(F("    drainPump <speed_0_100%> <duration_seconds>"));
     Serial.println(F("    samplePump <speed_0_100%> <duration_seconds>"));
+    Serial.println("    fillPump <speed_0_100%> <duration_seconds>");
     Serial.print(F("    stirringMotor <speed_"));
     Serial.print(ActuatorController::getStirringMotorMinRPM());
     Serial.print(F("_"));

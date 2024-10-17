@@ -21,7 +21,7 @@ public:
     static void initialize(DCPump& airPump, DCPump& drainPump,
                            PeristalticPump& nutrientPump, PeristalticPump& basePump,
                            StirringMotor& stirringMotor, HeatingPlate& heatingPlate,
-                           LEDGrowLight& ledGrowLight, DCPump& samplePump);
+                           LEDGrowLight& ledGrowLight, DCPump& samplePump, DCPump& fillPump);
     static void beginAll();
     
     static void runActuator(const String& actuatorName, float value, int duration);
@@ -57,6 +57,7 @@ private:
     static LEDGrowLight* ledGrowLight;
     static ControlMode heatingControlMode;
     static DCPump* samplePump;
+    static DCPump* fillPump;
 };
 
 #endif // ACTUATOR_CONTROLLER_H

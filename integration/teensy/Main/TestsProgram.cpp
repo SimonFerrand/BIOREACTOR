@@ -209,6 +209,15 @@ void TestsProgram::updateAllActuatorsTest() {
         default:
             stop();
             break;
+        case 8:
+            if (elapsedTime < 10000) {
+                ActuatorController::runActuator("fillPump", 80, 0);
+            } else {
+                ActuatorController::stopActuator("fillPump");
+                _currentActuatorTest++;
+                Logger::log(LogLevel::INFO, F("Fill Pump test completed"));
+            }
+            break;
     }
 }
 

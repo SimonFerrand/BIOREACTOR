@@ -16,6 +16,7 @@
 
 #include "ActuatorInterface.h"
 #include <Arduino.h>
+#include "QuadChannelDACController.h"
 
 class DCPump : public ActuatorInterface {
 public:
@@ -73,6 +74,7 @@ private:
     int _currentValue;
     float _volumeAdded;
     float _volumeRemoved; // Track the volume removed by the pump
+    int _channel;
     
 };
 

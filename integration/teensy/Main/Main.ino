@@ -31,6 +31,7 @@
 #include "CommandHandler.h"
 #include "Communication.h"
 #include "DataCollector.h"
+#include "QuadChannelDACController.h"
 
 #include "TestsProgram.h"
 #include "DrainProgram.h"
@@ -41,24 +42,29 @@
 #define SerialESP Serial7 // (RX = 28, TX=29)
 #define SerialTurbidity Serial8 // (RX: Blue = 34, TX: green = 35) 
 #define SerialSensoTransmitter Serial3 // For communication with SensoTransmitter (pH & O2 sensor) on Arduino Uno
+  // DAC (Digital to Analogic Converter) - MCP4728
+#define QUAD_CHANNEL_DAC_SDA_PIN 25
+#define QUAD_CHANNEL_DAC_SCL_PIN 24
+#define QUAD_CHANNEL_DAC_ADDRESS 0x60 // // Define the I2C address for the new QuadChannelDAC. Please note that for this MCP4728 DAC, I was unable to change the address via software. The address is locked at 0x60. If another MCP4728 DAC is to be used, it will have to be connected to another I2C.
 
 // Sensor declarations
 PT100Sensor waterTempSensor(10, 11, 12, 13, "waterTempSensor");  // Water temperature sensor (CS: 10, DI: 11, DO: 12, CLK: 13)
 DS18B20TemperatureSensor airTempSensor(39, "airTempSensor");     // Air temperature sensor (Data: 52)
-DS18B20TemperatureSensor electronicTempSensor(20, "electronicTempSensor");     // Electronic temperature sensor (Data: 29)
+DS18B20TemperatureSensor electronicTempSensor(36, "electronicTempSensor");     // Electronic temperature sensor (Data: 29)
 PHSensor phSensor(&SerialSensoTransmitter, &waterTempSensor, "phSensor");             // pH sensor (Analog: A1, uses water temp for compensation)
 //TurbiditySensor turbiditySensor(A2, "turbiditySensor");          // Turbidity sensor (Analog: A2)
 OxygenSensor oxygenSensor(&SerialSensoTransmitter, &waterTempSensor, "oxygenSensor"); // Dissolved oxygen sensor (Analog: A3, uses water temp)
-AirFlowSensor airFlowSensor(2, "airFlowSensor");                // Air flow sensor (Digital: 26)
+AirFlowSensor airFlowSensor(22, "airFlowSensor");                // Air flow sensor (Digital: 37)
 TurbiditySensorSEN0554 turbiditySensorSEN0554(&SerialTurbidity, "turbiditySensorSEN0554"); // SEN0554 turbidity sensor (RX: Blue, TX: green) 
 
 // Actuator declarations
-DCPump airPump(23, 6, 10, "airPump");        // Air pump (PWM: 5, Relay: 6, Min PWM: 10) - 12V
-DCPump drainPump(41, 3, 15, "drainPump");    // Drain pump (PWM: 4, Relay: 29, Min PWM: 15) - 24V
-DCPump samplePump(7, 2, 15, "samplePump");// Sample pump (PWM: 3, Relay: 28, Min PWM: 15) - 24V
-PeristalticPump nutrientPump(0x61, 0, 1, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 7, Min flow: 1, Max flow: 105.0) - 24V ; Allocate IC2 address by soldering A0 input to Vcc on MCP4725 board 
+DCPump airPump(MCP4728_CHANNEL_A, 6, 10, "airPump");        // Air pump (PWM: MCP4728_CHANNEL_A, Relay: 6, Min PWM: 10) - 12V
+DCPump drainPump(MCP4728_CHANNEL_B, 3, 15, "drainPump");    // Drain pump (PWM: MCP4728_CHANNEL_B, Relay: 29, Min PWM: 15) - 24V
+DCPump samplePump(MCP4728_CHANNEL_C, 2, 15, "samplePump");// Sample pump (PWM: MCP4728_CHANNEL_C, Relay: 28, Min PWM: 15) - 24V
+DCPump fillPump(MCP4728_CHANNEL_D, 5, 15, "fillPump");// Fill pump (PWM: MCP4728_CHANNEL_D, Relay: 7, Min PWM: 15) - 24V
+PeristalticPump nutrientPump(0x61, 0, 1, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 0, Min flow: 1, Max flow: 105.0) - 24V ; Allocate IC2 address by soldering A0 input to Vcc on MCP4725 board 
 PeristalticPump basePump(0x60, 1, 1, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0) ; NaOH @10% - 24V 
-StirringMotor stirringMotor(16, 5, 390, 550,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000) - 12V
+StirringMotor stirringMotor(16, 7, 390, 550,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000) - 12V
 HeatingPlate heatingPlate(4, false, "heatingPlate");            // Heating plate (Relay: 12, Not PWM capable) - 24V
 LEDGrowLight ledGrowLight(32, "ledGrowLight");                   // LED grow light (Relay: 27) 
 
@@ -83,17 +89,26 @@ const long measurement_interval = 15000; // Interval for logging (30 seconds)
 
 void setup() {
 
-      // Initialize actuators
+    // Initialize the QuadChannelDACController for the DC pump
+        // Initialize I2C2 for QuadChannelDAC
+    Wire2.setSDA(QUAD_CHANNEL_DAC_SDA_PIN);
+    Wire2.setSCL(QUAD_CHANNEL_DAC_SCL_PIN);
+    Wire2.begin();
+        // Initialize the QuadChannelDACController with the specified address
+    QuadChannelDACController::getInstance().begin(QUAD_CHANNEL_DAC_ADDRESS, QUAD_CHANNEL_DAC_SDA_PIN, QUAD_CHANNEL_DAC_SCL_PIN);
+
+    // Initialize actuators
     ActuatorController::initialize(airPump, drainPump, nutrientPump, basePump,
                                    stirringMotor, heatingPlate, ledGrowLight, samplePump);
     ActuatorController::beginAll();
     
+    // Initialize serial communication
     Serial.begin(115200);  // Initialize serial communication for debugging
     espCommunication.begin(9600); // Initialize serial communication with ESP32
     SerialTurbidity.begin(9600); // // Initialize serial communication with turbiditySensorSEN0554
     SerialSensoTransmitter.begin(9600); // Initialize communication with the pH and O2 transmitter on Arduino Uno
     
-
+    // Initialize dataCollector
     Logger::initialize(dataCollector);
     //Logger::log(LogLevel::INFO, "Setup started");
     Logger::log(LogLevel::INFO, F("Setup started"));

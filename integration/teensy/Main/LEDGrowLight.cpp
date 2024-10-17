@@ -42,12 +42,12 @@ void LEDGrowLight::control(bool state, int value) {
 
     if (state != _currentState || (state && value != _currentValue)) {
         if (state) {
-            digitalWrite(_relayPin, LOW);
+            digitalWrite(_relayPin, HIGH);
             _status = true;
             _intensity = value;
             Logger::log(LogLevel::INFO, String(_name) + " is ON with intensity: " + String(_intensity) + "%");
         } else {
-            digitalWrite(_relayPin, HIGH);
+            digitalWrite(_relayPin, LOW);
             _status = false;
             _intensity = 0;
             Logger::log(LogLevel::INFO, String(_name) + " is OFF");

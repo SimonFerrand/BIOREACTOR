@@ -85,7 +85,7 @@ HeatingPlate::HeatingPlate(int relayPin, bool isPWMCapable, const char* name)
 }
 
 void HeatingPlate::begin() {
-    digitalWrite(_relayPin, HIGH);
+    digitalWrite(_relayPin, LOW);
     Logger::log(LogLevel::INFO, String(_name) + " initialized");
 }
 
@@ -119,7 +119,7 @@ void HeatingPlate::controlPWM(int value) {
 }
 
 void HeatingPlate::controlOnOff(bool state) {
-    digitalWrite(_relayPin, state ? LOW : HIGH);
+    digitalWrite(_relayPin, state ? HIGH : LOW);
     _status = state;
     //Logger::log(LogLevel::INFO, String(_name) + (_status ? " is ON" : " is OFF"));
     Logger::log(LogLevel::INFO, String(_name) + (_status ? F(" is ON") : F(" is OFF")));
@@ -140,10 +140,10 @@ void HeatingPlate::controlWithCycle(int percentage) {
     
     // Determine if the heater should be on or off based on the current point in the cycle
     if (now - _lastCycleStart < _cycleTime * _dutyCycle) {
-        digitalWrite(_relayPin, LOW);  // Turn heater ON
+        digitalWrite(_relayPin, HIGH);  // Turn heater ON
         _status = true;
     } else {
-        digitalWrite(_relayPin, HIGH);   // Turn heater OFF
+        digitalWrite(_relayPin, LOW);   // Turn heater OFF
         _status = false;
     }
     

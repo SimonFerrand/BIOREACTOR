@@ -6,3 +6,4 @@ Adafruit_MCP4725
 DFRobot_PH
 ArduinoJson
 ezTime
+Adafruit_MCP4728

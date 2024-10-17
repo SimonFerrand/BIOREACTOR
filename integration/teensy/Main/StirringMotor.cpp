@@ -15,7 +15,7 @@ StirringMotor::StirringMotor(int pwmPin, int relayPin, int minRPM, int maxRPM, c
 void StirringMotor::begin() {
     pinMode(_pwmPin, OUTPUT);
     pinMode(_relayPin, OUTPUT);
-    digitalWrite(_relayPin, HIGH);
+    digitalWrite(_relayPin, LOW);
     analogWrite(_pwmPin, 0);
     //Logger::log(LogLevel::INFO, String(_name) + " initialized");
     Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
@@ -29,13 +29,13 @@ void StirringMotor::control(bool state, int value) {
         if (state && _targetRPM > 0) {
             int pwmValue = rpmToPWM(_targetRPM);
             analogWrite(_pwmPin, pwmValue);
-            digitalWrite(_relayPin, LOW);
+            digitalWrite(_relayPin, HIGH);
             _status = true;
             _currentRPM = _targetRPM;
             Logger::log(LogLevel::INFO, String(_name) + F(" is ON, RPM set to: ") + String(_targetRPM));
         } else {
             analogWrite(_pwmPin, 0);
-            digitalWrite(_relayPin, HIGH);
+            digitalWrite(_relayPin, LOW);
             _status = false;
             _currentRPM = 0;
             Logger::log(LogLevel::INFO, String(_name) + F(" is OFF"));

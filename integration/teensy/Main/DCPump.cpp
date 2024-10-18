@@ -9,8 +9,8 @@
 #include "Logger.h"
 
 // Constructor for DCPump
-DCPump::DCPump(int pwmPin, int relayPin, int minPWM, const char* name)
-    : _pwmPin(pwmPin), _relayPin(relayPin), _minPWM(minPWM), _name(name), _status(false),  _currentValue(0), _volumeAdded(0) {
+DCPump::DCPump(int channel, int relayPin, int minPWM, const char* name)
+    : _channel(channel), _relayPin(relayPin), _minPWM(minPWM), _name(name), _status(false),  _currentValue(0), _volumeAdded(0) {
     pinMode(_relayPin, OUTPUT); // Set relay pin as output
 }
 
@@ -18,7 +18,7 @@ DCPump::DCPump(int pwmPin, int relayPin, int minPWM, const char* name)
 void DCPump::begin() {
     // Ensure the pump is off at initialization
     digitalWrite(_relayPin, LOW);
-    analogWrite(_pwmPin, 0);
+    analogWrite(_channel, 0);
     //Logger::log(LogLevel::INFO, String(_name) + " initialized");
     Logger::log(LogLevel::INFO, String(_name) + F(" initialized"));
 }

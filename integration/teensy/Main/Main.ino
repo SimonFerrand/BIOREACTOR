@@ -38,6 +38,8 @@
 #include "MixProgram.h"
 #include "FermentationProgram.h"
 
+// WARNING, pins 2 and 3 do not work well in this system. Avoid allocating them without double-checking.
+
 // Define serial port for communication 
 #define SerialESP Serial7 // (RX = 28, TX=29)
 #define SerialTurbidity Serial8 // (RX: Blue = 34, TX: green = 35) 
@@ -52,15 +54,15 @@ PT100Sensor waterTempSensor(10, 11, 12, 13, "waterTempSensor");  // Water temper
 DS18B20TemperatureSensor airTempSensor(39, "airTempSensor");     // Air temperature sensor (Data: 52)
 DS18B20TemperatureSensor electronicTempSensor(36, "electronicTempSensor");     // Electronic temperature sensor (Data: 29)
 PHSensor phSensor(&SerialSensoTransmitter, &waterTempSensor, "phSensor");             // pH sensor (Analog: A1, uses water temp for compensation)
-//TurbiditySensor turbiditySensor(A2, "turbiditySensor");          // Turbidity sensor (Analog: A2)
 OxygenSensor oxygenSensor(&SerialSensoTransmitter, &waterTempSensor, "oxygenSensor"); // Dissolved oxygen sensor (Analog: A3, uses water temp)
 AirFlowSensor airFlowSensor(22, "airFlowSensor");                // Air flow sensor (Digital: 37)
-TurbiditySensorSEN0554 turbiditySensorSEN0554(&SerialTurbidity, "turbiditySensorSEN0554"); // SEN0554 turbidity sensor (RX: Blue, TX: green) 
+TurbiditySensorSEN0554 turbiditySensorSEN0554(&SerialTurbidity, "turbiditySensorSEN0554"); // SEN0554 turbidity sensor (RX: Blue, TX: green)
+//TurbiditySensor turbiditySensor(A2, "turbiditySensor");          // Turbidity sensor (Analog: A2) 
 
 // Actuator declarations
 DCPump airPump(MCP4728_CHANNEL_A, 6, 10, "airPump");        // Air pump (PWM: MCP4728_CHANNEL_A, Relay: 6, Min PWM: 10) - 12V
-DCPump drainPump(MCP4728_CHANNEL_B, 3, 15, "drainPump");    // Drain pump (PWM: MCP4728_CHANNEL_B, Relay: 29, Min PWM: 15) - 24V
-DCPump samplePump(MCP4728_CHANNEL_C, 2, 15, "samplePump");// Sample pump (PWM: MCP4728_CHANNEL_C, Relay: 28, Min PWM: 15) - 24V
+DCPump drainPump(MCP4728_CHANNEL_B, 9, 15, "drainPump");    // Drain pump (PWM: MCP4728_CHANNEL_B, Relay: 29, Min PWM: 15) - 24V         //3  >9
+DCPump samplePump(MCP4728_CHANNEL_C, 8, 15, "samplePump");// Sample pump (PWM: MCP4728_CHANNEL_C, Relay: 28, Min PWM: 15) - 24V          //2  > 8
 DCPump fillPump(MCP4728_CHANNEL_D, 5, 15, "fillPump");// Fill pump (PWM: MCP4728_CHANNEL_D, Relay: 7, Min PWM: 15) - 24V
 PeristalticPump nutrientPump(0x61, 0, 1, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 0, Min flow: 1, Max flow: 105.0) - 24V ; Allocate IC2 address by soldering A0 input to Vcc on MCP4725 board 
 PeristalticPump basePump(0x60, 1, 1, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0) ; NaOH @10% - 24V 
@@ -96,12 +98,7 @@ void setup() {
     Wire2.begin();
         // Initialize the QuadChannelDACController with the specified address
     QuadChannelDACController::getInstance().begin(QUAD_CHANNEL_DAC_ADDRESS, QUAD_CHANNEL_DAC_SDA_PIN, QUAD_CHANNEL_DAC_SCL_PIN);
-
-    // Initialize actuators
-    ActuatorController::initialize(airPump, drainPump, nutrientPump, basePump,
-                                   stirringMotor, heatingPlate, ledGrowLight, samplePump, fillPump);
-    ActuatorController::beginAll();
-    
+  
     // Initialize serial communication
     Serial.begin(115200);  // Initialize serial communication for debugging
     espCommunication.begin(9600); // Initialize serial communication with ESP32
@@ -112,6 +109,11 @@ void setup() {
     Logger::initialize(dataCollector);
     //Logger::log(LogLevel::INFO, "Setup started");
     Logger::log(LogLevel::INFO, F("Setup started"));
+
+        // Initialize actuators
+    ActuatorController::initialize(airPump, drainPump, nutrientPump, basePump,
+                                   stirringMotor, heatingPlate, ledGrowLight, samplePump, fillPump);
+    ActuatorController::beginAll();
     
     // Initialize sensors
     SensorController::initialize(waterTempSensor, airTempSensor, electronicTempSensor,

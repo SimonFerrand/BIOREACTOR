@@ -27,7 +27,7 @@ public:
      * @param minPWM: The minimum PWM value required to run the pump.
      * @param name: Identifier for the pump (for debugging purposes).
      */
-    DCPump(int pwmPin, int relayPin, int minPWM, const char* name);
+    DCPump(int channel, int relayPin, int minPWM, const char* name);
 
     /*
      * Method to initialize the pump.
@@ -66,7 +66,7 @@ public:
     void resetVolumeAdded() { _volumeAdded = 0; }
 
 private:
-    int _pwmPin;    // PWM pin
+    int _channel;    
     int _relayPin;  // Relay pin
     int _minPWM;    // Minimum PWM value
     const char* _name;
@@ -74,7 +74,6 @@ private:
     int _currentValue;
     float _volumeAdded;
     float _volumeRemoved; // Track the volume removed by the pump
-    int _channel;
     
 };
 

@@ -26,13 +26,16 @@ npm run serve
 Backend (FastAPI): http://192.168.1.25:8000/
 Frontend (Vue.js): http://192.168.1.25:8080/
 
+x - maintenance (MAJ system)
+sudo apt update && sudo apt upgrade -y
 
 x- restart
 cd /Raspberry/Bioreactor/ServerFastAPI/frontend
 sudo systemctl restart fastapi.service
 npm run serve
 
-
+x - script for network_check_and_server_restart (/home/pi/network_check_and_server_restart.sh) :
+ls -l /home/pi/network_check_and_server_restart.sh
 
 
 

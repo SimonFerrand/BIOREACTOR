@@ -1,256 +1,252 @@
+# Serveur Bioreactor - Guide d'Installation et de Vérification
 
+Ce guide explique comment installer, configurer et vérifier le serveur Bioreactor sur un Raspberry Pi.
 
-# Raspberry Pi Server
+## Prérequis
 
+- Raspberry Pi avec Raspbian OS installé
+- Connexion Internet
+- Accès SSH au Raspberry Pi
 
-## Objective
+## Installation
 
+### 1. Mise à jour du système
 
-
-## Introduction
-
-
-## Setup Instructions
-
-### Install Raspberry Pi OS
-
-Install Raspberry Pi OS using Raspberry Pi Imager: [Download](https://www.raspberrypi.com/software/)
-
-### Raspberry Pi Server Setup
-
-#### System Update
 ```bash
-sudo apt-get update
-sudo apt-get upgrade
-sudo apt-get dist-upgrade
-sudo apt-get autoremove
+sudo apt update
+sudo apt upgrade -y
 ```
 
-#### Install Samba
-```bash
-sudo apt-get install samba samba-common-bin
-sudo mkdir /Raspberry
-sudo chmod 777 /Raspberry
-sudo nano /etc/samba/smb.conf
+### 2. Installation de Node.js et npm
+Nous utiliserons fnm (Fast Node Manager) pour gérer les versions de Node.js.
 
-# Add the following lines at the end of the smb.conf file:
-[Raspberry]
-path = /Raspberry
-writeable = yes
-create mask = 0777
-directory mask = 0777
-public = yes
-```
-
-#### Reboot the System
-```bash
-sudo reboot
-```
-
-#### Install Node.js and Vue CLI
 ```bash
 curl -fsSL https://fnm.vercel.app/install | bash
-source /home/pi/.bashrc
-fnm use --install-if-missing 20
-node -v
-npm -v
-
-npm install -g @vue/cli
-vue --version
+source ~/.bashrc
+fnm install --lts
 ```
-
-#### Install FastAPI and Uvicorn
+### 3. Installation des dépendances du projet
 ```bash
-sudo apt-get install python3-pip
-python3 -m venv ~/env_bioreactor
-source ~/env_bioreactor/bin/activate
-pip install fastapi uvicorn
-nano ~/.bashrc
-
-# Add the following line at the end of the ~/.bashrc file:
-source ~/env_bioreactor/bin/activate
+cd /Raspberry/Bioreactor/ServerFastAPI/frontend
+npm install
 ```
 
-#### Create Directories for Logs and Data
-```bash
-mkdir -p /Raspberry/Bioreactor/logs /Raspberry/Bioreactor/ServerFastAPI
-mkdir -p /Raspberry/Bioreactor/logs /Raspberry/Bioreactor/ServerFastAPI/data
-```
+### 4. Installation des dépendances du projet
+Créez le fichier de service :
 
-#### Configure Uvicorn
-```bash
-cd /Raspberry/Bioreactor/ServerFastAPI
-uvicorn backend:app --host 0.0.0.0 --port 8000 
-```
-
-#### Create Uvicorn Service
 ```bash
 sudo nano /etc/systemd/system/fastapi.service
+```
 
-# Add the following lines to the uvicorn.service file:
+Ajoutez le contenu suivant :
+```bash
 [Unit]
 Description=FastAPI server
 After=network.target
 
 [Service]
 User=pi
-Group=www-data
 WorkingDirectory=/Raspberry/Bioreactor/ServerFastAPI
 Environment="PATH=/home/pi/env_bioreactor/bin"
 ExecStart=/home/pi/env_bioreactor/bin/uvicorn backend:app --host 0.0.0.0 --port 8000
 
 [Install]
 WantedBy=multi-user.target
-
-
-sudo systemctl daemon-reload
-sudo systemctl enable uvicorn
-sudo systemctl start uvicorn
-sudo systemctl status fastapi
 ```
 
-
-#### Install Unattended Upgrades
+Activez et démarrez le service :
 ```bash
-sudo apt-get install unattended-upgrades
-sudo dpkg-reconfigure --priority=low unattended-upgrades
+sudo systemctl enable fastapi.service
+sudo systemctl start fastapi.service
 ```
 
-#### Configurer les mises à jour automatiques
-```bash
-sudo nano /etc/apt/apt.conf.d/50unattended-upgrades
+### 5. Configuration du service Frontend
+Créez un script wrapper pour le frontend :
 
-# Add the following lines
-Unattended-Upgrade::Origins-Pattern {
-    "o=Debian,a=stable";
-    "o=Debian,a=stable-updates";
-    "o=Debian,a=proposed-updates";
-    "o=Debian,a=stable-backports";
-    "o=Raspbian,a=stable";
-    "o=Raspbian,a=stable-updates";
-    "o=Raspbian,a=proposed-updates";
-    "o=Raspbian,a=stable-backports";
-};
+```bash
+sudo nano /home/pi/start-frontend.sh
 ```
 
+Ajoutez le contenu suivant :
 ```bash
-sudo nano /etc/apt/apt.conf.d/20auto-upgrades
+#!/bin/bash
 
-# Add the following lines
-APT::Periodic::Update-Package-Lists "1";
-APT::Periodic::Download-Upgradeable-Packages "1";
-APT::Periodic::AutocleanInterval "7";
-APT::Periodic::Unattended-Upgrade "1";
-```
+# Charger les variables d'environnement de l'utilisateur
+source /home/pi/.profile
+source /home/pi/.bashrc
 
-#### Start Uvicorn
-```bash
-cd /Raspberry/Bioreactor/ServerFastAPI
-uvicorn backend:app --host 0.0.0.0 --port 8000 
+# Configurer fnm
+export PATH="/home/pi/.local/share/fnm:$PATH"
+eval "$(fnm env --use-on-cd)"
 
-sudo systemctl enable fastapi
-sudo systemctl start fastapi
-sudo reboot
-sudo systemctl status fastapi
-```
-
-
-
-
-#### Create a New Vue Project
-cd /Raspberry/Bioreactor/ServerFastAPI
-vue create frontend
-
-#### Install axios - Axios is a promise-based HTTP client for making requests to your FastAPI backend
-```bash
-npm install axios
-npm install vue-router axios
-```
-
-
-####
-```bash
-sudo chmod -R 777 /Raspberry/Bioreactor/ServerFastAPI/frontend
-sudo chmod -R 777 /Raspberry/Bioreactor
-
-sudo chmod -R 755 /Raspberry/Bioreactor/ServerFastAPI/frontend
-
-ls -l /Raspberry/Bioreactor/ServerFastAPI/frontend
-sudo chmod -R 777 /Raspberry/Bioreactor/ServerFastAPI/frontend
-ls -ld /Raspberry/Bioreactor/ServerFastAPI/frontend
-sudo chown -R pi:pi /Raspberry/Bioreactor/ServerFastAPI/frontend
-sudo chmod -R 755 /Raspberry/Bioreactor/ServerFastAPI/frontend
-
-sudo chown pi:pi /Raspberry/Bioreactor/ServerFastAPI/frontend/vue.config.js
-ls -l /Raspberry/Bioreactor/ServerFastAPI/frontend
-
-sudo ufw status
-sudo ufw allow 8080/tcp
-
-sudo systemctl status apache2
-sudo systemctl stop apache2
-sudo systemctl disable apache2
-
-#### firewall
-sudo apt-get install ufw
-sudo ufw allow 8080/tcp
-sudo ufw allow ssh
-sudo ufw allow 137/udp
-sudo ufw allow 138/udp
-sudo ufw allow 139/tcp
-sudo ufw allow 445/tcp
-sudo ufw enable
-sudo systemctl restart smbd
-sudo ufw allow 8000/tcp
-sudo ufw status
-sudo systemctl restart fastapi
-
-npm install vue-router@next axios
-
+# Aller dans le répertoire du projet
 cd /Raspberry/Bioreactor/ServerFastAPI/frontend
-npm install
-npm run serve
 
-which npm
-which node
+# Lancer npm run serve
+exec npm run serve
+```
 
-#### Creating a service file for Vue.js
+Rendez le script exécutable :
 ```bash
-sudo nano /etc/systemd/system/vuejs.service
+sudo chmod +x /home/pi/start-frontend.sh
+```
 
-# Add the following lines
+Créez le fichier de service pour le frontend :
+```bash
+sudo nano /etc/systemd/system/bioreactor-frontend.service
+```
+
+Ajoutez le contenu suivant :
+```bash
 [Unit]
-Description=Vue.js server
+Description=Bioreactor Frontend Service
 After=network.target
 
 [Service]
+Type=simple
 User=pi
-Group=pi
-WorkingDirectory=/Raspberry/Bioreactor/ServerFastAPI/frontend
-Environment="PATH=/run/user/1000/fnm_multishells/1898_1717764681009/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ExecStart=/run/user/1000/fnm_multishells/1898_1717764681009/bin/npm run serve
-Restart=always
+ExecStart=/home/pi/start-frontend.sh
+Restart=on-failure
+StandardOutput=append:/home/pi/frontend.log
+StandardError=append:/home/pi/frontend.log
 
 [Install]
 WantedBy=multi-user.target
-
-
-
 ```
 
-sudo systemctl daemon-reload
-sudo systemctl restart vuejs.service
-sudo systemctl enable vuejs.service
-sudo systemctl start vuejs.service
-sudo systemctl status vuejs.service
-sudo systemctl enable fastapi.service
-sudo systemctl status fastapi.service
-
-
-
-sudo systemctl restart vuejs.service
-sudo systemctl status vuejs.service
-
+Activez et démarrez le service :
+```bash
+sudo systemctl enable bioreactor-frontend.service
+sudo systemctl start bioreactor-frontend.service
 ```
 
+### 6. Configuration du script de surveillance
+Créez un script de surveillance pour vérifier et redémarrer les services si nécessaire :
 
+```bash
+sudo nano /home/pi/bioreactor_monitor.sh
+```
+
+Ajoutez le contenu suivant :
+```bash
+#!/bin/bash
+
+# Chemins
+LOG_FILE="/home/pi/bioreactor.log"
+
+# Charger l'environnement de l'utilisateur
+source /home/pi/.profile
+source /home/pi/.bashrc
+
+# Configurer fnm si nécessaire
+export PATH="/home/pi/.local/share/fnm:$PATH"
+eval "$(fnm env --use-on-cd)"
+
+# Fonction de logging
+log() {
+    echo "$(date): $1" | tee -a "$LOG_FILE"
+}
+
+# Fonction pour vérifier et appliquer les mises à jour de sécurité
+check_security_updates() {
+    log "Vérification des mises à jour de sécurité..."
+    sudo apt-get update 2>&1 | tee -a "$LOG_FILE"
+    sudo apt-get upgrade -y 2>&1 | tee -a "$LOG_FILE"
+}
+
+# Fonction pour vérifier la connexion internet
+check_connection() {
+    log "Vérification de la connexion internet..."
+    if ! ping -c 4 8.8.8.8 > /dev/null 2>&1; then
+        log "La connexion internet est down. Redémarrage de l'interface réseau..."
+        sudo ifconfig wlan0 down
+        sleep 5
+        sudo ifconfig wlan0 up
+        sleep 10
+    else
+        log "La connexion internet fonctionne."
+    fi
+}
+
+# Fonction pour vérifier et redémarrer les services
+check_and_restart_service() {
+    local service_name=$1
+    if ! systemctl is-active --quiet "$service_name"; then
+        log "Le service $service_name n'est pas en cours d'exécution. Redémarrage..."
+        sudo systemctl restart "$service_name"
+        sleep 10
+        if systemctl is-active --quiet "$service_name"; then
+            log "Le service $service_name a été redémarré avec succès."
+        else
+            log "Échec du redémarrage du service $service_name."
+            log "Statut du service $service_name :"
+            sudo systemctl status "$service_name" >> "$LOG_FILE" 2>&1
+        fi
+    else
+        log "Le service $service_name est en cours d'exécution."
+    fi
+}
+
+log "Script de surveillance démarré"
+
+# Boucle principale
+while true; do
+    check_security_updates
+    check_connection
+    check_and_restart_service "fastapi"
+    check_and_restart_service "bioreactor-frontend"
+    log "Cycle de vérification terminé. Attente de 5 minutes avant le prochain cycle."
+    sleep 300 # Attendre 5 minutes avant la prochaine vérification
+done
+```
+
+Rendez le script exécutable :
+```bash
+sudo chmod +x /home/pi/bioreactor_monitor.sh
+```
+
+### 7. Configuration du démarrage automatique
+Configurez le script de surveillance pour qu'il s'exécute au démarrage :
+
+```bash
+sudo crontab -e
+```
+
+Ajoutez la ligne suivante à la fin du fichier :
+```bash
+@reboot /home/pi/bioreactor_monitor.sh &
+```
+
+### Vérification
+Après avoir effectué toutes ces étapes, redémarrez votre Raspberry Pi :
+```bash
+sudo reboot
+```
+
+Après le redémarrage, vérifiez que tout fonctionne correctement :
+
+Vérifiez l'état des services :
+```bash
+sudo systemctl status fastapi
+sudo systemctl status bioreactor-frontend
+```
+
+Vérifiez les logs :
+```bash
+cat /home/pi/bioreactor.log
+cat /home/pi/frontend.log
+```
+
+Testez l'accès au frontend en ouvrant un navigateur et en accédant à :
+```bash
+http://192.168.1.25:8080
+```
+(remplacez l'IP par celle de votre Raspberry Pi si elle est différente)
+
+Testez l'accès au backend en ouvrant un navigateur et en accédant à :
+```bash
+http://192.168.1.25:8000
+```
+(remplacez l'IP par celle de votre Raspberry Pi si elle est différente)
+
+Si tout fonctionne correctement, vous devriez voir l'interface utilisateur de votre application sur le port 8080 et une page indiquant que le serveur FastAPI est en cours d'exécution sur le port 8000.

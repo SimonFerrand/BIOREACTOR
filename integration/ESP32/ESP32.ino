@@ -1,32 +1,29 @@
 /*
  * ESP32 Code
  * 
- * This code receives data from the Arduino Mega via serial communication and sends it to a web server.
- * It also receives commands from the web server and sends them to the Arduino Mega.
- * This code handles communication between an Arduino Mega and a web server,
- * using encrypted WebSocket and HTTP communications.
+ * This code handles communication between a Teensy (main controller) and a web server running on a Raspberry Pi,
+ * using WebSocket and HTTP communications. It receives data from the Teensy 
+ * via serial communication and sends it to the web server. It also receives commands 
+ * from the web server via WebSocket and sends them to the Teensy.
  * 
  * Connections:
- * - RX (pin 18) of ESP32 to TX of Arduino Mega
- * - TX (pin 19) of ESP32 to RX of Arduino Mega
- * - GND of ESP32 to GND of Arduino Mega
+ * - RX (pin 12) of ESP32 to TX of Teensy
+ * - TX (pin 14) of ESP32 to RX of Teensy
+ * - GND of ESP32 to GND of Teensy
  * 
  * Libraries:
  * - ArduinoJson: To handle JSON parsing and serialization
  * - WiFi: To handle WiFi connections
  * - HTTPClient: To handle HTTP requests
- * - NTPClient: To get the current time
  * - WebSocketsClient: To handle WebSocket communication
- * - Crypto: To handle encryption and decryption
- * - AES: To use AES encryption
- * - config.h: Contains the WiFi and WebSocket server credentials, and the shared secret key
+ * - ezTime: To handle time synchronization and formatting
+ * - config.h: Contains the WiFi and WebSocket server credentials
  * 
  * How it works:
  * - The ESP32 connects to the WiFi network.
- * - It connects to a WebSocket server to receive commands.
- * - When a command is received, it authenticates the command using the shared secret key.
- * - If the command is authenticated, it sends the corresponding command to the Arduino Mega via Serial2.
- * - When data is received from the Arduino Mega, it encrypts the data using the shared secret key and sends it to the web server using an HTTP POST request.
+ * - It connects to a WebSocket server on the Raspberry Pi to receive commands.
+ * - When a command is received, it sends the corresponding command to the Teensy via Serial2.
+ * - When data is received from the Teensy, it sends it to the web server using an HTTP POST request.
  * 
  * Software Setup:
  * - Install the ESP32 Board in Arduino IDE:
@@ -39,12 +36,23 @@
  * 
  * - Install Necessary Libraries:
  *   - Go to Sketch > Include Library > Manage Libraries.
- *   - Search for and install ArduinoJson, WiFi, HTTPClient, NTPClient, WebSocketsClient, Crypto, and AES.
+ *   - Search for and install ArduinoJson, WiFi, HTTPClient, WebSocketsClient, and ezTime.
  *
  * - Partition Scheme
- *   - If you have space problems uploading the code, do the following: "Select Minimal SPIFFS (3.8MB APP with 256KB SPIFFS) in Tools > Partition Scheme".
+ *   - If you have space problems uploading the code, do the following: "Select Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS) in Tools > Partition Scheme".
  *
- * -note : Voltage matching: If you are communicating between two boards operating at different voltages (for example, 5V for the Arduino Mega and 3.3V for the ESP32 or Teensy 4.1), you need to lower the voltage of the TX (transmission) signal from the Arduino to a level acceptable to the ESP32. By using a resistor or voltage divider, you protect the ESP32 circuit from overvoltages that could damage the pins
+ * Note: Voltage matching: If you are communicating between two boards operating at different voltages 
+ * (for example, 3.3V for the ESP32 and 5V for the Teensy), you need to match the voltage levels. 
+ * By using a resistor or voltage divider, you protect the ESP32 circuit from overvoltages that could damage the pins.
+ * You can also use a bidirectional logic level converter to safely interface between the two voltage levels.
+ *
+ * A USB isolator like the DSD TECH SH-G01A with ADUM3160 12M chip can be used to provide electrical isolation. 
+ * This type of module prevents current from flowing back to the computer, protecting against 
+ * ground loops and potential differences. It converts the USB signals optically or magnetically, 
+ * ensuring that there's no direct electrical connection between the two sides.
+ *
+ * **ATTENTION: The USB isolator may not provide sufficient power for the ESP32 to operate its WiFi functionality. 
+ * In this case, it's necessary to power the ESP32 externally and use the isolator only for serial communication.**
  */
 
  /*
@@ -71,8 +79,8 @@ const char webSocketPath[] = "/ws";
 #include <ezTime.h>
 
 // Define the pins for Serial2 communication with the Arduino Mega
-const int rxPin = 19;
-const int txPin = 18;
+const int rxPin = 12;
+const int txPin = 14;
 
 // Create a WebSocket client to communicate with the WebSocket server
 WebSocketsClient webSocket;

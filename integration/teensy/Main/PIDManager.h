@@ -70,8 +70,8 @@ private:
     unsigned long lastDOUpdateTime;
 
     static const unsigned long UPDATE_INTERVAL_TEMP = 5000; // 20 seconds - (10-20 seconds; usually in the chemical process industry ) ; could be appropriate if the changes are rapid: 1 second
-    static const unsigned long UPDATE_INTERVAL_PH = 30000;   // 45 seconds - (30-60 seconds; usually in the chemical process industry ) ; could be appropriate if the changes are rapid: 5 seconds
-    static const unsigned long UPDATE_INTERVAL_DO = 30000;  // 45 seconds - (30-60 seconds; usually in the chemical process industry ) ; could be appropriate if the changes are rapid: 10 seconds
+    static const unsigned long UPDATE_INTERVAL_PH = 5000;   // 45 seconds - (30-60 seconds; usually in the chemical process industry ) ; could be appropriate if the changes are rapid: 5 seconds
+    static const unsigned long UPDATE_INTERVAL_DO = 15000;  // 45 seconds - (30-60 seconds; usually in the chemical process industry ) ; could be appropriate if the changes are rapid: 10 seconds
 
     double tempHysteresis;
     double phHysteresis;

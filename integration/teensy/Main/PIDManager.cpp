@@ -16,7 +16,7 @@ PIDManager::PIDManager()
 {
     tempPID.SetOutputLimits(0, 100);
     phPID.SetOutputLimits(0, 100);
-    doPID.SetOutputLimits(0, 100);
+    doPID.SetOutputLimits(20, 100); // minimum 20% because AirPump does not work below this level
     tempPID.SetMode(AUTOMATIC);
     phPID.SetMode(AUTOMATIC);
     doPID.SetMode(AUTOMATIC);
@@ -164,7 +164,7 @@ void PIDManager::adjustPIDStirringSpeed() {
     finalSpeed = constrain(finalSpeed, ActuatorController::getStirringMotorMinRPM(), ActuatorController::getStirringMotorMaxRPM());
     ActuatorController::runActuator("stirringMotor", finalSpeed, 0);
     
-    Logger::log(LogLevel::INFO, "Adjusted stirring motor speed: " + String(finalSpeed));
+    //Logger::log(LogLevel::INFO, "Adjusted stirring motor speed: " + String(finalSpeed));
 }
 
 /*
@@ -206,7 +206,7 @@ void PIDManager::updateTemperaturePID() {
                 ActuatorController::runActuator("heatingPlate", tempOutput, 0);
             }
             
-            if (abs(tempInput - tempSetpoint) < 1.0) {
+            if (abs(tempInput - tempSetpoint) < 1) {
                 switchToMaintainMode();
             }
         } else {
@@ -217,8 +217,9 @@ void PIDManager::updateTemperaturePID() {
                     ", Input: " + String(tempInput) + ", Output: " + String(tempOutput) + "%, Startup: " + 
                     String(isStartupPhase ? "Yes" : "No"));
     } else {
-        stopTemperaturePID();
-        Logger::log(LogLevel::INFO, F("Temperature within hysteresis range. Stopping temperature control."));
+        ActuatorController::stopActuator("heatingPlate");  // Just stop heating but keep PID active
+        Logger::log(LogLevel::INFO, "Temperature within hysteresis range (" + 
+                   String(tempHysteresis) + "°C). Heating paused.");
     }
 }
 
@@ -248,8 +249,9 @@ void PIDManager::updatePHPID() {
                     ", Input: " + String(phInput) + ", Output: " + String(flowRate) + 
                     ", Duration: " + String(pumpDuration));
     } else if (abs(phInput - phSetpoint) <= phHysteresis) {
-        stopPHPID();
-        Logger::log(LogLevel::INFO, F("pH within hysteresis range. Stopping pH control."));
+        ActuatorController::stopActuator("basePump");  // Just stop pump but keep PID active
+        Logger::log(LogLevel::INFO, "pH within hysteresis range (" +
+                    String(phHysteresis) + "). Base dosing paused.");
     }
 }
 
@@ -257,19 +259,20 @@ void PIDManager::updateDOPID() {
     if (!doPIDRunning) return;
 
     doInput = SensorController::readSensor("oxygenSensor");
-    
+    doPID.Compute();
+
     if (abs(doInput - doSetpoint) > doHysteresis) {
-        doPID.Compute();
-        ActuatorController::runActuator("airPump", doOutput, 0);  // 0 pour une durée continue
+        ActuatorController::runActuator("airPump", doOutput, 0);  // 0 pour une durée continue   
         Logger::log(LogLevel::INFO, "DO PID update - Setpoint: " + String(doSetpoint) + ", Input: " + String(doInput) + ", Output: " + String(doOutput));
     /*} else if (doInput >= doSetpoint) {
         // If the O2 level is sufficient, reduce the pump speed to minimum
         ActuatorController::runActuator("airPump", 10, 0); // 10% as minimum speed
         Logger::log(LogLevel::INFO, F("DO sufficient. Running air pump at minimum speed."));*/
     } else {
-        stopDOPID();
-        //Logger::log(LogLevel::INFO, "DO within hysteresis range. Stopping DO control.");
-        Logger::log(LogLevel::INFO, F("DO within hysteresis range. Stopping DO control."));
+        ActuatorController::stopActuator("airPump");
+        // ActuatorController::runActuator("airPump", 20, 0);  // Maintain minimum aeration
+        Logger::log(LogLevel::INFO, "DO within hysteresis range (" +
+                    String(doHysteresis) + "). Aeration paused.");
     }
 }
 
@@ -277,7 +280,6 @@ void PIDManager::stopTemperaturePID() {
     tempPIDRunning = false;
     tempOutput = 0;
     ActuatorController::stopActuator("heatingPlate");
-    //Logger::log(LogLevel::INFO, "Temperature PID stopped");
     Logger::log(LogLevel::INFO, F("Temperature PID stopped"));
 }
 

@@ -262,6 +262,7 @@ void TestsProgram::updateContinuousTest() {
         case TestType::PID_PH:
         case TestType::PID_DISSOLVED_OXYGEN:
             _pidManager.updateAllPIDControllers();
+            _pidManager.adjustPIDStirringSpeed();
             break;
         case TestType::INDIVIDUAL_ACTUATOR:
         case TestType::ALL_ACTUATORS:
@@ -292,17 +293,29 @@ void TestsProgram::parseCommand(const String& command) {
     } else if (cmd == "test sensors") {
         _currentTestType = TestType::SENSORS;
     } else if (cmd.startsWith("test pid ")) {
-        String pidType = cmd.substring(9, 13);
-        _testValue = cmd.substring(14).toFloat();
+        // Diviser la commande en parties
+        int firstSpace = cmd.indexOf(' ', 9);  // Trouver l'espace après "test pid "
+        if (firstSpace == -1) {
+            Logger::log(LogLevel::ERROR, F("Invalid PID command format"));
+            return;
+        }
+        
+        String pidType = cmd.substring(9, firstSpace);  // Extraire uniquement le type
+        _testValue = cmd.substring(firstSpace + 1).toFloat();  // Extraire la valeur
+        
         if (pidType == "temp") {
             _currentTestType = TestType::PID_TEMPERATURE;
+            Logger::log(LogLevel::INFO, "Starting temperature PID with setpoint: " + String(_testValue));
         } else if (pidType == "ph") {
             _currentTestType = TestType::PID_PH;
+            Logger::log(LogLevel::INFO, "Starting pH PID with setpoint: " + String(_testValue));
         } else if (pidType == "do") {
             _currentTestType = TestType::PID_DISSOLVED_OXYGEN;
+            Logger::log(LogLevel::INFO, "Starting DO PID with setpoint: " + String(_testValue));
         } else {
-            //Logger::log(LogLevel::ERROR, "Invalid PID type");
-            Logger::log(LogLevel::ERROR, F("Invalid PID type"));
+            Logger::log(LogLevel::ERROR, "Invalid PID type: " + pidType);
+            _currentTestType = TestType::INDIVIDUAL_ACTUATOR;  // Fallback
+            return;
         }
     } else if (cmd.startsWith("test ")) {
         _currentTestType = TestType::INDIVIDUAL_ACTUATOR;

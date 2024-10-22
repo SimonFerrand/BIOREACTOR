@@ -55,18 +55,18 @@ DS18B20TemperatureSensor airTempSensor(39, "airTempSensor");     // Air temperat
 DS18B20TemperatureSensor electronicTempSensor(36, "electronicTempSensor");     // Electronic temperature sensor (Data: 29)
 PHSensor phSensor(&SerialSensoTransmitter, &waterTempSensor, "phSensor");             // pH sensor (Analog: A1, uses water temp for compensation)
 OxygenSensor oxygenSensor(&SerialSensoTransmitter, &waterTempSensor, "oxygenSensor"); // Dissolved oxygen sensor (Analog: A3, uses water temp)
-AirFlowSensor airFlowSensor(22, "airFlowSensor");                // Air flow sensor (Digital: 37)
+AirFlowSensor airFlowSensor(23, "airFlowSensor");                // Air flow sensor (Digital: 37)
 TurbiditySensorSEN0554 turbiditySensorSEN0554(&SerialTurbidity, "turbiditySensorSEN0554"); // SEN0554 turbidity sensor (RX: Blue, TX: green)
 //TurbiditySensor turbiditySensor(A2, "turbiditySensor");          // Turbidity sensor (Analog: A2) 
 
 // Actuator declarations
-DCPump airPump(MCP4728_CHANNEL_A, 6, 10, "airPump");        // Air pump (PWM: MCP4728_CHANNEL_A, Relay: 6, Min PWM: 10) - 12V
-DCPump drainPump(MCP4728_CHANNEL_B, 9, 15, "drainPump");    // Drain pump (PWM: MCP4728_CHANNEL_B, Relay: 29, Min PWM: 15) - 24V         //3  >9
-DCPump samplePump(MCP4728_CHANNEL_C, 8, 15, "samplePump");// Sample pump (PWM: MCP4728_CHANNEL_C, Relay: 28, Min PWM: 15) - 24V          //2  > 8
-DCPump fillPump(MCP4728_CHANNEL_D, 5, 15, "fillPump");// Fill pump (PWM: MCP4728_CHANNEL_D, Relay: 7, Min PWM: 15) - 24V
+DCPump airPump(MCP4728_CHANNEL_A, 6, 20, "airPump");        // Air pump (PWM: MCP4728_CHANNEL_A, Relay: 6, Min PWM: 15) - 12V
+DCPump drainPump(MCP4728_CHANNEL_B, 9, 25, "drainPump");    // Drain pump (PWM: MCP4728_CHANNEL_B, Relay: 29, Min PWM: 15) - 24V         //3  >9
+DCPump samplePump(MCP4728_CHANNEL_C, 8, 25, "samplePump");// Sample pump (PWM: MCP4728_CHANNEL_C, Relay: 28, Min PWM: 15) - 24V          //2  > 8
+DCPump fillPump(MCP4728_CHANNEL_D, 5, 25, "fillPump");// Fill pump (PWM: MCP4728_CHANNEL_D, Relay: 7, Min PWM: 15) - 24V
 PeristalticPump nutrientPump(0x61, 0, 1, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 0, Min flow: 1, Max flow: 105.0) - 24V ; Allocate IC2 address by soldering A0 input to Vcc on MCP4725 board 
 PeristalticPump basePump(0x60, 1, 1, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0) ; NaOH @10% - 24V 
-StirringMotor stirringMotor(16, 7, 390, 550,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000) - 12V
+StirringMotor stirringMotor(22, 7, 390, 1500,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000) - 12V
 HeatingPlate heatingPlate(4, false, "heatingPlate");            // Heating plate (Relay: 12, Not PWM capable) - 24V
 LEDGrowLight ledGrowLight(32, "ledGrowLight");                   // LED grow light (Relay: 27) 
 
@@ -130,8 +130,16 @@ void setup() {
     stateMachine.addProgram("Fermentation", &fermentationProgram);
 
     // Initialisation of the PIDManager to define hysteresis values
-    pidManager.initialize(2.0, 5.0, 1.0, 2.0, 5.0, 1.0, 2.0, 5.0, 1.0);
-    pidManager.setHysteresis(0.8, 0.25, 2.5); // Température Hystérésis : 0.5 à 1.0 °C; pH Hystérésis : 0.2 à 0.3; Oxygène Dissous Hystérésis : 2.0 à 3.0 % sat
+        /*
+        Kp (Proportional) : Reacts proportionally to the current error
+        Ki (Integral) = Considers the accumulation of past errors
+        Kd (Derivative) = Reacts to the rate of change of the error
+        =>To obtain a more aggressive response: First increase Kp to obtain a stronger reaction, Increase Ki if the error persists too long, Adjust Kd to avoid excessive oscillations. 
+        */
+    pidManager.initialize(2.0, 5.0, 1.0,  // (tempKp, tempKi, tempKd)
+                          2.0, 5.0, 1.0,  // (phKp, phKi, phKd,)
+                          15.0, 8.0, 2.0); // (doKp, doKi, doKd) // 10.0, 5.0, 2.0
+    pidManager.setHysteresis(0.5, 0.3, 0.5); // Température Hystérésis : 0.5 à 1.0 °C; pH Hystérésis : 0.2 à 0.3; Oxygène Dissous Hystérésis : 2.0 à 3.0 % sat
     //Logger::log(LogLevel::INFO, "PID setup");
     Logger::log(LogLevel::INFO, F("PID setup"));
 

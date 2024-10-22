@@ -16,7 +16,7 @@ FermentationProgram::FermentationProgram(PIDManager& pidManager, VolumeManager& 
       duration(0),
       startTime(0),
       pauseStartTime(0),
-      isPIDEnabled(false), //PID activated by default ; false/true
+      isPIDEnabled(true), //PID activated by default ; false/true
       lastNutrientActivationTime(0),
       currentStirringSpeed(0)
 {

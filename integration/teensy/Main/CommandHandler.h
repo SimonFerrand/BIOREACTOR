@@ -17,12 +17,23 @@ public:
     void executeCommand(const String& command);
     void printHelp();
     static float getPumpMaxFlowRate(const String& actuatorName);
+    
 
 private:
     StateMachine& stateMachine;
     SafetySystem& safetySystem;
     VolumeManager& volumeManager;
     PIDManager& pidManager;
+
+    // O2 calibration states
+    enum class O2CalibrationState {
+        NONE,
+        WAITING_ZERO,
+        WAITING_SAT_LOW,
+        WAITING_SAT_HIGH,
+        COMPLETED
+    };
+    O2CalibrationState o2CalState = O2CalibrationState::NONE;
 
     void handleAdjustVolume(const String& command);
 
@@ -33,6 +44,8 @@ private:
     void handleVolumeInfoCommand();
 
     void handleO2CalibrationCommand(const String& command);
+
+
 };
 
 #endif // COMMAND_HANDLER_H

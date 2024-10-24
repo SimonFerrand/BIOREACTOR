@@ -15,29 +15,32 @@ void initializeEEPROM() {
     byte value;
     EEPROM.get(0, value);
     if (value == 255) { // Blank EEPROM
-        // Initialize with default values
-        // For oxygen sensor
-        int defaultCalibrationPoints = 0;
-        EEPROM.put(O2_EEPROM_ADDR, defaultCalibrationPoints);
-        // For pH meter, if required
-        // ...
-        
-        Serial.println(F("EEPROM initialized with default values"));
+        // Marquer l'EEPROM comme initialisée
+        EEPROM.put(0, (byte)0);
+        // Les valeurs par défaut sont maintenant gérées dans le constructeur de OxygenSensor
+        Serial.println(F("EEPROM initialized"));
     }
 }
 
 void setup() {
     Serial.begin(115200);
     teensySerial.begin(9600);
+
+    // Initialisation des capteurs
     sensorController.initialize(phSensor, oxygenSensor);
     SensorController::beginAll();
 
     initializeEEPROM();
+    
+    Serial.println(F("System initialized"));
+    // Afficher l'état initial des calibrations
+    Serial.println(oxygenSensor.getCalibrationStatus());
 }
 
 void loop() {
     if (teensySerial.available()) {
         String command = teensySerial.readStringUntil('\n');
+        command.trim();  // Enlever espaces et retours chariot
         
         if (command.startsWith(F("PH:READ:"))) {
             float temp = command.substring(8).toFloat();
@@ -45,50 +48,44 @@ void loop() {
             teensySerial.print(F("PH:"));
             teensySerial.println(ph);
         }
-        else if (command.startsWith(F("PH:CAL:"))) {
-            int firstColon = command.indexOf(':', 7);
-            int lastColon = command.lastIndexOf(':');
-            if (firstColon != -1 && lastColon != -1) {
-                String calCommand = command.substring(7, firstColon);
-                float temp = command.substring(lastColon + 1).toFloat();
-                String result = phSensor.calibration(calCommand.c_str(), temp);
-                teensySerial.println("PH:CAL:" + result);
-            } else {
-                teensySerial.println(F("PH:CAL:ERROR:Invalid command format"));
+        else if (command.startsWith(F("O2:"))) {  // Ajout du préfixe O2:
+            if (command.startsWith(F("O2:READ:"))) {
+                float temp = command.substring(8).toFloat();
+                float o2 = oxygenSensor.readValue(temp);
+                teensySerial.print(F("O2:"));
+                teensySerial.println(o2);
+            }
+            else if (command.startsWith(F("O2:CAL:"))) {
+                String calCommand = command.substring(7);  // Enlever "O2:CAL:"
+                
+                if (calCommand.startsWith(F("ZERO:"))) {
+                    float temp = calCommand.substring(5).toFloat();
+                    oxygenSensor.saveZeroPoint(temp);
+                    teensySerial.println(F("O2:CAL:ZERO_OK"));
+                }
+                else if (calCommand.startsWith(F("SAT_LOW:"))) {
+                    float temp = calCommand.substring(8).toFloat();
+                    oxygenSensor.saveSaturationLowTemp(temp);
+                    teensySerial.println(F("O2:CAL:SAT_LOW_OK"));
+                }
+                else if (calCommand.startsWith(F("SAT_HIGH:"))) {
+                    float temp = calCommand.substring(9).toFloat();
+                    oxygenSensor.saveSaturationHighTemp(temp);
+                    teensySerial.println(F("O2:CAL:SAT_HIGH_OK"));
+                }
+                else if (calCommand == F("STATUS")) {
+                    String status = oxygenSensor.getCalibrationStatus();
+                    teensySerial.println("O2:CAL:STATUS:" + status);
+                }
+                else if (calCommand == F("RESET")) {
+                    oxygenSensor.resetCalibration();
+                    teensySerial.println(F("O2:CAL:RESET_OK"));
+                }
             }
         }
-        else if (command.startsWith(F("O2:READ:"))) {
-            float temp = command.substring(8).toFloat();
-            float o2 = oxygenSensor.readValue(temp);
-            teensySerial.print(F("O2:"));
-            teensySerial.println(o2);
-        }
-        else if (command.startsWith(F("O2:CAL:START:"))) {
-            int points = command.substring(13).toInt();
-            if (points > 0 && points <= 3) {
-                oxygenSensor.startCalibration(points);
-                teensySerial.println(F("O2:CAL:STARTED"));
-            } else {
-                teensySerial.println(F("O2:CAL:ERROR:Invalid number of points"));
-            }
-        }
-        else if (command.startsWith(F("O2:CAL:SAVE:"))) {
-            float temp = command.substring(12).toFloat();
-            oxygenSensor.saveCalibrationPoint(temp);
-            teensySerial.println(F("O2:CAL:POINT_SAVED"));
-        }
-        else if (command == F("O2:CAL:FINISH")) {
-            oxygenSensor.finishCalibration();
-            teensySerial.println(F("O2:CAL:COMPLETED"));
-        }
-        else if (command == F("O2:CAL:STATUS")) {
-            String status = oxygenSensor.getCalibrationStatus();
-            teensySerial.print(F("O2:CAL:STATUS:"));
-            teensySerial.println(status);
-        }
-        else if (command == F("O2:CAL:RESET")) {
-            oxygenSensor.resetCalibration();
-            teensySerial.println(F("O2:CAL:RESET_DONE"));
-        }
+
+        // Debug sur le port série
+        Serial.print(F("Command received: "));
+        Serial.println(command);
     }
 }

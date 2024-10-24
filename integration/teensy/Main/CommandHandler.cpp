@@ -32,8 +32,11 @@ void CommandHandler::executeCommand(const String& command) {
         handlePHCalibrationCommand(command);
     } else if (command == "volume info") {
         handleVolumeInfoCommand();
-    } else if (command.startsWith("o2 calibrate")) {
-        handleO2CalibrationCommand(command);
+    } else if (command.startsWith("o2 cal ")) {
+        handleO2CalibrationCommand(command.substring(7));
+    } else if (command == "o2 status") {
+        float waterTemp = SensorController::readSensor("waterTempSensor");
+        Serial7.println("O2:READ:" + String(waterTemp, 1));
     } else {
         Logger::log(LogLevel::WARNING, "Unknown command: " + command);
     }
@@ -96,24 +99,52 @@ void CommandHandler::handleVolumeInfoCommand() {
 }
 
 void CommandHandler::handleO2CalibrationCommand(const String& command) {
-    OxygenSensor* o2Sensor = (OxygenSensor*)SensorController::findSensorByName("oxygenSensor");
-    if (o2Sensor) {
-        if (command.startsWith("o2 calibrate start")) {
-            int points = command.substring(19).toInt();
-            o2Sensor->startCalibration(points);
-        } else if (command == "o2 calibrate save") {
-            o2Sensor->saveCalibrationPoint();
-        } else if (command == "o2 calibrate finish") {
-            o2Sensor->finishCalibration();
-        } else if (command == "o2 calibrate status") {
-            Logger::log(LogLevel::INFO, o2Sensor->getCalibrationStatus());
-        } else if (command == "o2 calibrate reset") {
-            o2Sensor->resetCalibration();
-        } else {
-            Logger::log(LogLevel::WARNING, String(F("Invalid O2 calibration command: ")) + command);
-        }
-    } else {
-        Logger::log(LogLevel::WARNING, F("Oxygen sensor not found"));
+    float waterTemp = SensorController::readSensor("waterTempSensor");
+    
+    if (command == "start") {
+        o2CalState = O2CalibrationState::WAITING_ZERO;
+        Logger::log(LogLevel::INFO, F("Starting O2 calibration"));
+        Logger::log(LogLevel::INFO, F("1. Prepare zero solution (2g Na2S2O3 in 100mL)"));
+        Logger::log(LogLevel::INFO, F("   Wait 1 hour and type 'o2 cal zero' when ready"));
+    }
+    else if (command == "zero" && o2CalState == O2CalibrationState::WAITING_ZERO) {
+        Serial7.println("O2:CAL:ZERO:" + String(waterTemp, 1));
+        o2CalState = O2CalibrationState::WAITING_SAT_LOW;
+        Logger::log(LogLevel::INFO, F("Zero point saved. Temperature: ") + String(waterTemp, 1) + F("°C"));
+        Logger::log(LogLevel::INFO, F("2. Prepare room temperature water (20-25°C)"));
+        Logger::log(LogLevel::INFO, F("   Aerate for 15min minimum"));
+        Logger::log(LogLevel::INFO, F("   Type 'o2 cal low' when ready"));
+    }
+    else if (command == "low" && o2CalState == O2CalibrationState::WAITING_SAT_LOW) {
+        Serial7.println("O2:CAL:SAT_LOW:" + String(waterTemp, 1));
+        o2CalState = O2CalibrationState::WAITING_SAT_HIGH;
+        Logger::log(LogLevel::INFO, F("Low temperature point saved. Temperature: ") + String(waterTemp, 1) + F("°C"));
+        Logger::log(LogLevel::INFO, F("3. Heat water to ~35°C while aerating"));
+        Logger::log(LogLevel::INFO, F("   Type 'o2 cal high' when ready"));
+    }
+    else if (command == "high" && o2CalState == O2CalibrationState::WAITING_SAT_HIGH) {
+        Serial7.println("O2:CAL:SAT_HIGH:" + String(waterTemp, 1));
+        o2CalState = O2CalibrationState::COMPLETED;
+        Logger::log(LogLevel::INFO, F("High temperature point saved. Temperature: ") + String(waterTemp, 1) + F("°C"));
+        Logger::log(LogLevel::INFO, F("Calibration completed!"));
+    }
+    else if (command == "reset") {
+        Serial7.println("O2:CAL:RESET");
+        o2CalState = O2CalibrationState::NONE;
+        Logger::log(LogLevel::INFO, F("Calibration reset"));
+    }
+    else if (command == "status") {
+        Serial7.println("O2:CAL:STATUS");
+    }
+    else {
+        Logger::log(LogLevel::WARNING, F("Invalid O2 calibration command"));
+        Logger::log(LogLevel::INFO, F("Available commands:"));
+        Logger::log(LogLevel::INFO, F("  o2 cal start - Start calibration"));
+        Logger::log(LogLevel::INFO, F("  o2 cal zero  - Save zero point"));
+        Logger::log(LogLevel::INFO, F("  o2 cal low   - Save low temp saturation"));
+        Logger::log(LogLevel::INFO, F("  o2 cal high  - Save high temp saturation"));
+        Logger::log(LogLevel::INFO, F("  o2 cal reset - Reset calibration"));
+        Logger::log(LogLevel::INFO, F("  o2 cal status - Show calibration status"));
     }
 }
 
@@ -159,11 +190,13 @@ void CommandHandler::printHelp() {
     Serial.println(F("ph EXITPH - Save and exit pH calibration mode"));
     Serial.println(F("volume info - Get all volume informations"));
     Serial.println(F("set_pid_enabled - set pid enabled during Fermentation program (true, false "));
-    Serial.println(F("o2 calibrate start <points> - Start O2 calibration with specified number of points (1-3)"));
-    Serial.println(F("o2 calibrate save - Save current O2 calibration point"));
-    Serial.println(F("o2 calibrate finish - Finish and save O2 calibration"));
-    Serial.println(F("o2 calibrate status - Display current O2 calibration status"));
-    Serial.println(F("o2 calibrate reset - Reset O2 calibration data"));
+    Serial.println(F("O2 Calibration commands:"));
+    Serial.println(F("  o2 cal start - Start calibration procedure"));
+    Serial.println(F("  o2 cal zero  - Calibrate zero point"));
+    Serial.println(F("  o2 cal low   - Calibrate low temp saturation"));
+    Serial.println(F("  o2 cal high  - Calibrate high temp saturation"));
+    Serial.println(F("  o2 cal reset - Reset calibration"));
+    Serial.println(F("  o2 status    - Show calibration status"));
     Serial.println(F("-----------------------------------------------------------------------------------------------------------------------"));
 }
 

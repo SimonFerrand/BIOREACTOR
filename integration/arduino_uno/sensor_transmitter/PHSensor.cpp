@@ -39,7 +39,7 @@ void PHSensor::displayCalibrationValues() {
     Serial.println(F(" mV/pH"));
     
     if (acidVoltage > neutralVoltage) {
-        Serial.println(F("ATTENTION: The calibration values seem to be inverted!"));
+        //Serial.println(F("ATTENTION: The calibration values seem to be inverted!"));
     }
 }
 

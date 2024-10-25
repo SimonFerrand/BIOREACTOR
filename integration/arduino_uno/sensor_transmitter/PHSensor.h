@@ -62,7 +62,6 @@ ATTENTION : After completing the measurement, disconnect the pH probe from the s
 #include <Arduino.h>
 
 #define PH_EEPROM_ADDR 0
-#define O2_EEPROM_ADDR 100
 
 #define PHVALUEADDR 0x00    // Adresse de début pour les données de calibration pH dans l'EEPROM
 

@@ -11,11 +11,12 @@ public:
     float readValue() override;
     const char* getName() const override { return _name; }
     
-    void startCalibration(int points);
-    void saveCalibrationPoint();
-    void finishCalibration();
-    String getCalibrationStatus();
+    void startCalibration();
+    void calibrateZero();
+    void calibrateSatLow();
+    void calibrateSatHigh();
     void resetCalibration();
+    void getCalibrationStatus();
 
 private:
     HardwareSerial* _serial;

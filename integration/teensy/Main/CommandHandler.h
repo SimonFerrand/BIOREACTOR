@@ -45,6 +45,18 @@ private:
 
     void handleO2CalibrationCommand(const String& command);
 
+    String sendCommandAndWaitResponse(const String& cmd) {
+        Serial7.println(cmd);
+        unsigned long startTime = millis();
+        while (!Serial7.available()) {
+            if (millis() - startTime > 5000) {
+                Logger::log(LogLevel::ERROR, "Timeout waiting for Arduino response");
+                return "ERROR:TIMEOUT";
+            }
+        }
+        return Serial7.readStringUntil('\n');
+    }
+
 
 };
 

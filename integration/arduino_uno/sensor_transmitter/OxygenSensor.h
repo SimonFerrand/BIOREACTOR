@@ -58,7 +58,7 @@ Calibration protocol :
 #include <EEPROM.h>
 #include <Arduino.h>
 
-#define O2_EEPROM_ADDR 100
+#define O2_EEPROM_ADDR 200
 
 class OxygenSensor : public SensorInterface {
 public:
@@ -74,6 +74,8 @@ public:
     void resetCalibration();
     String getCalibrationStatus();
 
+
+
 private:
     int _pin;
     const char* _name;
@@ -82,20 +84,32 @@ private:
     static const uint16_t VREF = 5000;    // 5000mV
     static const uint16_t ADC_RES = 1024;  // ADC Resolution
     static const uint8_t SAMPLES_COUNT = 10;
-    
+
     float zeroVoltage;
     float saturationVoltageLow;
     float saturationVoltageHigh;
     float zeroTemperature;
     float saturationTempLow;
     float saturationTempHigh;
-
+    
     enum class CalibrationState {
         NONE,
         PARTIAL,
         COMPLETE
     };
     CalibrationState calibrationState;
+
+    // Structure pour les données de calibration
+    struct CalibrationData {
+        float zeroVoltage;
+        float saturationVoltageLow;
+        float saturationVoltageHigh;
+        float zeroTemperature;
+        float saturationTempLow;
+        float saturationTempHigh;
+        int calibrationState;
+        byte signature;  // Signature pour validation
+    };
 
     // Limites de température
     static const uint8_t TEMP_MIN = 15;
@@ -112,6 +126,8 @@ private:
     void printDebugInfo(float voltage, float temperature, float doValue);
     void saveCalibrationToEEPROM();
     void loadCalibrationFromEEPROM();
+
+
 };
 
 #endif

@@ -22,19 +22,24 @@ float PHSensor::readValue() {
 void PHSensor::enterCalibration() {
     float temperature = _tempSensor->readValue();
     String response = sendCommand("PH:CAL:ENTERPH:" + String(temperature, 2));
-    Logger::log(LogLevel::INFO, "pH calibration enter response: " + response);
+    // La réponse sera "ENTERPH:OK" ou "ENTERPH:INVALID_CMD"
+    Logger::log(LogLevel::INFO, "pH calibration response: " + response);
+    Logger::log(LogLevel::INFO, F(". Place probe in pH 7.0 or pH 4.0 buffer solution"));
+    Logger::log(LogLevel::INFO, F(". Type 'ph CALPH' when ready"));
 }
 
 void PHSensor::calibrate() {
     float temperature = _tempSensor->readValue();
     String response = sendCommand("PH:CAL:CALPH:" + String(temperature, 2));
     Logger::log(LogLevel::INFO, "pH calibration response: " + response);
+    Logger::log(LogLevel::INFO, F("4. Repeat for the second buffer solution or type 'ph EXITPH' to save and finish"));
 }
 
 void PHSensor::exitCalibration() {
     float temperature = _tempSensor->readValue();
     String response = sendCommand("PH:CAL:EXITPH:" + String(temperature, 2));
     Logger::log(LogLevel::INFO, "pH calibration exit response: " + response);
+    Logger::log(LogLevel::INFO, F("Calibration saved"));
 }
 
 String PHSensor::sendCommand(const String& cmd) {

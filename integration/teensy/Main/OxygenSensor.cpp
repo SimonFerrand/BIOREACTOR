@@ -20,33 +20,51 @@ float OxygenSensor::readValue() {
     return -1;
 }
 
-void OxygenSensor::startCalibration(int points) {
-    String response = sendCommand("O2:CAL:START:" + String(points));
-    Logger::log(LogLevel::INFO, "O2 calibration start response: " + response);
+void OxygenSensor::startCalibration() {
+    String response = sendCommand("O2:CAL:START");
+    Logger::log(LogLevel::INFO, "O2 calibration response: " + response);
+    Logger::log(LogLevel::INFO, F("Starting O2 calibration"));
+    Logger::log(LogLevel::INFO, F("1. Prepare zero solution (2g Na2S2O3 in 100mL)"));
+    Logger::log(LogLevel::INFO, F("   Wait 1 hour and type 'o2 cal zero' when ready"));
 }
 
-void OxygenSensor::saveCalibrationPoint() {
+void OxygenSensor::calibrateZero() {
     float temperature = _tempSensor->readValue();
-    String response = sendCommand("O2:CAL:SAVE:" + String(temperature, 2));
-    Logger::log(LogLevel::INFO, "O2 calibration save point response: " + response);
+    String response = sendCommand("O2:CAL:ZERO:" + String(temperature, 1));
+    Logger::log(LogLevel::INFO, "O2 zero calibration response: " + response);
+    Logger::log(LogLevel::INFO, F("2. Prepare room temperature water (20-25°C)"));
+    Logger::log(LogLevel::INFO, F("   Aerate for 15min minimum"));
+    Logger::log(LogLevel::INFO, F("   Type 'o2 cal low' when ready"));
 }
 
-void OxygenSensor::finishCalibration() {
-    String response = sendCommand("O2:CAL:FINISH");
-    Logger::log(LogLevel::INFO, "O2 calibration finish response: " + response);
+void OxygenSensor::calibrateSatLow() {
+    float temperature = _tempSensor->readValue();
+    String response = sendCommand("O2:CAL:SAT_LOW:" + String(temperature, 1));
+    Logger::log(LogLevel::INFO, "O2 low saturation calibration response: " + response);
+    Logger::log(LogLevel::INFO, F("3. Heat water to ~35°C while aerating"));
+    Logger::log(LogLevel::INFO, F("   Type 'o2 cal high' when ready"));
 }
 
-String OxygenSensor::getCalibrationStatus() {
-    return sendCommand("O2:CAL:STATUS");
+void OxygenSensor::calibrateSatHigh() {
+    float temperature = _tempSensor->readValue();
+    String response = sendCommand("O2:CAL:SAT_HIGH:" + String(temperature, 1));
+    Logger::log(LogLevel::INFO, "O2 high saturation calibration response: " + response);
+    Logger::log(LogLevel::INFO, F("Calibration completed!"));
 }
 
+void OxygenSensor::getCalibrationStatus() {
+    String response = sendCommand("O2:CAL:STATUS");
+    Logger::log(LogLevel::INFO, "O2 calibration status: " + response);
+}
 void OxygenSensor::resetCalibration() {
     String response = sendCommand("O2:CAL:RESET");
     Logger::log(LogLevel::INFO, "O2 calibration reset response: " + response);
 }
 
 String OxygenSensor::sendCommand(const String& cmd) {
+    Logger::log(LogLevel::INFO, "Sending command to Arduino: " + cmd);
     _serial->println(cmd);
+    
     unsigned long startTime = millis();
     while (!_serial->available()) {
         if (millis() - startTime > 5000) {
@@ -54,5 +72,8 @@ String OxygenSensor::sendCommand(const String& cmd) {
             return "ERROR:TIMEOUT";
         }
     }
-    return _serial->readStringUntil('\n');
+    String response = _serial->readStringUntil('\n');
+    response.trim();
+    Logger::log(LogLevel::INFO, "Received response from Arduino: " + response);
+    return response;
 }

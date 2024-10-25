@@ -139,7 +139,7 @@ void setup() {
     pidManager.initialize(2.0, 5.0, 1.0,  // (tempKp, tempKi, tempKd)
                           2.0, 5.0, 1.0,  // (phKp, phKi, phKd,)
                           15.0, 8.0, 2.0); // (doKp, doKi, doKd) // 10.0, 5.0, 2.0
-    pidManager.setHysteresis(0.5, 0.3, 0.5); // Température Hystérésis : 0.5 à 1.0 °C; pH Hystérésis : 0.2 à 0.3; Oxygène Dissous Hystérésis : 2.0 à 3.0 % sat
+    pidManager.setHysteresis(0.5, 0.3, 0.3); // Température Hystérésis : 0.5 à 1.0 °C; pH Hystérésis : 0.2 à 0.3; Oxygène Dissous Hystérésis : 0.2 g/L
     //Logger::log(LogLevel::INFO, "PID setup");
     Logger::log(LogLevel::INFO, F("PID setup"));
 

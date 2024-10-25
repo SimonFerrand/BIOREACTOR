@@ -64,7 +64,7 @@ String PHSensor::calibration(const char* cmd, float temperature) {
 
     if (strcmp(cmd, "ENTERPH") == 0 || strcmp(cmd, "CALPH") == 0 || strcmp(cmd, "EXITPH") == 0) {
         _ph.calibration(_voltage, temperature, const_cast<char*>(cmd)); // Call the calibration method from DFRobot_PH class
-        result = String(cmd) + "_OK";
+        result = String(cmd) + "OK";
     } else {
         result = "INVALID_CMD";
     }

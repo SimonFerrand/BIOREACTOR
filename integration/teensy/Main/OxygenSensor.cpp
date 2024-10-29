@@ -62,7 +62,7 @@ void OxygenSensor::resetCalibration() {
 }
 
 String OxygenSensor::sendCommand(const String& cmd) {
-    Logger::log(LogLevel::INFO, "Sending command to Arduino: " + cmd);
+    //Logger::log(LogLevel::INFO, "Sending command to Arduino: " + cmd);
     _serial->println(cmd);
     
     unsigned long startTime = millis();
@@ -74,6 +74,6 @@ String OxygenSensor::sendCommand(const String& cmd) {
     }
     String response = _serial->readStringUntil('\n');
     response.trim();
-    Logger::log(LogLevel::INFO, "Received response from Arduino: " + response);
+    //Logger::log(LogLevel::INFO, "Received response from Arduino: " + response);
     return response;
 }

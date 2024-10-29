@@ -51,6 +51,7 @@ Calibration protocol :
     o2 calibrate finish
 */
 
+// OxygenSensor.h
 #ifndef OXYGENSENSOR_H
 #define OXYGENSENSOR_H
 
@@ -58,39 +59,34 @@ Calibration protocol :
 #include <EEPROM.h>
 #include <Arduino.h>
 
-#define O2_EEPROM_ADDR 200
-
 class OxygenSensor : public SensorInterface {
 public:
     OxygenSensor(int pin, const char* name);
     void begin() override;
     float readValue(float temperature) override;
     const char* getName() const override { return _name; }
-
-    // Points de calibration
+    
     void saveZeroPoint(float temp);
     void saveSaturationLowTemp(float temp);
     void saveSaturationHighTemp(float temp);
     void resetCalibration();
     String getCalibrationStatus();
-
-
+    void debugEEPROM();
 
 private:
+    struct CalibrationData {
+        float zeroVoltage;        // 4 bytes
+        float zeroTemperature;    // 4 bytes
+        float saturationVoltageLow;  // 4 bytes
+        float saturationTempLow;     // 4 bytes
+        float saturationVoltageHigh; // 4 bytes
+        float saturationTempHigh;    // 4 bytes
+        byte isInitialized;       // 1 byte
+    };
+
     int _pin;
     const char* _name;
-
-    // Configuration ADC
-    static const uint16_t VREF = 5000;    // 5000mV
-    static const uint16_t ADC_RES = 1024;  // ADC Resolution
-    static const uint8_t SAMPLES_COUNT = 10;
-
-    float zeroVoltage;
-    float saturationVoltageLow;
-    float saturationVoltageHigh;
-    float zeroTemperature;
-    float saturationTempLow;
-    float saturationTempHigh;
+    CalibrationData calibData;
     
     enum class CalibrationState {
         NONE,
@@ -98,25 +94,17 @@ private:
         COMPLETE
     };
     CalibrationState calibrationState;
-
-    // Structure pour les données de calibration
-    struct CalibrationData {
-        float zeroVoltage;
-        float saturationVoltageLow;
-        float saturationVoltageHigh;
-        float zeroTemperature;
-        float saturationTempLow;
-        float saturationTempHigh;
-        int calibrationState;
-        byte signature;  // Signature pour validation
-    };
-
-    // Limites de température
+    
+    // Constantes
     static const uint8_t TEMP_MIN = 15;
     static const uint8_t TEMP_MAX = 40;
-    static const float DO_TABLE[26];  // 15-40°C
+    static const float DO_TABLE[26];
+    static const uint16_t VREF = 5000;
+    static const uint16_t ADC_RES = 1024;
+    static const uint8_t SAMPLES_COUNT = 10;
+    static const int EEPROM_START_ADDR = 20; // After pH, which uses 0-19
 
-
+    // Méthodes privées
     float readAverageVoltage();
     float calculateDO(float voltage, float temperature);
     float calculateUncalibratedDO(float voltage, float temperature);
@@ -124,10 +112,11 @@ private:
     float interpolateVoltage(float temperature);
     void updateCalibrationState();
     void printDebugInfo(float voltage, float temperature, float doValue);
-    void saveCalibrationToEEPROM();
-    void loadCalibrationFromEEPROM();
-
-
+    
+    // Méthodes qui manquaient dans la déclaration
+    void loadCalibration();
+    void resetToDefaultValues();
+    bool isValidValues();
 };
 
 #endif

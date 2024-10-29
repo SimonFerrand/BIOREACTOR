@@ -62,8 +62,7 @@ ATTENTION : After completing the measurement, disconnect the pH probe from the s
 #include <Arduino.h>
 
 #define PH_EEPROM_ADDR 0
-
-#define PHVALUEADDR 0x00    // Adresse de début pour les données de calibration pH dans l'EEPROM
+#define PHVALUEADDR 0x00    // Start address for pH calibration data in EEPROM
 
 class PHSensor : public SensorInterface {
 public:

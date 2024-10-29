@@ -38,11 +38,20 @@ const float OxygenSensor::DO_TABLE[26] = {
 
 OxygenSensor::OxygenSensor(int pin, const char* name) 
     : _pin(pin), _name(name), calibrationState(CalibrationState::NONE) {
-    resetCalibration();
 }
 
 void OxygenSensor::begin() {
-    loadCalibrationFromEEPROM();
+    delay(100);
+    
+    EEPROM.get(EEPROM_START_ADDR, calibData);
+    
+    if(calibData.isInitialized != 0xAB) {
+        Serial.println(F("First use - Initializing"));
+        resetCalibration();
+    } else {
+        updateCalibrationState();
+    }
+    
     Serial.print(_name);
     Serial.println(F(" initialized"));
 }
@@ -55,10 +64,8 @@ float OxygenSensor::readValue(float temperature) {
         temperature = constrain(temperature, 15.0f, 40.0f);
     }
 
-    // Lecture tension avec moyenne mobile
     float voltage = readAverageVoltage();
     
-    // Calcul DO selon état calibration
     float doValue = 0.0f;
     if (calibrationState == CalibrationState::COMPLETE) {
         doValue = calculateDO(voltage, temperature);
@@ -67,78 +74,85 @@ float OxygenSensor::readValue(float temperature) {
         doValue = calculateUncalibratedDO(voltage, temperature);
     }
 
-    doValue = round(doValue * 10.0f) / 10.0f; // Round to 1 decimal place
-
-    // Debug détaillé
+    doValue = round(doValue * 10.0f) / 10.0f;  // Rounded to 1 decimal place
+    
     printDebugInfo(voltage, temperature, doValue);
     
     return doValue;
 }
 
 void OxygenSensor::saveZeroPoint(float temp) {
-    zeroVoltage = readAverageVoltage();
-    zeroTemperature = temp;
+    float voltage = readAverageVoltage();
+    
+    calibData.zeroVoltage = voltage;
+    calibData.zeroTemperature = temp;
+    calibData.isInitialized = 0xAB;
+    
+    EEPROM.put(EEPROM_START_ADDR, calibData);
     updateCalibrationState();
-    saveCalibrationToEEPROM();
     
     Serial.print(F("Zero point saved: "));
-    Serial.print(zeroVoltage, 1);
+    Serial.print(voltage, 1);
     Serial.print(F("mV at "));
     Serial.print(temp, 1);
     Serial.println(F("°C"));
 }
 
+
 void OxygenSensor::saveSaturationLowTemp(float temp) {
-    saturationVoltageLow = readAverageVoltage();
-    saturationTempLow = temp;
+    float voltage = readAverageVoltage();
+    
+    calibData.saturationVoltageLow = voltage;
+    calibData.saturationTempLow = temp;
+    
+    EEPROM.put(EEPROM_START_ADDR, calibData);
     updateCalibrationState();
-    saveCalibrationToEEPROM();
     
     Serial.print(F("Low temp saturation saved: "));
-    Serial.print(saturationVoltageLow, 1);
+    Serial.print(voltage, 1);
     Serial.print(F("mV at "));
     Serial.print(temp, 1);
     Serial.println(F("°C"));
 }
 
 void OxygenSensor::saveSaturationHighTemp(float temp) {
-    saturationVoltageHigh = readAverageVoltage();
-    saturationTempHigh = temp;
+    float voltage = readAverageVoltage();
+    
+    calibData.saturationVoltageHigh = voltage;
+    calibData.saturationTempHigh = temp;
+    
+    EEPROM.put(EEPROM_START_ADDR, calibData);
     updateCalibrationState();
-    saveCalibrationToEEPROM();
     
     Serial.print(F("High temp saturation saved: "));
-    Serial.print(saturationVoltageHigh, 1);
+    Serial.print(voltage, 1);
     Serial.print(F("mV at "));
     Serial.print(temp, 1);
     Serial.println(F("°C"));
 }
 
+
 String OxygenSensor::getCalibrationStatus() {
     String status = F("O2 Calibration Status:\n");
     
-    // Point zéro
     status += F("Zero: ");
-    status += String(zeroVoltage, 1);
+    status += String(calibData.zeroVoltage, 1);
     status += F("mV at ");
-    status += String(zeroTemperature, 1);
+    status += String(calibData.zeroTemperature, 1);
     status += F("C\n");
     
-    // Point saturation basse température
     status += F("Sat Low: ");
-    status += String(saturationVoltageLow, 1);
+    status += String(calibData.saturationVoltageLow, 1);
     status += F("mV at ");
-    status += String(saturationTempLow, 1);
+    status += String(calibData.saturationTempLow, 1);
     status += F("C\n");
     
-    // Point saturation haute température
     status += F("Sat High: ");
-    status += String(saturationVoltageHigh, 1);
+    status += String(calibData.saturationVoltageHigh, 1);
     status += F("mV at ");
-    status += String(saturationTempHigh, 1);
+    status += String(calibData.saturationTempHigh, 1);
     status += F("C\n");
     
-    // État
     status += F("State: ");
     switch (calibrationState) {
         case CalibrationState::NONE: 
@@ -158,36 +172,34 @@ float OxygenSensor::readAverageVoltage() {
     uint32_t sum = 0;
     for(int i = 0; i < SAMPLES_COUNT; i++) {
         sum += analogRead(_pin);
-        delay(10);  // Court délai entre les lectures
+        delay(10);  
     }
     return (sum * VREF) / (ADC_RES * SAMPLES_COUNT);
 }
 
 float OxygenSensor::calculateDO(float voltage, float temperature) {
-    // 1. Obtenir concentration à saturation pour cette température
+    // 1. get saturation concentration for this temperature
     float saturationDO = getSaturationDO(temperature);
-    
-    // 2. Obtenir tension de saturation interpolée
+    // 2. get interpolated saturation voltage
     float saturationVoltage = interpolateVoltage(temperature);
+    // 3. calculate DO with modified Nernst equation
+    float voltageRange = saturationVoltage - calibData.zeroVoltage;
     
-    // 3. Calculer DO avec équation de Nernst modifiée
-    float voltageRange = saturationVoltage - zeroVoltage;
-    
-    // Protection division par zéro et validations
+    // Zero division protection and validation
     if (voltageRange < 50.0f) {  // Moins de 50mV entre zéro et saturation
         Serial.println(F("Error: Invalid voltage range"));
         return 0.0f;
     }
     
-    float doValue = saturationDO * (voltage - zeroVoltage) / voltageRange;
-    
-    // Ne jamais retourner de valeur négative ou au-dessus de la saturation
+    float doValue = saturationDO * (voltage - calibData.zeroVoltage) / voltageRange;
+
+    // Never return a negative value or a value above saturation
     return constrain(doValue, 0.0f, saturationDO);
 }
 
 float OxygenSensor::calculateUncalibratedDO(float voltage, float temperature) {
     float saturationDO = getSaturationDO(temperature);
-    return saturationDO * voltage / 1000.0f;  // Approximation grossière
+    return saturationDO * voltage / 1000.0f;  // Rough approximation
 }
 
 float OxygenSensor::getSaturationDO(float temperature) {
@@ -195,25 +207,32 @@ float OxygenSensor::getSaturationDO(float temperature) {
     return DO_TABLE[index];
 }
 
+
 float OxygenSensor::interpolateVoltage(float temperature) {
-    if (temperature <= saturationTempLow) {
-        return saturationVoltageLow;
+    if (temperature <= calibData.saturationTempLow) {
+        return calibData.saturationVoltageLow;
     }
-    if (temperature >= saturationTempHigh) {
-        return saturationVoltageHigh;
+    if (temperature >= calibData.saturationTempHigh) {
+        return calibData.saturationVoltageHigh;
     }
     
-    float ratio = (temperature - saturationTempLow) / (saturationTempHigh - saturationTempLow);
-    return saturationVoltageLow + ratio * (saturationVoltageHigh - saturationVoltageLow);
+    float ratio = (temperature - calibData.saturationTempLow) / 
+                  (calibData.saturationTempHigh - calibData.saturationTempLow);
+    return calibData.saturationVoltageLow + 
+           ratio * (calibData.saturationVoltageHigh - calibData.saturationVoltageLow);
 }
 
 void OxygenSensor::updateCalibrationState() {
-    if (zeroVoltage > 0) {
-        if (saturationVoltageLow > 0 && saturationVoltageHigh > 0) {
+    if (calibData.zeroVoltage > 0) {
+        if (calibData.saturationVoltageLow > 0 && calibData.saturationVoltageHigh > 0) {
             calibrationState = CalibrationState::COMPLETE;
-        } else if (saturationVoltageLow > 0 || saturationVoltageHigh > 0) {
+        } else if (calibData.saturationVoltageLow > 0 || calibData.saturationVoltageHigh > 0) {
             calibrationState = CalibrationState::PARTIAL;
+        } else {
+            calibrationState = CalibrationState::NONE;
         }
+    } else {
+        calibrationState = CalibrationState::NONE;
     }
 }
 
@@ -231,76 +250,98 @@ void OxygenSensor::printDebugInfo(float voltage, float temperature, float doValu
     Serial.println(F("mV"));
 }
 
-void OxygenSensor::saveCalibrationToEEPROM() {
-    CalibrationData data;
-    data.zeroVoltage = zeroVoltage;
-    data.saturationVoltageLow = saturationVoltageLow;
-    data.saturationVoltageHigh = saturationVoltageHigh;
-    data.zeroTemperature = zeroTemperature;
-    data.saturationTempLow = saturationTempLow;
-    data.saturationTempHigh = saturationTempHigh;
-    data.calibrationState = (int)calibrationState;
-    data.signature = 0x42;  // Signature pour validation
 
-    // Debug avant écriture
-    Serial.println(F("Writing O2 calibration to EEPROM:"));
-    Serial.print(F("Address: ")); Serial.println(O2_EEPROM_ADDR);
-    Serial.print(F("Signature: 0x")); Serial.println(data.signature, HEX);
-    Serial.print(F("Zero V: ")); Serial.println(data.zeroVoltage);
-    Serial.print(F("SatLow V: ")); Serial.println(data.saturationVoltageLow);
-    Serial.print(F("SatHigh V: ")); Serial.println(data.saturationVoltageHigh);
+void OxygenSensor::loadCalibration() {
+    Serial.println(F("\n=== EEPROM Raw Values ==="));
+    
+    // Lire les données directement dans calibData
+    EEPROM.get(EEPROM_START_ADDR, calibData);
+    
+    Serial.print(F("Zero V: ")); Serial.println(calibData.zeroVoltage);
+    Serial.print(F("Zero T: ")); Serial.println(calibData.zeroTemperature);
+    Serial.print(F("Sat Low V: ")); Serial.println(calibData.saturationVoltageLow);
+    Serial.print(F("Sat Low T: ")); Serial.println(calibData.saturationTempLow);
+    Serial.print(F("Sat High V: ")); Serial.println(calibData.saturationVoltageHigh);
+    Serial.print(F("Sat High T: ")); Serial.println(calibData.saturationTempHigh);
 
-    EEPROM.put(O2_EEPROM_ADDR, data);
-
-    // Vérification immédiate
-    CalibrationData verify;
-    EEPROM.get(O2_EEPROM_ADDR, verify);
-    Serial.println(F("Verification after write:"));
-    Serial.print(F("Signature: 0x")); Serial.println(verify.signature, HEX);
-    Serial.print(F("Zero V: ")); Serial.println(verify.zeroVoltage);
+    // Validation
+    if (!isValidValues()) {
+        Serial.println(F("Invalid values detected - Resetting to defaults"));
+        resetToDefaultValues();
+    } else {
+        updateCalibrationState();
+        Serial.println(F("Calibration loaded successfully"));
+    }
 }
 
-void OxygenSensor::loadCalibrationFromEEPROM() {
-    CalibrationData data;
-    EEPROM.get(O2_EEPROM_ADDR, data);
-
-    if (data.signature != 0x42) {
-        Serial.println(F("No valid calibration found in EEPROM"));
-        resetCalibration();
-        return;
-    }
-
-    // Charger toutes les valeurs
-    zeroVoltage = data.zeroVoltage;
-    saturationVoltageLow = data.saturationVoltageLow;
-    saturationVoltageHigh = data.saturationVoltageHigh;
-    zeroTemperature = data.zeroTemperature;
-    saturationTempLow = data.saturationTempLow;
-    saturationTempHigh = data.saturationTempHigh;
-    calibrationState = (CalibrationState)data.calibrationState;
-
-    Serial.println(F("Calibration loaded from EEPROM:"));
-    Serial.print(F("Zero: ")); Serial.print(zeroVoltage);
-    Serial.print(F("mV @ ")); Serial.println(zeroTemperature);
-    Serial.print(F("SatLow: ")); Serial.print(saturationVoltageLow);
-    Serial.print(F("mV @ ")); Serial.println(saturationTempLow);
-    Serial.print(F("SatHigh: ")); Serial.print(saturationVoltageHigh);
-    Serial.print(F("mV @ ")); Serial.println(saturationTempHigh);
+void OxygenSensor::resetToDefaultValues() {
+    // Reset calibData to default values
+    calibData.zeroVoltage = 0.0f;
+    calibData.zeroTemperature = 25.0f;
+    calibData.saturationVoltageLow = 0.0f;
+    calibData.saturationTempLow = 25.0f;
+    calibData.saturationVoltageHigh = 0.0f;
+    calibData.saturationTempHigh = 25.0f;
+    calibData.isInitialized = 0xAB;
+    
+    // Save at once
+    EEPROM.put(EEPROM_START_ADDR, calibData);
+    
+    calibrationState = CalibrationState::NONE;
+    Serial.println(F("Default values set"));
 }
 
 void OxygenSensor::resetCalibration() {
-    zeroVoltage = 0.0f;
-    saturationVoltageLow = 0.0f;
-    saturationVoltageHigh = 0.0f;
-    zeroTemperature = 20.0f;
-    saturationTempLow = 20.0f;
-    saturationTempHigh = 35.0f;
-    calibrationState = CalibrationState::NONE;
-
-    // Effacer la signature dans l'EEPROM
-    CalibrationData data;
-    data.signature = 0xFF;  // Signature invalide
-    EEPROM.put(O2_EEPROM_ADDR, data);
-
-    Serial.println(F("Calibration reset"));
+    calibData.zeroVoltage = 0.0f;
+    calibData.zeroTemperature = 25.0f;
+    calibData.saturationVoltageLow = 0.0f;
+    calibData.saturationTempLow = 25.0f;
+    calibData.saturationVoltageHigh = 0.0f;
+    calibData.saturationTempHigh = 25.0f;
+    calibData.isInitialized = 0xAB;
+    
+    EEPROM.put(EEPROM_START_ADDR, calibData);
+    updateCalibrationState();
+    
+    Serial.println(F("Calibration reset complete"));
 }
+
+
+bool OxygenSensor::isValidValues() {
+    if (calibData.zeroVoltage < 0.0f || calibData.zeroVoltage > 3000.0f) return false;
+    if (calibData.saturationVoltageLow > 3000.0f) return false;
+    if (calibData.saturationVoltageHigh > 3000.0f) return false;
+    
+    if (calibData.zeroTemperature < 0.0f || calibData.zeroTemperature > 40.0f) return false;
+    if (calibData.saturationTempLow < 0.0f || calibData.saturationTempLow > 40.0f) return false;
+    if (calibData.saturationTempHigh < 0.0f || calibData.saturationTempHigh > 40.0f) return false;
+    
+    return true;
+}
+
+void OxygenSensor::debugEEPROM() {
+    Serial.println(F("\n=== EEPROM Debug ==="));
+    Serial.println(F("Current calibration data:"));
+    Serial.print(F("Zero: ")); 
+    Serial.print(calibData.zeroVoltage);
+    Serial.print(F("mV at "));
+    Serial.print(calibData.zeroTemperature);
+    Serial.println(F("°C"));
+    
+    Serial.print(F("Low: "));
+    Serial.print(calibData.saturationVoltageLow);
+    Serial.print(F("mV at "));
+    Serial.print(calibData.saturationTempLow);
+    Serial.println(F("°C"));
+    
+    Serial.print(F("High: "));
+    Serial.print(calibData.saturationVoltageHigh);
+    Serial.print(F("mV at "));
+    Serial.print(calibData.saturationTempHigh);
+    Serial.println(F("°C"));
+    
+    Serial.print(F("Initialized flag: 0x"));
+    Serial.println(calibData.isInitialized, HEX);
+}
+
+

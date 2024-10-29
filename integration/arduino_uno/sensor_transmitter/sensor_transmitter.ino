@@ -4,35 +4,31 @@
 #include "OxygenSensor.h"
 #include <EEPROM.h>
 
+// Configuration communication
 SoftwareSerial teensySerial(2, 3); // RX, TX
 
+// Capteurs
 PHSensor phSensor(A1, "phSensor");
 OxygenSensor oxygenSensor(A5, "oxygenSensor");
 
-SensorController sensorController;
-
-void initializeEEPROM() {
-    byte value;
-    EEPROM.get(0, value);
-    if (value == 255) { // Blank EEPROM
-        // Marquer l'EEPROM comme initialisée
-        EEPROM.put(0, (byte)0);
-        // Les valeurs par défaut sont maintenant gérées dans le constructeur de OxygenSensor
-        Serial.println(F("EEPROM initialized"));
-    }
-}
-
 void setup() {
+    // Initialisation des communications
     Serial.begin(115200);
+    while(!Serial) { }  // Attendre que le port série soit prêt
+    delay(1000);
     teensySerial.begin(9600);
-
-    // Initialisation des capteurs
-    sensorController.initialize(phSensor, oxygenSensor);
+    
+    Serial.println(F("=== System Initialization ==="));
+    
+    // Initialiser le controller et les capteurs
+    SensorController::initialize(phSensor, oxygenSensor);
     SensorController::beginAll();
     
-    Serial.println(F("System initialized"));
-    // Afficher l'état initial des calibrations
+    // État initial
+    Serial.println(F("\nInitial calibration status:"));
     Serial.println(oxygenSensor.getCalibrationStatus());
+    
+    Serial.println(F("\nSystem ready"));
 }
 
 void loop() {
@@ -40,12 +36,13 @@ void loop() {
         String command = teensySerial.readStringUntil('\n');
         command.trim();
         
-        Serial.print(F("Command received from Teensy: "));
+        Serial.print(F("Command received: "));
         Serial.println(command);
 
+        // pH commands
         if (command.startsWith(F("PH:READ:"))) {
             float temp = command.substring(8).toFloat();
-            float ph = phSensor.readValue(temp);
+            float ph = SensorController::readSensor("phSensor", temp);
             teensySerial.print(F("PH:"));
             teensySerial.println(ph);
         }
@@ -68,7 +65,7 @@ void loop() {
         // O2 commands
         else if (command.startsWith(F("O2:READ:"))) {
             float temp = command.substring(8).toFloat();
-            float o2 = oxygenSensor.readValue(temp);
+            float o2 = SensorController::readSensor("oxygenSensor", temp);
             teensySerial.print(F("O2:"));
             teensySerial.println(o2);
         }

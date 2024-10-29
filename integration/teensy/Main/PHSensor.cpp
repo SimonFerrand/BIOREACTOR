@@ -32,7 +32,7 @@ void PHSensor::calibrate() {
     float temperature = _tempSensor->readValue();
     String response = sendCommand("PH:CAL:CALPH:" + String(temperature, 2));
     Logger::log(LogLevel::INFO, "pH calibration response: " + response);
-    Logger::log(LogLevel::INFO, F("4. Repeat for the second buffer solution or type 'ph EXITPH' to save and finish"));
+    Logger::log(LogLevel::INFO, F("4. Type 'ph EXITPH' to save and finish"));
 }
 
 void PHSensor::exitCalibration() {

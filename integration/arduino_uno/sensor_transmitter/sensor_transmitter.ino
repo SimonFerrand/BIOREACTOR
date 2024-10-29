@@ -46,18 +46,25 @@ void loop() {
             teensySerial.print(F("PH:"));
             teensySerial.println(ph);
         }
+        /*
         else if (command.startsWith(F("PH:CAL:ENTERPH:"))) {
             float temp = command.substring(14).toFloat();
             String result = phSensor.calibration("ENTERPH", temp);
             teensySerial.println("ENTERPH:" + result);
         }
+        */
+        else if (command.startsWith(F("PH:CAL:ENTERPH:"))) {
+            float temp = command.substring(14 + 1).toFloat();
+            String result = phSensor.calibration("ENTERPH", temp);
+            teensySerial.println("ENTERPH:" + result);
+        }
         else if (command.startsWith(F("PH:CAL:CALPH:"))) {
-            float temp = command.substring(12).toFloat();
+            float temp = command.substring(12 + 1).toFloat();
             String result = phSensor.calibration("CALPH", temp);
             teensySerial.println("CALPH:" + result);
         }
         else if (command.startsWith(F("PH:CAL:EXITPH:"))) {
-            float temp = command.substring(13).toFloat();
+            float temp = command.substring(13 + 1).toFloat();
             String result = phSensor.calibration("EXITPH", temp);
             teensySerial.println("EXITPH:" + result);
         }

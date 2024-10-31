@@ -158,6 +158,16 @@ void PIDManager::adjustPIDStirringSpeed() {
         return;
     }
 
+    // Check if readings are valid
+    bool validTemp = tempInput > -100 && tempInput < 100;  // Reasonable temperature range
+    bool validPH = phInput > 0 && phInput < 14;           // Valid pH range
+    bool validDO = (doInput >= 0 && doInput <= 120) || doSetpoint == 0;  // Valid if within range (0-120%) OR if setpoint = 0
+
+    // Use maximum output but ignore PIDs with invalid readings
+    double tempOutputValid = validTemp ? abs(tempOutput) : 0;
+    double phOutputValid = validPH ? abs(phOutput) : 0;
+    double doOutputValid = (validDO && doSetpoint > 0) ? abs(doOutput) : 0;
+
     double maxOutput = max(max(abs(tempOutput), abs(phOutput)), abs(doOutput));
     int pidSpeed = map(maxOutput, 0, 100, ActuatorController::getStirringMotorMinRPM(), ActuatorController::getStirringMotorMaxRPM());
     int finalSpeed = max(pidSpeed, getMinStirringSpeed());
@@ -333,7 +343,7 @@ void PIDManager::updateDOPID() {
 
     // If set to 0, maintain constant aeration of 30%.
     if (doSetpoint == 0) {
-        ActuatorController::runActuator("airPump", 30, 0);  // 30% constant
+        ActuatorController::runActuator("airPump", 40, 0);  // 30% constant
         Logger::log(LogLevel::INFO, F("DO setpoint is 0, maintaining constant aeration at 30%"));
         return;
     }

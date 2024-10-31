@@ -60,12 +60,12 @@ TurbiditySensorSEN0554 turbiditySensorSEN0554(&SerialTurbidity, "turbiditySensor
 //TurbiditySensor turbiditySensor(A2, "turbiditySensor");          // Turbidity sensor (Analog: A2) 
 
 // Actuator declarations
-DCPump airPump(MCP4728_CHANNEL_A, 6, 30, "airPump");        // Air pump (PWM: MCP4728_CHANNEL_A, Relay: 6, Min PWM: 15) - 12V
-DCPump drainPump(MCP4728_CHANNEL_B, 9, 30, "drainPump");    // Drain pump (PWM: MCP4728_CHANNEL_B, Relay: 29, Min PWM: 15) - 24V         //3  >9
-DCPump samplePump(MCP4728_CHANNEL_C, 8, 30, "samplePump");// Sample pump (PWM: MCP4728_CHANNEL_C, Relay: 28, Min PWM: 15) - 24V          //2  > 8
-DCPump fillPump(MCP4728_CHANNEL_D, 5, 30, "fillPump");// Fill pump (PWM: MCP4728_CHANNEL_D, Relay: 7, Min PWM: 15) - 24V
-PeristalticPump nutrientPump(0x61, 0, 3, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 0, Min flow: 1, Max flow: 105.0) - 24V ; Allocate IC2 address by soldering A0 input to Vcc on MCP4725 board 
-PeristalticPump basePump(0x60, 1, 3, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0) ; NaOH @10% - 24V 
+DCPump airPump(MCP4728_CHANNEL_A, 6, 15, "airPump");        // Air pump (PWM: MCP4728_CHANNEL_A, Relay: 6, Min PWM: 15) - 12V
+DCPump drainPump(MCP4728_CHANNEL_B, 9, 15, "drainPump");    // Drain pump (PWM: MCP4728_CHANNEL_B, Relay: 29, Min PWM: 15) - 24V         //3  >9
+DCPump samplePump(MCP4728_CHANNEL_C, 8, 15, "samplePump");// Sample pump (PWM: MCP4728_CHANNEL_C, Relay: 28, Min PWM: 15) - 24V          //2  > 8
+DCPump fillPump(MCP4728_CHANNEL_D, 5, 15, "fillPump");// Fill pump (PWM: MCP4728_CHANNEL_D, Relay: 7, Min PWM: 15) - 24V
+PeristalticPump nutrientPump(0x61, 0, 2, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 0, Min flow: 1, Max flow: 105.0) - 24V ; Allocate IC2 address by soldering A0 input to Vcc on MCP4725 board 
+PeristalticPump basePump(0x60, 1, 2, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0) ; NaOH @10% - 24V 
 StirringMotor stirringMotor(22, 7, 390, 1500,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000) - 12V
 HeatingPlate heatingPlate(4, false, "heatingPlate");            // Heating plate (Relay: 12, Not PWM capable) - 24V
 LEDGrowLight ledGrowLight(32, "ledGrowLight");                   // LED grow light (Relay: 27) 

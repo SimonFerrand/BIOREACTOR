@@ -54,5 +54,6 @@ bool PeristalticPump::isOn() const {
 // Converts flow rate in ml/min to DAC value
 uint16_t PeristalticPump::flowRateToDAC(float _flowRate) {
     float proportion = _flowRate / _maxFlowRate;       // Calculate proportion of max flow rate
-    return static_cast<uint16_t>(proportion * 4095);  // Convert to DAC value (0-4095)
+    return static_cast<uint16_t>(proportion * 4095* (5.0/5.4));  // Convert to DAC value (0-4095) // Scale by voltage ratio to compensate DAC voltage ; because the bioreactor operates at 5.4v instead of 5.0v
+                                                                 // Adjust DAC output scaling to compensate for 5.4V power supply instead of standard 5.0V, ensuring consistent pump speeds across different DAC supply voltages.
 }

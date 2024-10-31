@@ -2,6 +2,34 @@
 #include <Arduino.h>
 #include "Logger.h"
 
+
+/*
+# Dextrose feed parameters
+Target
+ - Total volume to be injected: 146.67 ml
+ - Desired duration: 24 hours
+ - Average hourly volume: 146.67 ml ÷ 24 = 6.11 ml/h
+Calculation of optimum parameters
+ 1- For regular addition over 24 hours :
+    - Total cycle: 5 minutes (as at present: activation + pause)
+    - Number of cycles over 24h: 288 cycles
+    - Volume per cycle: 146.67 ml ÷ 288 = 0.51 ml/cycle
+
+ 2- With a reasonable flow rate of 3 ml/min :
+    - Activation time required: (0.51 ml ÷ 3 ml/min) × 60 = 10.2 seconds
+    - Rounded to 10 seconds for simplicity
+
+ 3- Setting
+static const unsigned long NUTRIENT_ACTIVATION_TIME = 10000;  // 10 secondes
+static const unsigned long NUTRIENT_PAUSE_TIME = 290000;      // 290 secondes (4 min 50 sec)
+static constexpr float DEFAULT_NUTRIENT_FLOW_RATE = 3.0;     // 3 ml/min
+
+# NaOH 1.5% :
+    - Place 150ml of distilled water in a clean 200ml bottle.
+    - Add 10ml NaOH 30.5%, then make up to 200ml with water and mix gently.
+
+*/
+
 FermentationProgram::FermentationProgram(PIDManager& pidManager, VolumeManager& volumeManager)
     : ProgramBase(),
       pidManager(pidManager),
@@ -255,7 +283,7 @@ void FermentationProgram::addNutrientsContinuously() {
 void FermentationProgram::addNutrientsContinuouslyFixedRate(float fixedFlowRate) {
     unsigned long currentTime = millis();
 
-    // Vérifier si le programme est toujours en cours d'exécution
+    // Check if the program is still running
     if (!_isRunning || _isPaused) {
         if (ActuatorController::isActuatorRunning("nutrientPump")) {
             unsigned long runTime = currentTime - lastNutrientActivationTime;
@@ -269,9 +297,9 @@ void FermentationProgram::addNutrientsContinuouslyFixedRate(float fixedFlowRate)
         return;
     }
 
-    // Vérifier si nous ajoutons actuellement des nutriments
+    // Check whether we are currently adding nutrients
     if (ActuatorController::isActuatorRunning("nutrientPump")) {
-        // Vérifier s'il est temps d'arrêter l'ajout de nutriments
+        // Check if it's time to stop adding nutrients
         if (currentTime - lastNutrientActivationTime >= plannedNutrientActivationTime) {
             ActuatorController::stopActuator("nutrientPump");
             float addedVolume = (fixedFlowRate / 60.0) * (plannedNutrientActivationTime / 1000.0);
@@ -285,12 +313,12 @@ void FermentationProgram::addNutrientsContinuouslyFixedRate(float fixedFlowRate)
         return;
     }
 
-    // Vérifier que nous sommes toujours dans la période de pause
+    // Check that we are still in the pause period
     if (currentTime - lastNutrientActivationTime < (plannedNutrientActivationTime + NUTRIENT_PAUSE_TIME)) {
         return;
     }
 
-    // Vérifications avant d'ajouter des nutriments
+    // Checks before adding nutrients
     float currentVolume = volumeManager.getCurrentVolume();
     float maxAllowedVolume = volumeManager.getMaxAllowedVolume();
     if (currentVolume >= maxAllowedVolume) {
@@ -305,16 +333,16 @@ void FermentationProgram::addNutrientsContinuouslyFixedRate(float fixedFlowRate)
         return;
     }
 
-    // Calculer le volume de nutriments à ajouter
+    // Calculate the volume of nutrients to add
     float maxPossibleAddition = (fixedFlowRate / 60.0) * (NUTRIENT_ACTIVATION_TIME / 1000.0);
     float availableVolume = volumeManager.getAvailableVolume() * 1000; // Convert to ml
     float nutrientToAdd = min(maxPossibleAddition, availableVolume);
 
-    // Commencer à ajouter des nutriments s'il y a de la place
+    // Start adding nutrients if there's room
     if (nutrientToAdd > 0) {
         Logger::log(LogLevel::INFO, "Starting nutrient addition: " + String(nutrientToAdd, 3) + " ml");
         plannedNutrientActivationTime = static_cast<unsigned long>((nutrientToAdd / maxPossibleAddition) * NUTRIENT_ACTIVATION_TIME);
-        ActuatorController::runActuator("nutrientPump", fixedFlowRate, 0); // 0 pour une durée continue
+        ActuatorController::runActuator("nutrientPump", fixedFlowRate, 0); // 0 for continuous duration
         lastNutrientActivationTime = currentTime;
         Logger::log(LogLevel::INFO, "Nutrient pump activated for planned duration: " + String(plannedNutrientActivationTime) + " ms");
     } else {

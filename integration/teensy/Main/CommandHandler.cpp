@@ -177,8 +177,8 @@ void CommandHandler::printHelp() {
     Serial.println(F("---O2 Calibration commands:---"));
     Serial.println(F("  o2 cal start - Start calibration procedure"));
     Serial.println(F("  o2 cal zero  - Calibrate zero point"));
-    Serial.println(F("  o2 cal low   - Calibrate low temp saturation"));
-    Serial.println(F("  o2 cal high  - Calibrate high temp saturation"));
+    Serial.println(F("  o2 cal low   - Calibrate low temperature saturation"));
+    Serial.println(F("  o2 cal high  - Calibrate high temperature saturation"));
     Serial.println(F("  o2 cal reset - Reset calibration"));
     Serial.println(F("  o2 cal status    - Show calibration status"));
     Serial.println(F("-----------------------------------------------------------------------------------------------------------------------"));

@@ -189,6 +189,7 @@ void PIDManager::updateTemperaturePID() {
 }
 */
 
+/*
 void PIDManager::updateTemperaturePID() {
     if (!tempPIDRunning) return;
     
@@ -222,32 +223,78 @@ void PIDManager::updateTemperaturePID() {
                    String(tempHysteresis) + "°C). Heating paused.");
     }
 }
+*/
+
+void PIDManager::updateTemperaturePID() {
+    if (!tempPIDRunning) return;
+    
+    tempInput = SensorController::readSensor("waterTempSensor");
+    
+    if (abs(tempInput - tempSetpoint) > tempHysteresis) {
+        tempPID.Compute();  // Always calculate the PID output
+
+        // Activate heating only if temperature is below setpoint
+        if (tempInput < tempSetpoint) {
+            // Si la température est significativement inférieure à la cible, chauffez à pleine puissance
+            if (isStartupPhase && tempInput < tempSetpoint - 2.0) {
+                ActuatorController::runActuator("heatingPlate", 100, 0);
+                Logger::log(LogLevel::INFO, "Aggressive heating: 100%");
+            } else {
+                ActuatorController::runActuator("heatingPlate", tempOutput, 0);
+            }
+        } else {
+            ActuatorController::stopActuator("heatingPlate");
+            Logger::log(LogLevel::INFO, "Temperature above setpoint, heating paused");
+        }
+            
+        if (isStartupPhase && abs(tempInput - tempSetpoint) < 1) {
+            switchToMaintainMode();
+        } else {
+            ActuatorController::runActuator("heatingPlate", tempOutput, 0);
+        }
+        
+        Logger::log(LogLevel::INFO, "Temperature PID update - Setpoint: " + String(tempSetpoint) + 
+                    ", Input: " + String(tempInput) + ", Output: " + String(tempOutput) + "%, Startup: " + 
+                    String(isStartupPhase ? "Yes" : "No"));
+    } else {
+        ActuatorController::stopActuator("heatingPlate");  // Just stop heating but keep PID active
+        Logger::log(LogLevel::INFO, "Temperature within hysteresis range (" + 
+                   String(tempHysteresis) + "°C). Heating paused.");
+    }
+}
 
 void PIDManager::updatePHPID() {
     if (!phPIDRunning) return;
     
     static unsigned long lastAdjustmentTime = 0;
-    const unsigned long adjustmentDelay = 60000; // 1 minute delay between adjustments
+    const unsigned long adjustmentDelay = 120000; // 2 minutes delay between adjustments
     
     phInput = SensorController::readSensor("phSensor");
     
     if (abs(phInput - phSetpoint) > phHysteresis && millis() - lastAdjustmentTime > adjustmentDelay) {
         phPID.Compute();
-        double flowRate = convertPIDOutputToFlowRate(phOutput);
         
-        // Limit the flow rate
-        const double maxAllowedFlowRate = 10.0; // ml/min, adjust as needed
-        flowRate = min(flowRate, maxAllowedFlowRate);
-        
-        // Activate pump for a short duration
-        const unsigned long pumpDuration = 1000; // 1 second
-        ActuatorController::runActuator("basePump", flowRate, pumpDuration);
-        
-        lastAdjustmentTime = millis();
-        
-        Logger::log(LogLevel::INFO, "pH PID update - Setpoint: " + String(phSetpoint) + 
-                    ", Input: " + String(phInput) + ", Output: " + String(flowRate) + 
-                    ", Duration: " + String(pumpDuration));
+        // Activate heating only if temperature is below setpoint
+        if (phInput < phSetpoint) {
+            double flowRate = convertPIDOutputToFlowRate(phOutput);
+            
+            // Limit the flow rate
+            const double maxAllowedFlowRate = 10.0; // ml/min, adjust as needed 
+            flowRate = min(flowRate, maxAllowedFlowRate);
+            
+            // Activate pump for a short duration
+            const unsigned long pumpDuration = 1000; // 1 second
+            ActuatorController::runActuator("basePump", flowRate, pumpDuration);
+            
+            lastAdjustmentTime = millis();
+            
+            Logger::log(LogLevel::INFO, "pH PID update - Setpoint: " + String(phSetpoint) + 
+                        ", Input: " + String(phInput) + ", Output: " + String(flowRate) + 
+                        ", Duration: " + String(pumpDuration));
+        } else {
+            ActuatorController::stopActuator("basePump");
+            Logger::log(LogLevel::INFO, "pH above setpoint, base dosing paused");
+        }
     } else if (abs(phInput - phSetpoint) <= phHysteresis) {
         ActuatorController::stopActuator("basePump");  // Just stop pump but keep PID active
         Logger::log(LogLevel::INFO, "pH within hysteresis range (" +
@@ -255,6 +302,7 @@ void PIDManager::updatePHPID() {
     }
 }
 
+/*
 void PIDManager::updateDOPID() {
     if (!doPIDRunning) return;
 
@@ -264,15 +312,47 @@ void PIDManager::updateDOPID() {
     if (abs(doInput - doSetpoint) > doHysteresis) {
         ActuatorController::runActuator("airPump", doOutput, 0);  // 0 pour une durée continue   
         Logger::log(LogLevel::INFO, "DO PID update - Setpoint: " + String(doSetpoint) + ", Input: " + String(doInput) + ", Output: " + String(doOutput));
-    /*} else if (doInput >= doSetpoint) {
+    } else if (doInput >= doSetpoint) {
         // If the O2 level is sufficient, reduce the pump speed to minimum
-        ActuatorController::runActuator("airPump", 10, 0); // 10% as minimum speed
-        Logger::log(LogLevel::INFO, F("DO sufficient. Running air pump at minimum speed."));*/
+        ActuatorController::runActuator("airPump", 20, 0); // 20% as minimum speed
+        Logger::log(LogLevel::INFO, F("DO sufficient. Running air pump at minimum speed."));
     } else {
         ActuatorController::stopActuator("airPump");
         // ActuatorController::runActuator("airPump", 20, 0);  // Maintain minimum aeration
         Logger::log(LogLevel::INFO, "DO within hysteresis range (" +
                     String(doHysteresis) + "). Aeration paused.");
+    }
+}
+*/
+
+void PIDManager::updateDOPID() {
+    if (!doPIDRunning) return;
+
+    doInput = SensorController::readSensor("oxygenSensor");
+    doPID.Compute();
+
+    // If set to 0, maintain constant aeration of 30%.
+    if (doSetpoint == 0) {
+        ActuatorController::runActuator("airPump", 30, 0);  // 30% constant
+        Logger::log(LogLevel::INFO, F("DO setpoint is 0, maintaining constant aeration at 30%"));
+        return;
+    }
+
+    // Normal PID behavior if setpoint is not 0
+    if (abs(doInput - doSetpoint) > doHysteresis) {
+        if (doInput < doSetpoint) {
+            ActuatorController::runActuator("airPump", doOutput, 0);
+            Logger::log(LogLevel::INFO, "DO PID update - Setpoint: " + String(doSetpoint) + 
+                       ", Input: " + String(doInput) + ", Output: " + String(doOutput));
+        } else {
+            ActuatorController::stopActuator("airPump");
+            Logger::log(LogLevel::INFO, "DO above setpoint, stopping aeration");
+        }
+    } else {
+        ActuatorController::stopActuator("airPump");
+        // ActuatorController::runActuator("airPump", 20, 0);  // Maintain minimum aeration
+        Logger::log(LogLevel::INFO, "DO within hysteresis range (" +
+                    String(doHysteresis) + "). Aeration stopped.");
     }
 }
 

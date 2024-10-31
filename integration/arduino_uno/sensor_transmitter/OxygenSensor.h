@@ -10,7 +10,7 @@
 /*
 Installation Instructions:
 
-For Gravity: Analog Dissolved Oxygen Sensor / Meter Kit for Arduino
+For Gravity: Analog Dissolved Oxygen Sensor / Meter Kit for Arduino (Galvanic probe with membrane cap)
 @https://wiki.dfrobot.com/Gravity__Analog_Dissolved_Oxygen_Sensor_SKU_SEN0237
 @https://www.instructables.com/Calibrated-Dissolved-Oxygen-Meter/
 
@@ -31,6 +31,7 @@ For Gravity: Analog Dissolved Oxygen Sensor / Meter Kit for Arduino
     -Add sodium sulfite(Na2SO3) or Thiosulfate Sodium (ex: 2g in 100 ml of water during 30+ min) into water until it is saturated. This can consume all the oxygen in the water to obtain the zero dissolved oxygen liquid.
 4. For calibration in the air, expose the membrane to the air and set the output value to 100% oxygen saturation (can be done via software using calibration commands or physically via the potentiometer on the sensor board).
 5. The actual DO measurement will vary with temperature. It is highly recommended to use a temperature compensation function which can be achieved by integrating a temperature sensor like the DS18B20 to provide real-time temperature data for more accurate DO readings.
+6. The DO sensor will consume a little oxygen during the measurement. Please gently stir the solution and let the oxygen be distributed evenly in the water.
 
 Attention : It is necessary to measure the saturated dissolved oxygen voltage at two different temperatures to obtain a temperature compensation curve.
 

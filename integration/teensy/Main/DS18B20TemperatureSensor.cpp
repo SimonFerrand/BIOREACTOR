@@ -24,17 +24,17 @@ float DS18B20TemperatureSensor::readValue() {
 
     if (!_ds.search(addr)) {
         _ds.reset_search();
-        Serial.println("no DS18B20 temperature sensor found!");
+        //Serial.println("no DS18B20 temperature sensor found!");
         return -1000; // Return an error value if no sensor found
     }
 
     if (OneWire::crc8(addr, 7) != addr[7]) {
-        Serial.println("CRC is not valid (DS18B20 temperature sensor)!");
+        //Serial.println("CRC is not valid (DS18B20 temperature sensor)!");
         return -2000; // Return an error value if CRC check fails
     }
 
     if (addr[0] != 0x10 && addr[0] != 0x28) {
-        Serial.print("Device (DS18B20 temperature sensor) is not recognized");
+        //Serial.print("Device (DS18B20 temperature sensor) is not recognized");
         return -3000; // Return an error value if the device is not recognized
     }
 

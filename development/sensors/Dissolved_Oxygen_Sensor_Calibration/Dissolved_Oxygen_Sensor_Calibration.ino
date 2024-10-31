@@ -16,7 +16,7 @@ void setup()
 
 void loop()
 {
-    raw=analogRead(A3); //select the pin
+    raw=analogRead(A5); //select the pin
     Serial.println("raw:\t"+String(raw)+"\tVoltage(mv)"+String(raw*VREF/ADC_RES));
     delay(1000);
 }

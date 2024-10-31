@@ -28,9 +28,9 @@ public:
     void setNutrientFixedFlowRate(float rate) { nutrientFixedFlowRate = rate; }
     
     // Time settings for continuous nutrient addition (in milliseconds)
-    static const unsigned long NUTRIENT_ACTIVATION_TIME = 30000; //60000;  // 1 minute
-    static const unsigned long NUTRIENT_PAUSE_TIME = 15000; //240000;      // 4 minutes
-    static constexpr float DEFAULT_NUTRIENT_FLOW_RATE = 100.0; // ml/min
+    static const unsigned long NUTRIENT_ACTIVATION_TIME = 10000; //60000;  // 1 minute
+    static const unsigned long NUTRIENT_PAUSE_TIME = 290000; //240000;      // 4 minutes
+    static constexpr float DEFAULT_NUTRIENT_FLOW_RATE = 3.0; // ml/min
 
     void setPIDEnabled(bool enabled);
     //void setPIDEnabled(bool enabled) { isPIDEnabled = enabled; }

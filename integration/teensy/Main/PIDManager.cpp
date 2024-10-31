@@ -16,7 +16,7 @@ PIDManager::PIDManager()
 {
     tempPID.SetOutputLimits(0, 100);
     phPID.SetOutputLimits(0, 100);
-    doPID.SetOutputLimits(20, 100); // minimum 20% because AirPump does not work below this level
+    doPID.SetOutputLimits(15, 100); // minimum 15% because AirPump does not work below this level
     tempPID.SetMode(AUTOMATIC);
     phPID.SetMode(AUTOMATIC);
     doPID.SetMode(AUTOMATIC);
@@ -160,7 +160,7 @@ void PIDManager::adjustPIDStirringSpeed() {
 
     // Check if readings are valid
     bool validTemp = tempInput > -100 && tempInput < 100;  // Reasonable temperature range
-    bool validPH = phInput > 0 && phInput < 14;           // Valid pH range
+    bool validPH = phInput > 0 && phInput < 14 && phInput != -1;           // Valid pH range and explicitly exclude -1
     bool validDO = (doInput >= 0 && doInput <= 120) || doSetpoint == 0;  // Valid if within range (0-120%) OR if setpoint = 0
 
     // Use maximum output but ignore PIDs with invalid readings
@@ -235,6 +235,7 @@ void PIDManager::updateTemperaturePID() {
 }
 */
 
+/*
 void PIDManager::updateTemperaturePID() {
     if (!tempPIDRunning) return;
     
@@ -270,6 +271,56 @@ void PIDManager::updateTemperaturePID() {
         ActuatorController::stopActuator("heatingPlate");  // Just stop heating but keep PID active
         Logger::log(LogLevel::INFO, "Temperature within hysteresis range (" + 
                    String(tempHysteresis) + "°C). Heating paused.");
+    }
+}
+*/
+
+void PIDManager::updateTemperaturePID() {
+    if (!tempPIDRunning) return;
+    
+    tempInput = SensorController::readSensor("waterTempSensor");
+
+    // Safety check for invalid readings
+    if (tempInput <= -100 || tempInput >= 100) {
+        ActuatorController::stopActuator("heatingPlate");
+        Logger::log(LogLevel::ERROR, "Invalid temperature reading, heating stopped for safety");
+        return;
+    }
+    
+    // Check if temperature is outside hysteresis range
+    if (abs(tempInput - tempSetpoint) > tempHysteresis) {
+        tempPID.Compute();  // Calculate new PID output
+
+        // Only activate heating if temperature is below setpoint
+        if (tempInput < tempSetpoint) {
+            // During startup phase, use aggressive heating if temp is significantly low
+            if (isStartupPhase && tempInput < tempSetpoint - 2.0) {
+                ActuatorController::runActuator("heatingPlate", 100, 0);
+                Logger::log(LogLevel::INFO, "Aggressive heating: 100%");
+            } else {
+                // Normal PID-controlled heating
+                ActuatorController::runActuator("heatingPlate", tempOutput, 0);
+            }
+        } else {
+            // Stop heating if temperature is above setpoint
+            ActuatorController::stopActuator("heatingPlate");
+            Logger::log(LogLevel::INFO, "Temperature above setpoint, heating stopped");
+        }
+
+        // Switch to maintain mode if temperature is close to setpoint during startup
+        if (isStartupPhase && abs(tempInput - tempSetpoint) < 1) {
+            switchToMaintainMode();
+        }
+
+        // Log PID status
+        Logger::log(LogLevel::INFO, "Temperature PID update - Setpoint: " + String(tempSetpoint) + 
+                    ", Input: " + String(tempInput) + ", Output: " + String(tempOutput) + "%, Startup: " + 
+                    String(isStartupPhase ? "Yes" : "No"));
+    } else {
+        // Stop heating when within hysteresis range
+        ActuatorController::stopActuator("heatingPlate");
+        Logger::log(LogLevel::INFO, "Temperature within hysteresis range (" + 
+                    String(tempHysteresis) + "°C). Heating paused.");
     }
 }
 
@@ -343,7 +394,7 @@ void PIDManager::updateDOPID() {
 
     // If set to 0, maintain constant aeration of 30%.
     if (doSetpoint == 0) {
-        ActuatorController::runActuator("airPump", 40, 0);  // 30% constant
+        ActuatorController::runActuator("airPump", 30, 0);  // Maintain minimum aeration at 30% constant
         Logger::log(LogLevel::INFO, F("DO setpoint is 0, maintaining constant aeration at 30%"));
         return;
     }

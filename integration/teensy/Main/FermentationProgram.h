@@ -80,7 +80,7 @@ private:
     bool isAnyActuatorRunning() const;
     unsigned long plannedNutrientActivationTime;
 
-    static const int MIN_STIRRING_SPEED = 500;
+    static const int MIN_STIRRING_SPEED = 390;
     float nutrientFixedFlowRate = DEFAULT_NUTRIENT_FLOW_RATE;
 
 };

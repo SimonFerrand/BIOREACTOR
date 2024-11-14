@@ -29,8 +29,8 @@ public:
     
     // Time settings for continuous nutrient addition (in milliseconds)
     static const unsigned long NUTRIENT_ACTIVATION_TIME = 10000; //60000;  // 1 minute   10000
-    static const unsigned long NUTRIENT_PAUSE_TIME = 24000; //240000;      // 4 minutes   290000
-    static constexpr float DEFAULT_NUTRIENT_FLOW_RATE = 4.0; // ml/min
+    static const unsigned long NUTRIENT_PAUSE_TIME = 508400; // 8.64 minutes - 10 secondes = 508.4 secondes
+    static constexpr float DEFAULT_NUTRIENT_FLOW_RATE = 3.0; // ml/min
 
     void setPIDEnabled(bool enabled);
     //void setPIDEnabled(bool enabled) { isPIDEnabled = enabled; }

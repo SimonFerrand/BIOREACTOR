@@ -29,7 +29,7 @@ void DCPump::control(bool state, int value) {
 
     if (state != _status || (state && value != _currentValue)) {
         if (state && value >= _minPWM) {
-            uint16_t dacValue = map(value, _minPWM, 100, 0, static_cast<uint16_t>(4095 * (5.0/5.4)));  // Map speed percentage to analogic value. // Scale DAC output (4095) by voltage ratio (5.0V/5.4V) to compensate for higher DAC supply voltage  and maintain consistent pump speeds regardless of DAC voltage supply
+            uint16_t dacValue = (value * 4095 * 5.0) / (100 * 5.4);  // Convert percentage (0-100%) to DAC value (0-4095) with voltage compensation from 5.4V to 5.0V
             QuadChannelDACController::getInstance().setVoltage(_channel, dacValue); // Set the analogic value
             digitalWrite(_relayPin, HIGH); // Turn on the relay
             _status = true; // Set the status to on

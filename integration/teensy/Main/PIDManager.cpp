@@ -161,7 +161,7 @@ void PIDManager::adjustPIDStirringSpeed() {
     // Check if readings are valid
     bool validTemp = tempInput > -100 && tempInput < 100;  // Reasonable temperature range
     bool validPH = phInput > 0 && phInput < 14 && phInput != -1;           // Valid pH range and explicitly exclude -1
-    bool validDO = (doInput >= 0 && doInput <= 120) || doSetpoint == 0;  // Valid if within range (0-120%) OR if setpoint = 0
+    bool validDO = ((doInput >= 0 && doInput <= 120) || doSetpoint == 0) && doInput != -1;// Valid if within range (0-120%) OR if setpoint = 0, and explicitly exclude -1
 
     // Use maximum output but ignore PIDs with invalid readings
     double tempOutputValid = validTemp ? abs(tempOutput) : 0;
@@ -392,10 +392,10 @@ void PIDManager::updateDOPID() {
     doInput = SensorController::readSensor("oxygenSensor");
     doPID.Compute();
 
-    // If set to 0, maintain constant aeration of 30%.
+    // If set to 0, maintain constant aeration of 20%.
     if (doSetpoint == 0) {
-        ActuatorController::runActuator("airPump", 30, 0);  // Maintain minimum aeration at 30% constant
-        Logger::log(LogLevel::INFO, F("DO setpoint is 0, maintaining constant aeration at 30%"));
+        ActuatorController::runActuator("airPump", 20, 0);  // Maintain minimum aeration at 20% constant
+        Logger::log(LogLevel::INFO, F("DO setpoint is 0, maintaining constant aeration at 20%"));
         return;
     }
 

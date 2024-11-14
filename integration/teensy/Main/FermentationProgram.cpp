@@ -5,13 +5,13 @@
 
 /*
 # Dextrose feed parameters
-Target
+Target (450 g/l)
  - Total volume to be injected: 146.67 ml
  - Desired duration: 24 hours
  - Average hourly volume: 146.67 ml ÷ 24 = 6.11 ml/h
 Calculation of optimum parameters
  1- For regular addition over 24 hours :
-    - Total cycle: 5 minutes (as at present: activation + pause)
+    - Total cycle: 5 minutes 
     - Number of cycles over 24h: 288 cycles
     - Volume per cycle: 146.67 ml ÷ 288 = 0.51 ml/cycle
 
@@ -23,6 +23,13 @@ Calculation of optimum parameters
 static const unsigned long NUTRIENT_ACTIVATION_TIME = 10000;  // 10 secondes
 static const unsigned long NUTRIENT_PAUSE_TIME = 290000;      // 290 secondes (4 min 50 sec)
 static constexpr float DEFAULT_NUTRIENT_FLOW_RATE = 3.0;     // 3 ml/min
+
+ 4- Solution
+    - 60 g of glucose = 66g of dextrose monohydrate 
+    - maximum solubility at 25°C : 470g/L
+    -> 66g og monohydrate dextrose / 450 g/L = 146.67 ml or 90g in 200 mL
+
+    
 
 # NaOH 1.5% :
     - Place 150ml of distilled water in a clean 200ml bottle.
@@ -164,7 +171,7 @@ void FermentationProgram::resume() {
 
     pidManager.resumeAllPID();
 
-    ActuatorController::runActuator("airPump", 50, 0);  // Resume air pump at 50% speed
+    ActuatorController::runActuator("airPump", 30, 0);  // Resume air pump at 30% speed
 
     //Logger::log(LogLevel::INFO, "Fermentation resumed");
     Logger::log(LogLevel::INFO, F("Fermentation resumed"));
@@ -344,7 +351,7 @@ void FermentationProgram::addNutrientsContinuouslyFixedRate(float fixedFlowRate)
         plannedNutrientActivationTime = static_cast<unsigned long>((nutrientToAdd / maxPossibleAddition) * NUTRIENT_ACTIVATION_TIME);
         ActuatorController::runActuator("nutrientPump", fixedFlowRate, 0); // 0 for continuous duration
         lastNutrientActivationTime = currentTime;
-        Logger::log(LogLevel::INFO, "Nutrient pump activated for planned duration: " + String(plannedNutrientActivationTime) + " ms");
+        Logger::log(LogLevel::INFO, "Nutrient pump activated for planned duration: " + String(plannedNutrientActivationTime / 1000) + " s");
     } else {
         Logger::log(LogLevel::INFO, "No nutrients added: insufficient available volume");
     }

@@ -158,7 +158,7 @@ void CommandHandler::printHelp() {
     Serial.println(F("  drain <rate> <duration> - Start draining"));
     Serial.println(F("  stop - Stop all actuators and PIDs"));
     Serial.println(F("  mix <speed> - Start mixing"));
-    Serial.println(F("  fermentation <temp> <ph> <do> <nutrient_conc> <base_conc> <duration> <experiment_name> <comment> - Start fermentation"));
+    Serial.println(F("  fermentation <temp> <ph> <do> <nutrient_conc> <base_conc> <duration_in_hours> <experiment_name> <comment> - Start fermentation"));
     Serial.println(F("---Alarm & warning commands:---"));
     Serial.println(F("  alarm false - Disable safety alarms"));
     Serial.println(F("  alarm true - Enable safety alarms"));

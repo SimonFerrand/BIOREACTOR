@@ -34,7 +34,7 @@ private:
     static AirFlowSensor* airFlowSensor;
     static TurbiditySensorSEN0554* turbiditySensorSEN0554;
 
-    static const unsigned long PUMP_RUNTIME = 3000; // 5 seconds to prime the pump
+    static const unsigned long PUMP_RUNTIME = 10000; // 10 seconds to prime the pump
     static const unsigned long STABILIZATION_TIME = 1500; // 1 seconds to stabilise the sample
 
 

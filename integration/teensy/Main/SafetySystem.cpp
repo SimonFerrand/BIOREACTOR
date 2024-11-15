@@ -2,8 +2,9 @@
 #include "SafetySystem.h"
 #include "StateMachine.h"
 
-SafetySystem::SafetySystem(float totalVolume, float maxVolumePercent, float minVolume, StateMachine& stateMachine)
-    : stateMachine(stateMachine),          
+SafetySystem::SafetySystem(float totalVolume, float maxVolumePercent, float minVolume, StateMachine& stateMachine, VolumeManager& volumeManager)
+    : stateMachine(stateMachine),
+      volumeManager(volumeManager),          
       totalVolume(totalVolume),            
       maxVolumePercent(maxVolumePercent),  
       minVolume(minVolume),                
@@ -61,12 +62,12 @@ void SafetySystem::checkDissolvedOxygen() {
 
 void SafetySystem::checkVolume() {
     // Note: You'll need to implement a method to get the current volume
-    float volume = 0; // Replace with actual method to get current volume
+    float volume = volumeManager.getCurrentVolume(); // Replace with actual method to get current volume
     if (volume <= minVolume) {
         logAlert("Volume below minimum", LogLevel::WARNING);
     }
     if (volume >= maxVolumePercent * totalVolume) {
-        logAlert("Volume near maximum", LogLevel::ERROR);
+        logAlert("Volume at maximum", LogLevel::ERROR);
         stateMachine.stopAllPrograms();
     }
 }

@@ -20,7 +20,7 @@ struct HeatingMonitoringStatus {
 
 class SafetySystem {
 public:
-    SafetySystem(float totalVolume, float maxVolumePercent, float minVolume, StateMachine& stateMachine);
+    SafetySystem(float totalVolume, float maxVolumePercent, float minVolume, StateMachine& stateMachine, VolumeManager& volumeManager);
     void checkLimits();
     static void setLogLevel(LogLevel level);
     void parseCommand(const String& command);
@@ -28,6 +28,7 @@ public:
 
 private:
     StateMachine& stateMachine;
+    VolumeManager& volumeManager;
     float totalVolume;
     float maxVolumePercent;
     float minVolume;

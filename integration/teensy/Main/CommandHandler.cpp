@@ -34,6 +34,8 @@ void CommandHandler::executeCommand(const String& command) {
         handleVolumeInfoCommand();
     } else if (command.startsWith("o2 cal")) {
         handleO2CalibrationCommand(command);
+    } else if (command == "reset volume") {
+        volumeManager.resetVolume();
     } else {
         Logger::log(LogLevel::WARNING, "Unknown command: " + command);
     }
@@ -169,6 +171,7 @@ void CommandHandler::printHelp() {
     Serial.println(F("  adjust_volume <source> <amount> - Manually adjust volume (source: NaOH, Nutrient, Microalgae, Removed; amount in liter)"));
     Serial.println(F("  set_initial_volume <volume> - Set the initial culture volume (in liters)"));
     Serial.println(F("  volume info - Get all volume informations"));
+    Serial.println(F("  reset volume - Reset the volume to initial conditions"));
     Serial.println(F("  set_pid_enabled - set pid enabled during Fermentation program (true, false "));
     Serial.println(F("---pH Calibration commands:---"));
     Serial.println(F("  ph ENTERPH - Enter pH calibration mode : put the probe into the 4.0 or 7.0 standard buffer solution" ));

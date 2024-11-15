@@ -35,7 +35,8 @@ void VolumeManager::manuallyAdjustVolume(float volume, const String& source) {
 
 void VolumeManager::setInitialVolume(float volume) {
     if (volume > 0 && volume <= totalVolume * maxVolumePercent) {
-        currentVolume = volume;
+        initialVolume = volume;
+        currentVolume = initialVolume;
         addedNaOH = addedNutrient = addedMicroalgae = removedVolume = 0;
         cumulativeNaOH = cumulativeNutrient = cumulativeMicroalgae = cumulativeRemoved = 0;
         Logger::log(LogLevel::INFO, "Initial volume set to: " + String(volume) + " L");
@@ -119,3 +120,16 @@ String VolumeManager::getVolumeInfo() const {
     info += "Removed Volume: " + String(getRemovedVolume(), 4) + " L\n";
     return info;
 }
+
+void VolumeManager::resetVolume() {
+        currentVolume = initialVolume;
+        addedNaOH = 0;
+        addedNutrient = 0;
+        addedMicroalgae = 0;
+        removedVolume = 0;
+        cumulativeNaOH = 0;
+        cumulativeNutrient = 0;
+        cumulativeMicroalgae = 0;
+        cumulativeRemoved = 0;
+        Logger::log(LogLevel::INFO, "Volume reset to initial conditions: " + String(initialVolume) + " L");
+    }

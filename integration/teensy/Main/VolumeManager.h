@@ -26,12 +26,14 @@ public:
     float getMaxAllowedVolume() const { return totalVolume * maxVolumePercent; }
     bool isSafeToAddVolume(float volume) const;
     String getVolumeInfo() const;
+    void resetVolume();
 
 private:
     float totalVolume;
     float maxVolumePercent;
     float minVolume;
     float currentVolume;
+    float initialVolume;
 
     // Temporary volumes for current changes
     float addedNaOH;

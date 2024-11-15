@@ -7,8 +7,8 @@ SafetySystem::SafetySystem(float totalVolume, float maxVolumePercent, float minV
       totalVolume(totalVolume),            
       maxVolumePercent(maxVolumePercent),  
       minVolume(minVolume),                
-      alarmEnabled(false),
-      warningEnabled(false),
+      alarmEnabled(true),
+      warningEnabled(true),
       lastCheckTime(0),
       checkInterval(30000) {} // 30 seconds by default
 
@@ -82,7 +82,6 @@ void SafetySystem::checkElectronicTemperature() {
     float temp = SensorController::readSensor("electronicTempSensor");
     if (temp > MAX_ELECTRONIC_TEMP) {
         logAlert("Electronic temperature critical", LogLevel::ERROR);
-        stopRequired = true;
     } else if (temp > MAX_ELECTRONIC_TEMP - 10) {  // Warning at 5°C below the limit
         logAlert("Electronic temperature high", LogLevel::WARNING);
     }

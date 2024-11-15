@@ -75,8 +75,9 @@ VolumeManager volumeManager(0.85, 0.95, 0.40); // (totalVolume, maxVolumePercent
 DataCollector dataCollector(volumeManager);
 Communication espCommunication(SerialESP, dataCollector);
 PIDManager pidManager;
-SafetySystem safetySystem(1.0, 0.95, 0.1);
 StateMachine stateMachine(pidManager, volumeManager, espCommunication);
+SafetySystem safetySystem(0.85, 0.95, 0.40, stateMachine); // (totalVolume, maxVolumePercent, minVolume)
+
 
 // Program declarations
 TestsProgram testsProgram(pidManager);

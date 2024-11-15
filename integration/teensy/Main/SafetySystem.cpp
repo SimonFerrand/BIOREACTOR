@@ -1,10 +1,17 @@
 // SafetySystem.cpp
 #include "SafetySystem.h"
+#include "StateMachine.h"
 
-SafetySystem::SafetySystem(float totalVolume, float maxVolumePercent, float minVolume)
-    : totalVolume(totalVolume), maxVolumePercent(maxVolumePercent), minVolume(minVolume), 
-      stopRequired(false), alarmEnabled(false), warningEnabled(false),
-      lastCheckTime(0), checkInterval(30000) {} // 30 seconds by default
+SafetySystem::SafetySystem(float totalVolume, float maxVolumePercent, float minVolume, StateMachine& stateMachine)
+    : stateMachine(stateMachine),          
+      totalVolume(totalVolume),            
+      maxVolumePercent(maxVolumePercent),  
+      minVolume(minVolume),                
+      stopRequired(false),
+      alarmEnabled(false),
+      warningEnabled(false),
+      lastCheckTime(0),
+      checkInterval(30000) {} // 30 seconds by default
 
 void SafetySystem::checkLimits() {
     unsigned long currentTime = millis();
@@ -21,6 +28,7 @@ void SafetySystem::checkLimits() {
     checkDissolvedOxygen();
     checkVolume();
     checkTurbidity();
+    checkHeatingEffectiveness(); 
 }
 
 void SafetySystem::checkWaterTemperature() {
@@ -101,5 +109,35 @@ void SafetySystem::parseCommand(const String& command) {
         Logger::log(LogLevel::INFO, "Alarms set to " + String(alarmEnabled ? "enabled" : "disabled"));
     } else {
         Logger::log(LogLevel::WARNING, "Unknown command: " + command);
+    }
+}
+
+void SafetySystem::checkHeatingEffectiveness() {
+    float currentTemp = SensorController::readSensor("waterTempSensor");
+    
+    HeatingPlate* heatingPlate = (HeatingPlate*)ActuatorController::findActuatorByName("heatingPlate");
+    if (heatingPlate->isOn()) {
+        if (!heatingStatus.isMonitoring) {
+            // Start new monitoring period
+            heatingStatus.isMonitoring = true;
+            heatingStatus.monitorStartTime = millis();
+            heatingStatus.initialTemp = currentTemp;
+            Logger::log(LogLevel::INFO, "Started heating monitoring at temperature: " + String(currentTemp));
+        }
+
+        unsigned long monitoringDuration = millis() - heatingStatus.monitorStartTime;
+        if (monitoringDuration >= HeatingMonitoringStatus::MONITOR_DURATION) {  // Changed here
+            float tempChange = currentTemp - heatingStatus.initialTemp;
+            if (tempChange < HeatingMonitoringStatus::MIN_TEMP_INCREASE) {      // Changed here
+                logAlert("Temperature not increasing while heating - possible sensor malfunction", LogLevel::ERROR);
+                Logger::log(LogLevel::ERROR, "Initial temp: " + String(heatingStatus.initialTemp) + 
+                                           ", Current temp: " + String(currentTemp) + 
+                                           ", Change: " + String(tempChange));
+                stateMachine.stopAllPrograms();
+            }
+            heatingStatus.isMonitoring = false;
+        }
+    } else {
+        heatingStatus.isMonitoring = false;
     }
 }

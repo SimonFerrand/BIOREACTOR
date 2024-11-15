@@ -66,16 +66,24 @@ def ensure_csv_header():
             writer = csv.writer(file)
             writer.writerow([
                 "Backend_Time", "ESP_Time", "Event_Type",
-                "currentProgram", "CurrentState",
+                "currentProgram", "programState",
+                # sensorData
                 "waterTemp", "airTemp", "elecTemp", "pH",
                 "turbidity", "oxygen", "airFlow",
+                # actuatorData 
                 "airPump", "drainPump", "samplePump",
-                "nutrientPump", "basePump", "stirringMotor",
-                "heatingPlate", "ledGrowLight",
+                "nutrientPump", "basePump", "fillPump",  
+                "stirringMotor", "heatingPlate", "ledGrowLight",
+                # actuatorSetpoints 
+                "airPumpSetpoint", "drainPumpSetpoint", "samplePumpSetpoint",
+                "nutrientPumpSetpoint", "basePumpSetpoint", "fillPumpSetpoint",
+                "stirringMotorSetpoint", "heatingPlateSetpoint", "ledGrowLightSetpoint",
+                # volumeData
                 "currentVolume", "availableVolume", "addedNaOH",
                 "addedNutrient", "addedMicroalgae", "removedVolume",
-                "program", "speed", "rate", "duration", 
-                "tempSetpoint", "pHSetpoint", "DOSetpoint",
+                # program data
+                "program", "speed", "rate", "duration",
+                "tempSetpoint", "pHSetpoint", "DOSetpoint", 
                 "nutrientConc", "baseConc", "experimentName", "comment"
             ])
 
@@ -120,15 +128,23 @@ async def receive_data(data: BioreactorData):
         # Définir l'ordre des champs selon l'en-tête CSV
         field_order = [
             "currentProgram", "programState",
+            # sensorData
             "sensorData_waterTemp", "sensorData_airTemp", "sensorData_elecTemp", "sensorData_pH",
             "sensorData_turbidity", "sensorData_oxygen", "sensorData_airFlow",
+            # actuatorData
             "actuatorData_airPump", "actuatorData_drainPump", "actuatorData_samplePump",
-            "actuatorData_nutrientPump", "actuatorData_basePump", "actuatorData_stirringMotor",
-            "actuatorData_heatingPlate", "actuatorData_ledGrowLight",
+            "actuatorData_nutrientPump", "actuatorData_basePump", "actuatorData_fillPump",
+            "actuatorData_stirringMotor", "actuatorData_heatingPlate", "actuatorData_ledGrowLight",
+            # actuatorSetpoints
+            "actuatorSetpoints_airPumpValue", "actuatorSetpoints_drainPumpValue", "actuatorSetpoints_samplePumpValue",
+            "actuatorSetpoints_nutrientPumpValue", "actuatorSetpoints_basePumpValue", "actuatorSetpoints_fillPumpValue",
+            "actuatorSetpoints_stirringMotorValue", "actuatorSetpoints_heatingPlateValue", "actuatorSetpoints_ledGrowLightValue",
+            # volumeData
             "volumeData_currentVolume", "volumeData_availableVolume", "volumeData_addedNaOH",
             "volumeData_addedNutrient", "volumeData_addedMicroalgae", "volumeData_removedVolume",
-            "program", "speed", "rate", "duration", 
-            "tSet", "phSet", "doSet", "nutC", "baseC", "dur", "expN", "comm"
+            # program data
+            "program", "speed", "rate", "duration",
+            "tSet", "phSet", "doSet", "nutC", "baseC", "expN", "comm"
         ]
 
         for field in field_order:

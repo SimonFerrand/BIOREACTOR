@@ -7,7 +7,6 @@ SafetySystem::SafetySystem(float totalVolume, float maxVolumePercent, float minV
       totalVolume(totalVolume),            
       maxVolumePercent(maxVolumePercent),  
       minVolume(minVolume),                
-      stopRequired(false),
       alarmEnabled(false),
       warningEnabled(false),
       lastCheckTime(0),
@@ -19,8 +18,6 @@ void SafetySystem::checkLimits() {
         return; // Do not check if the interval has not elapsed
     }
     lastCheckTime = currentTime;
-
-    stopRequired = false;
     checkWaterTemperature();
     checkAirTemperature();
     checkElectronicTemperature();
@@ -37,7 +34,7 @@ void SafetySystem::checkWaterTemperature() {
     if (temp > MAX_WATER_TEMP) logAlert("Water temperature high", LogLevel::WARNING);
     if (temp > CRITICAL_WATER_TEMP) {
         logAlert("Water temperature critical", LogLevel::ERROR);
-        stopRequired = true;
+        stateMachine.stopAllPrograms();
     }
 }
 
@@ -53,7 +50,7 @@ void SafetySystem::checkPH() {
     if (pH > MAX_PH) logAlert("pH high", LogLevel::WARNING);
     if (pH > CRITICAL_PH) {
         logAlert("pH critical", LogLevel::ERROR);
-        stopRequired = true;
+        //stateMachine.stopAllPrograms();
     }
 }
 
@@ -70,7 +67,7 @@ void SafetySystem::checkVolume() {
     }
     if (volume >= maxVolumePercent * totalVolume) {
         logAlert("Volume near maximum", LogLevel::ERROR);
-        stopRequired = true;
+        stateMachine.stopAllPrograms();
     }
 }
 

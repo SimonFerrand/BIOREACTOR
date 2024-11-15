@@ -14,7 +14,7 @@ struct HeatingMonitoringStatus {
     bool isMonitoring;
     unsigned long monitorStartTime;
     float initialTemp;
-    static const unsigned long MONITOR_DURATION = 300000;  // 5 minutes
+    static const unsigned long MONITOR_DURATION = 180000;  // 3 minutes
     static constexpr float MIN_TEMP_INCREASE = 0.5;   // Minimum expected increase
 };
 
@@ -22,7 +22,6 @@ class SafetySystem {
 public:
     SafetySystem(float totalVolume, float maxVolumePercent, float minVolume, StateMachine& stateMachine);
     void checkLimits();
-    bool shouldStop() const { return stopRequired; }
     static void setLogLevel(LogLevel level);
     void parseCommand(const String& command);
     void setCheckInterval(unsigned long interval) { checkInterval = interval; }
@@ -32,7 +31,6 @@ private:
     float totalVolume;
     float maxVolumePercent;
     float minVolume;
-    bool stopRequired;
     bool alarmEnabled;
     bool warningEnabled;
     unsigned long lastCheckTime;
@@ -51,14 +49,14 @@ private:
 
     // Safety thresholds
     static constexpr float MIN_WATER_TEMP = 15.0;
-    static constexpr float MAX_WATER_TEMP = 45.0;
-    static constexpr float CRITICAL_WATER_TEMP = 50.0;
+    static constexpr float MAX_WATER_TEMP = 40.0;
+    static constexpr float CRITICAL_WATER_TEMP = 45.0;
     static constexpr float MIN_AIR_TEMP = 10.0;
     static constexpr float MAX_AIR_TEMP = 45.0;
     static constexpr float MAX_ELECTRONIC_TEMP = 60.0;
-    static constexpr float MIN_PH = 2.0;
-    static constexpr float MAX_PH = 12.0;
-    static constexpr float CRITICAL_PH = 10.0;
+    static constexpr float MIN_PH = 5.0;
+    static constexpr float MAX_PH = 8.5;
+    static constexpr float CRITICAL_PH = 9.0;
     static constexpr float MIN_DO = 0.0;
     static constexpr float MAX_TURBIDITY = 1000.0;
 };

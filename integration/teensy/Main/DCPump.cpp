@@ -55,3 +55,7 @@ void DCPump::control(bool state, int value) {
 bool DCPump::isOn() const {
     return _status;
 }
+
+int DCPump::getCurrentValue() const {
+    return _currentValue;
+}

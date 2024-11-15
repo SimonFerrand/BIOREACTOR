@@ -56,6 +56,8 @@ public:
     float getMaxFlowRate() const { return _maxFlowRate; }
     float getMinFlowRate() const { return _minFlowRate; }
 
+    int getCurrentValue() const override;
+
 
 private:
     uint8_t _dacAddress;    // I2C address of the DAC

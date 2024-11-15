@@ -66,3 +66,7 @@ int StirringMotor::rpmToPWM(int _targetRPM) {
     int pwmValue = map(int(loadPercentage), 0, 100, 0, 255);
     return pwmValue;
 }
+
+int StirringMotor::getCurrentValue() const {
+    return _currentRPM;
+}

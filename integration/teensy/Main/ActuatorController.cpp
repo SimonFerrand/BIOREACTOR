@@ -89,6 +89,11 @@ bool ActuatorController::isActuatorRunning(const String& actuatorName) {
     return actuator ? actuator->isOn() : false;
 }
 
+int ActuatorController::getCurrentValue(const String& actuatorName) {
+    ActuatorInterface* actuator = findActuatorByName(actuatorName);
+    return actuator ? actuator->getCurrentValue() : 0;
+}
+
 ActuatorInterface* ActuatorController::findActuatorByName(const String& name) {
     static const ActuatorInterface* actuators[] = {
         airPump, drainPump, nutrientPump, basePump, 

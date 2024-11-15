@@ -28,6 +28,7 @@ public:
     static void stopActuator(const String& actuatorName);
     static void stopAllActuators();
     static bool isActuatorRunning(const String& actuatorName);
+    static int getCurrentValue(const String& actuatorName);
 
     template<typename T>
     static float getPumpParameter(const String& actuatorName, float (T::*getter)() const);

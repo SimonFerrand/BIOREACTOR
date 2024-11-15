@@ -62,3 +62,7 @@ void LEDGrowLight::control(bool state, int value) {
 bool LEDGrowLight::isOn() const {
     return _status;
 }
+
+int LEDGrowLight::getCurrentValue() const {
+    return _intensity;
+}

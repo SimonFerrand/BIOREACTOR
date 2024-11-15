@@ -65,6 +65,8 @@ public:
      */
     void resetVolumeAdded() { _volumeAdded = 0; }
 
+    int getCurrentValue() const override;
+
 private:
     int _channel;    
     int _relayPin;  // Relay pin

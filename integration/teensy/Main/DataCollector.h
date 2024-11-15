@@ -32,6 +32,9 @@ public:
     // Colelct sensor, actuator and volume data
     String collectAllData(const String& currentProgram, int currentState);
 
+    // Collect current setpoint values for all actuators
+    String collectActuatorSetpoints();  
+
 private:
     VolumeManager& _volumeManager;
 };

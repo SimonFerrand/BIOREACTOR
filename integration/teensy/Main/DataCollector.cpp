@@ -51,6 +51,24 @@ String DataCollector::collectActuatorData() {
     return output;
 }
 
+String DataCollector::collectActuatorSetpoints() {
+    JsonDocument doc;
+    
+    doc["airPumpValue"] = ActuatorController::getCurrentValue("airPump");
+    doc["drainPumpValue"] = ActuatorController::getCurrentValue("drainPump");
+    doc["samplePumpValue"] = ActuatorController::getCurrentValue("samplePump");
+    doc["nutrientPumpValue"] = ActuatorController::getCurrentValue("nutrientPump");
+    doc["basePumpValue"] = ActuatorController::getCurrentValue("basePump");
+    doc["fillPumpValue"] = ActuatorController::getCurrentValue("fillPump");
+    doc["stirringMotorValue"] = ActuatorController::getCurrentValue("stirringMotor");
+    doc["heatingPlateValue"] = ActuatorController::getCurrentValue("heatingPlate");
+    doc["ledGrowLightValue"] = ActuatorController::getCurrentValue("ledGrowLight");
+    
+    String output;
+    serializeJson(doc, output);
+    return output;
+}
+
 String DataCollector::collectVolumeData() {
     JsonDocument doc;
 
@@ -96,6 +114,11 @@ String DataCollector::collectAllData(const String& currentProgram, int currentSt
     JsonObject actuatorData = doc.createNestedObject("actuatorData");
     String actuatorDataStr = collectActuatorData();
     deserializeJson(actuatorData, actuatorDataStr);
+
+    // Collect actuator setpoints
+    JsonObject actuatorSetpoints = doc.createNestedObject("actuatorSetpoints");
+    String setpointsDataStr = collectActuatorSetpoints();
+    deserializeJson(actuatorSetpoints, setpointsDataStr);
 
     // Collect volume data
     JsonObject volumeData = doc.createNestedObject("volumeData");

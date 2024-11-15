@@ -50,6 +50,8 @@ public:
      */
     const char* getName() const override { return _name; }
 
+    int getCurrentValue() const override;
+
 private:
     int _relayPin;   // Relay pin
     const char* _name;

@@ -59,6 +59,8 @@ public:
      */
     int getMaxRPM() const { return _maxRPM; }
 
+    int getCurrentValue() const override;
+
 
 private:
     int _pwmPin;   // PWM pin

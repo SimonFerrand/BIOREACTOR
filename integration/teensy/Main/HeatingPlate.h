@@ -47,6 +47,8 @@ public:
      */
     const char* getName() const override { return _name; }
 
+    int getCurrentValue() const override;
+
 private:
 /*
     int _controlPin;   // Relay or PWM pin

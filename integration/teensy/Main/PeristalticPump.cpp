@@ -56,3 +56,7 @@ uint16_t PeristalticPump::flowRateToDAC(float _flowRate) {
     float proportion = _flowRate / _maxFlowRate;       // Calculate proportion of max flow rate
     return static_cast<uint16_t>(proportion * 4095 * (5.0/5.4));  // Convert to DAC value (0-4095) and adjust for 5.4V power supply by scaling down DAC output to match desired voltage
 }
+
+int PeristalticPump::getCurrentValue() const {
+    return _currentFlowRate;
+}

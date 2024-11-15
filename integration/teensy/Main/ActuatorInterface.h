@@ -40,6 +40,8 @@ public:
      * Virtual destructor to ensure proper cleanup of derived classes.
      */
     virtual ~ActuatorInterface() {}
+
+    virtual int getCurrentValue() const = 0;
     
 protected:
     bool _currentState;

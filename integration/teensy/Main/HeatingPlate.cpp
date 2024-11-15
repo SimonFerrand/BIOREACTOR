@@ -149,3 +149,7 @@ void HeatingPlate::controlWithCycle(int percentage) {
     
     Logger::log(LogLevel::INFO, String(_name) + " Duty Cycle: " + String(_dutyCycle * 100) + "%");
 }
+
+int HeatingPlate::getCurrentValue() const {
+    return _currentValue;
+}

@@ -195,11 +195,13 @@ void loop() {
 
         measurementCounter++;  // Incrémente le compteur
 
-        if (measurementCounter >= SAMPLE_FREQUENCY) {
+        // Only take sample if Fermentation program is running
+        if (measurementCounter >= SAMPLE_FREQUENCY && 
+            stateMachine.getCurrentProgram() == "Fermentation") {
             // Take a fresh sample
             SensorController::takeSample();
             measurementCounter = 0;  // Réinitialise le compteur
-            Logger::log(LogLevel::INFO, F("Fresh sample taken"));
+            Logger::log(LogLevel::INFO, F("Fresh sample taken for Fermentation program"));
         }
         
         // log all data

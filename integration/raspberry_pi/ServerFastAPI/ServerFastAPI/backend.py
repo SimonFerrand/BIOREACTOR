@@ -107,60 +107,71 @@ async def receive_data(data: BioreactorData):
         bioreactor_data = data.arduino_value
         logger.debug(f"Parsed arduino_value: {bioreactor_data}")
 
-        # Vérification que bioreactor_data est un dictionnaire
         if not isinstance(bioreactor_data, dict):
             raise ValueError("arduino_value must be a dictionary")
 
-        # Déterminer le type d'événement
+        # Determine event type and process program parameters
+        event_type = "unknown"
+        program_parameters = {}
+        
         if "sensorData" in bioreactor_data:
             event_type = "periodic"
         elif "program" in bioreactor_data:
             event_type = "program_event"
-            # Vérification des champs pour program_event
-            required_fields = ["tSet", "phSet", "doSet", "nutC", "baseC", "dur", "expN", "comm"]
-            for field in required_fields:
-                if field not in bioreactor_data:
-                    logger.warning(f"Field {field} missing in program_event data")
-        else:
-            event_type = "unknown"
-            logger.warning("Unknown event type in received data")
+            if bioreactor_data.get("program") == "Fermentation":
+                # Map fermentation parameters correctly
+                program_parameters = {
+                    "program": "Fermentation",
+                    "tempSetpoint": bioreactor_data.get("temperatureSetpoint", ""),
+                    "pHSetpoint": bioreactor_data.get("phSetpoint", ""),
+                    "DOSetpoint": bioreactor_data.get("O2Setpoint", ""),
+                    "nutrientConc": bioreactor_data.get("nutrientConcentration", ""),
+                    "baseConc": bioreactor_data.get("baseConcentration", ""),
+                    "duration": bioreactor_data.get("duration", ""),
+                    "nutrientDelay": bioreactor_data.get("nutrientDelay", ""),
+                    "experimentName": bioreactor_data.get("experimentName", ""),
+                    "comment": bioreactor_data.get("comment", "")
+                }
 
-        # Aplatir le dictionnaire imbriqué
+        # Flatten the data structure
         flat_data = flatten_dict(bioreactor_data)
         logger.debug(f"Flattened data: {flat_data}")
 
-        # Préparer la ligne à écrire dans le CSV
+        # Prepare row with correct field order
         row = [backend_time, data.timestamp, event_type]
         
-        # Définir l'ordre des champs selon l'en-tête CSV
-        field_order = [
+        # Add non-program fields
+        standard_fields = [
+            # State fields
             "currentProgram", "programState",
-            # sensorData
-            "sensorData_waterTemp", "sensorData_airTemp", "sensorData_elecTemp", "sensorData_pH",
-            "sensorData_turbidity", "sensorData_oxygen", "sensorData_airFlow",
-            # actuatorData
+            # Sensor data
+            "sensorData_waterTemp", "sensorData_airTemp", "sensorData_elecTemp", 
+            "sensorData_pH", "sensorData_turbidity", "sensorData_oxygen", "sensorData_airFlow",
+            # Actuator states
             "actuatorData_airPump", "actuatorData_drainPump", "actuatorData_samplePump",
             "actuatorData_nutrientPump", "actuatorData_basePump", "actuatorData_fillPump",
-            "actuatorData_stirringMotor", "actuatorData_heatingPlate", "actuatorData_ledGrowLight",
-            # actuatorSetpoints
-            "actuatorSetpoints_airPumpValue", "actuatorSetpoints_drainPumpValue", "actuatorSetpoints_samplePumpValue",
-            "actuatorSetpoints_nutrientPumpValue", "actuatorSetpoints_basePumpValue", "actuatorSetpoints_fillPumpValue",
-            "actuatorSetpoints_stirringMotorValue", "actuatorSetpoints_heatingPlateValue", "actuatorSetpoints_ledGrowLightValue",
-            # volumeData
-            "volumeData_currentVolume", "volumeData_availableVolume", "volumeData_addedNaOH",
-            "volumeData_addedNutrient", "volumeData_addedMicroalgae", "volumeData_removedVolume",
-            # program data
-            "program", "speed", "rate", "duration",
-            "tSet", "phSet", "doSet", "nutC", "baseC", "expN", "comm"
+            "actuatorData_stirringMotor", "actuatorData_heatingPlate", "actuatorData_ledGrowLight"
         ]
 
-        for field in field_order:
-            value = flat_data.get(field, "")
-            if field == "dur":
-                logger.debug(f"Duration value: {value}")
-            row.append(str(value))
+        # Add standard fields
+        for field in standard_fields:
+            row.append(str(flat_data.get(field, "")))
 
-        # Écrire dans le fichier CSV
+        # Add program-specific fields
+        row.extend([
+            str(program_parameters.get("program", "")),
+            str(program_parameters.get("tempSetpoint", "")),
+            str(program_parameters.get("pHSetpoint", "")),
+            str(program_parameters.get("DOSetpoint", "")),
+            str(program_parameters.get("nutrientConc", "")),
+            str(program_parameters.get("baseConc", "")),
+            str(program_parameters.get("duration", "")),
+            str(program_parameters.get("nutrientDelay", "")),
+            str(program_parameters.get("experimentName", "")),
+            str(program_parameters.get("comment", ""))
+        ])
+
+        # Write to CSV
         with open(filename, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(row)
@@ -168,14 +179,8 @@ async def receive_data(data: BioreactorData):
         logger.info("Bioreactor data successfully saved")
         return {"status": "success", "message": "Data received and processed"}
 
-    except ValidationError as ve:
-        logger.error(f"Validation error: {str(ve)}")
-        raise HTTPException(status_code=422, detail=str(ve))
-    except ValueError as ve:
-        logger.error(f"Value error: {str(ve)}")
-        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Error processing data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/sensor_data")

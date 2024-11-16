@@ -131,9 +131,9 @@ void CommandHandler::handleO2CalibrationCommand(const String& command) {
 
 void CommandHandler::printHelp() {
     Serial.println();
-    Serial.println(F("------------------------------------------------- Available commands: -------------------------------------------------"));
+    Serial.println(F("------------------------------------------------- AVAILABLE COMMANDS: -------------------------------------------------"));
     Serial.println(F("help - Display this help message"));
-    Serial.println(F("---Tests commands:---"));
+    Serial.println(F("---TESTS COMMANDS:---"));
     Serial.println(F("  test sensors - Start continuous sensor data reading"));
     Serial.println(F("  tests - Run all predefined tests"));
     Serial.println(F("  test pid <type> <setpoint> - Start PID control (type: temp, ph, or do)"));
@@ -156,28 +156,28 @@ void CommandHandler::printHelp() {
     Serial.println(F("> <duration_seconds>"));
     Serial.println(F("      heatingPlate <power_0_100%> <duration_seconds>"));
     Serial.println(F("      ledGrowLight <intensity_0_100%> <duration_seconds>"));
-    Serial.println(F("---Program commands:---"));
+    Serial.println(F("---PROGRAM COMMANDS:---"));
     Serial.println(F("  drain <rate> <duration> - Start draining"));
     Serial.println(F("  stop - Stop all actuators and PIDs"));
     Serial.println(F("  mix <speed> - Start mixing"));
-    Serial.println(F("  fermentation <temp> <ph> <do> <nutrient_conc> <base_conc> <duration_in_hours> <experiment_name> <comment> - Start fermentation"));
-    Serial.println(F("---Alarm & warning commands:---"));
+    Serial.println(F("  fermentation <temp> <ph> <do> <nutrient_conc> <base_conc> <duration_hours> <nutrient_delay_hours> <"experiment_name"> <"comment"> - Start fermentation"));
+    Serial.println(F("---ALARM & WARNING COMMANDS:---"));
     Serial.println(F("  alarm false - Disable safety alarms"));
     Serial.println(F("  alarm true - Enable safety alarms"));
     Serial.println(F("  warning false - Disable safety warnings"));
     Serial.println(F("  warning true - Enable safety warnings"));
     Serial.println(F("  set_check_interval <seconds> - Set safety check interval"));
-    Serial.println(F("---Volume and Safety Configuration Commands:---"));
+    Serial.println(F("---VOLUME AND SAFETY CONFIGURATION COMMANDS:---"));
     Serial.println(F("  adjust_volume <source> <amount> - Manually adjust volume (source: NaOH, Nutrient, Microalgae, Removed; amount in liter)"));
     Serial.println(F("  set_initial_volume <volume> - Set the initial culture volume (in liters)"));
     Serial.println(F("  volume info - Get all volume informations"));
     Serial.println(F("  reset volume - Reset the volume to initial conditions"));
     Serial.println(F("  set_pid_enabled - set pid enabled during Fermentation program (true, false "));
-    Serial.println(F("---pH Calibration commands:---"));
+    Serial.println(F("---PH CALIBRATION COMMANDS:---"));
     Serial.println(F("  ph ENTERPH - Enter pH calibration mode : put the probe into the 4.0 or 7.0 standard buffer solution" ));
     Serial.println(F("  ph CALPH - Calibrate with buffer solution : standard buffer solution will be detected automatically "));
     Serial.println(F("  ph EXITPH - Save and exit pH calibration mode"));
-    Serial.println(F("---O2 Calibration commands:---"));
+    Serial.println(F("---O2 CALIBRATION COMMANDS:---"));
     Serial.println(F("  o2 cal start - Start calibration procedure"));
     Serial.println(F("  o2 cal zero  - Calibrate zero point"));
     Serial.println(F("  o2 cal low   - Calibrate low temperature saturation"));

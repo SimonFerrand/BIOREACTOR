@@ -12,7 +12,7 @@ class FermentationProgram : public ProgramBase {
 public:
     FermentationProgram(PIDManager& pidManager, VolumeManager& volumeManager);
     void configure(float tempSetpoint, float phSetpoint, float doSetpoint,
-                   float nutrientConc, float baseConc, float durationHours,
+                   float nutrientConc, float baseConc, float durationHours, float nutrientDelayHours,
                    const String& experimentName, const String& comment);
 
     void start(const String& command) override;
@@ -48,6 +48,9 @@ public:
 
     void updateTurbidity();
 
+    void setNutrientStartDelay(float delayHours) { nutrientStartDelay = static_cast<unsigned long>(delayHours * 3600000.0); }
+    float getNutrientStartDelay() const { return nutrientStartDelay / 3600000.0; } // Convertit en heures
+
 private:
     PIDManager& pidManager;
     VolumeManager& volumeManager;
@@ -82,6 +85,9 @@ private:
 
     static const int MIN_STIRRING_SPEED = 390;
     float nutrientFixedFlowRate = DEFAULT_NUTRIENT_FLOW_RATE;
+
+    unsigned long nutrientStartDelay = 0;
+    bool nutrientAdditionStarted = false;
 
 };
 

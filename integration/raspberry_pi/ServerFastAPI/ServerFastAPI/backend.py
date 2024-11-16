@@ -82,9 +82,16 @@ def ensure_csv_header():
                 "currentVolume", "availableVolume", "addedNaOH",
                 "addedNutrient", "addedMicroalgae", "removedVolume",
                 # program data
-                "program", "speed", "rate", "duration",
-                "tempSetpoint", "pHSetpoint", "DOSetpoint", 
-                "nutrientConc", "baseConc", "experimentName", "comment"
+                "program",
+                "tempSetpoint",  # temperature
+                "pHSetpoint",    # pH
+                "DOSetpoint",    # dissolvedOxygen
+                "nutrientConc",  # nutrientConcentration
+                "baseConc",      # baseConcentration
+                "duration",      # duration
+                "nutrientDelay", # delay
+                "experimentName",
+                "comment"
             ])
 
 
@@ -200,6 +207,7 @@ class FermentationCommand(BaseModel):
     nutrientConcentration: float
     baseConcentration: float
     duration: int
+    nutrientDelay: float 
     experimentName: str
     comment: str
 
@@ -280,6 +288,7 @@ async def execute_fermentation(command: FermentationCommand):
             "nutrientConcentration": command.nutrientConcentration,
             "baseConcentration": command.baseConcentration,
             "duration": command.duration,
+            "nutrientDelay": command.nutrientDelay, 
             "experimentName": command.experimentName,
             "comment": command.comment
         }))

@@ -58,7 +58,7 @@ FermentationProgram::FermentationProgram(PIDManager& pidManager, VolumeManager& 
 }
 
 void FermentationProgram::configure(float tempSetpoint, float phSetpoint, float doSetpoint,
-                                    float nutrientConc, float baseConc, float durationHours,
+                                    float nutrientConc, float baseConc, float durationHours, float nutrientDelayHours,
                                     const String& experimentName, const String& comment) {
     this->tempSetpoint = tempSetpoint;
     this->phSetpoint = phSetpoint;
@@ -66,6 +66,7 @@ void FermentationProgram::configure(float tempSetpoint, float phSetpoint, float 
     this->nutrientConc = nutrientConc;
     this->baseConc = baseConc;
     this->duration = static_cast<unsigned long>(durationHours * 3600000.0); // Convert hours to milliseconds
+    this->nutrientStartDelay = static_cast<unsigned long>(nutrientDelayHours * 3600000.0); // Convert hours to milliseconds
     this->experimentName = experimentName;
     this->comment = comment;
 
@@ -80,6 +81,7 @@ void FermentationProgram::configure(float tempSetpoint, float phSetpoint, float 
     Logger::log(LogLevel::INFO, "Nutrient concentration: " + String(nutrientConc));
     Logger::log(LogLevel::INFO, "Base concentration: " + String(baseConc));
     Logger::log(LogLevel::INFO, "Duration: " + String(duration) + " seconds");
+    Logger::log(LogLevel::INFO, "Nutrient addition delay: " + String(nutrientStartDelay) + " milliseconds");
     Logger::log(LogLevel::INFO, "Experiment name: " + experimentName);
     Logger::log(LogLevel::INFO, "Comment: " + comment);
 
@@ -99,6 +101,7 @@ void FermentationProgram::start(const String& command) {
     _isPaused = false;
     startTime = millis();
     totalPauseTime = 0;
+    nutrientAdditionStarted = false;
 
     initializeStirringSpeed();
 
@@ -125,6 +128,7 @@ void FermentationProgram::start(const String& command) {
 
     Logger::log(LogLevel::INFO, F("Fermentation parameters:"));
     Logger::log(LogLevel::INFO, String(F("   - Duration: ")) + String(duration) + F(" seconds"));
+    Logger::log(LogLevel::INFO, String(F("   - Nutrient addition delay: ")) + String(getNutrientStartDelay()) + F(" hours"));
     Logger::log(LogLevel::INFO, String(F("   - Initial volume: ")) + String(volumeManager.getCurrentVolume()) + F(" L"));
     Logger::log(LogLevel::INFO, String(F("   - Max allowed volume: ")) + String(volumeManager.getMaxAllowedVolume()) + F(" L"));
     Logger::log(LogLevel::INFO, String(F("   - Min volume: ")) + String(volumeManager.getMinVolume()) + F(" L"));
@@ -142,8 +146,20 @@ void FermentationProgram::update() {
     // We do nothing if isPIDEnabled is false
 
     updateVolume();
-    addNutrientsContinuouslyFixedRate(nutrientFixedFlowRate);
     checkCompletion();
+
+    // Check if it's time to start adding nutrients
+    unsigned long elapsedTime = millis() - startTime - totalPauseTime;
+    if (!nutrientAdditionStarted && elapsedTime >= nutrientStartDelay) {
+        nutrientAdditionStarted = true;
+        Logger::log(LogLevel::INFO, "Starting nutrient addition after delay of " + 
+                   String(getNutrientStartDelay()) + " hours");
+    }
+    // Add nutrients only when the deadline has passed
+    if (nutrientAdditionStarted) {
+        addNutrientsContinuouslyFixedRate(nutrientFixedFlowRate);
+    }
+    
 }
 
 void FermentationProgram::pause() {
@@ -229,33 +245,50 @@ void FermentationProgram::initializeStirringSpeed() {
     Logger::log(LogLevel::INFO, "Fermentation stirring speed initialized to: " + String(currentStirringSpeed) + " RPM");
 }
 
+
+// Dans parseCommand, simple ajout du nutrientDelay
 void FermentationProgram::parseCommand(const String& command) {
-    String params[8]; // Table for storing parameters
+    String params[9];
     int paramCount = 0;
-    int lastIndex = command.indexOf(' ') + 1; // Start after 'fermentation'
-    // Separate the command into parameters
-    while (lastIndex < command.length() && paramCount < 8) {
-        int spaceIndex = command.indexOf(' ', lastIndex);
-        if (spaceIndex == -1) spaceIndex = command.length();
-        params[paramCount] = command.substring(lastIndex, spaceIndex);
-        lastIndex = spaceIndex + 1;
+    int lastIndex = command.indexOf(' ') + 1;
+    
+    while (lastIndex < command.length() && paramCount < 9) {
+        if (command.charAt(lastIndex) == '"') {
+            // Si on trouve un guillemet, chercher le guillemet fermant
+            int endQuote = command.indexOf('"', lastIndex + 1);
+            if (endQuote != -1) {
+                // Extraire la chaîne sans les guillemets externes
+                params[paramCount] = command.substring(lastIndex + 1, endQuote);
+                lastIndex = endQuote + 2; // Sauter le guillemet et l'espace suivant
+            } else {
+                lastIndex = command.length();
+            }
+        } else {
+            // Comportement normal pour les autres paramètres
+            int spaceIndex = command.indexOf(' ', lastIndex);
+            if (spaceIndex == -1) spaceIndex = command.length();
+            params[paramCount] = command.substring(lastIndex, spaceIndex);
+            lastIndex = spaceIndex + 1;
+        }
         paramCount++;
     }
-    // Check that we have enough parameters
-    if (paramCount >= 7) {
+    
+    if (paramCount >= 8) {
         float temp = params[0].toFloat();
         float ph = params[1].toFloat();
         float do_setpoint = params[2].toFloat();
         float nutrient_conc = params[3].toFloat();
         float base_conc = params[4].toFloat();
         float durationHours = params[5].toFloat();
-        String experimentName = params[6];
-        String comment = (paramCount > 7) ? params[7] : "";
+        float nutrientDelay = params[6].toFloat();
+        String experimentName = params[7];
+        String comment = (paramCount > 8) ? params[8] : "";
         
-        configure(temp, ph, do_setpoint, nutrient_conc, base_conc, durationHours, experimentName, comment);
+        configure(temp, ph, do_setpoint, nutrient_conc, base_conc, 
+                 durationHours, nutrientDelay, experimentName, comment);
         
-        //Logger::log(LogLevel::INFO, "Fermentation command parsed successfully");
-        //Logger::log(LogLevel::INFO, "ParseCommand - Duration parsed: " + String(durationHours) + " hours");
+        Logger::log(LogLevel::INFO, "ParseCommand - Duration parsed: " + String(durationHours) + " hours");
+        Logger::log(LogLevel::INFO, "ParseCommand - Nutrient delay: " + String(nutrientDelay) + " hours");
     } else {
         Logger::log(LogLevel::ERROR, F("Invalid fermentation command format"));
     }
@@ -373,14 +406,15 @@ void FermentationProgram::setPIDEnabled(bool enabled) {
 }
 
 void FermentationProgram::getParameters(JsonDocument& doc) const {
-    doc["tSet"] = tempSetpoint;
-    doc["phSet"] = phSetpoint;
-    doc["doSet"] = doSetpoint;
-    doc["nutC"] = nutrientConc;
-    doc["baseC"] = baseConc;
-    doc["dur"] = getDuration();  // This will return the duration in hours
-    doc["expN"] = experimentName;
-    doc["comm"] = comment;
+    doc["temperatureSetpoint"] = tempSetpoint;
+    doc["phSetpoint"] = phSetpoint;
+    doc["O2Setpoint"] = doSetpoint;
+    doc["nutrientConcentration"] = nutrientConc;
+    doc["baseConcentration"] = baseConc;
+    doc["duration"] = getDuration();  // This will return the duration in hours
+    doc["nutrientDelay"] = getNutrientStartDelay(); // Returns time in hours
+    doc["experimentName"] = experimentName;
+    doc["comment"] = comment;
 }
 
 bool FermentationProgram::isAnyActuatorRunning() const {

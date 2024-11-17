@@ -3,21 +3,21 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime
 
-# Lire le fichier CSV
+# Read CSV file
 df = pd.read_csv("R:/Bioreactor/ServerFastAPI/data/data.csv")
 
-# Convertir la colonne Backend_Time en datetime
+# Convert Backend_Time column to datetime
 df['Backend_Time'] = pd.to_datetime(df['Backend_Time'])
 
-# Trouver l'index du dernier program_event
+# Find the index of the last program_event
 last_program_event = df[df['Event_Type'] == 'program_event'].index.max()
 
 if pd.notna(last_program_event):
-    # Prendre toutes les données après le dernier program_event où currentProgram est 'Fermentation'
+    # Take all data after the last program_event where currentProgram is 'Fermentation'.
     plot_data = df[last_program_event:][df['currentProgram'] == 'Fermentation'].copy()
     
     if not plot_data.empty:
-        # Créer une figure avec 4 sous-graphiques
+        # Create a figure with 4 subgraphs
         fig = make_subplots(
             rows=4, 
             cols=1,
@@ -26,7 +26,7 @@ if pd.notna(last_program_event):
             subplot_titles=('Water Temperature (°C)', 'pH', 'Dissolved Oxygen (%)', 'Turbidity (NTU)')
         )
 
-        # Configuration des traces
+        # Trace configuration
         fig.add_trace(
             go.Scatter(
                 x=plot_data['Backend_Time'],
@@ -67,7 +67,7 @@ if pd.notna(last_program_event):
             row=4, col=1
         )
 
-        # Mise à jour de la mise en page
+        # Update layout
         fig.update_layout(
             height=1000,
             showlegend=True,
@@ -89,20 +89,20 @@ if pd.notna(last_program_event):
             margin=dict(t=100)
         )
 
-        # Mise à jour des axes
+        # Update axes
         fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGray')
         fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGray')
         
-        # Spécifiques à chaque sous-graphique
+        # Specific to each subgraph
         fig.update_yaxes(title_text="Temperature (°C)", row=1, col=1)
         fig.update_yaxes(title_text="pH", row=2, col=1)
         fig.update_yaxes(title_text="DO (%)", row=3, col=1)
         fig.update_yaxes(title_text="Turbidity (NTU)", row=4, col=1)
         
-        # Ajouter un xlabel seulement sur le dernier graphique
+        # Add an xlabel only on the last chart
         fig.update_xaxes(title_text="Time", row=4, col=1)
 
-        # Afficher la figure
+        # Display figure
         fig.show()
     else:
         print("No fermentation data after last program event")

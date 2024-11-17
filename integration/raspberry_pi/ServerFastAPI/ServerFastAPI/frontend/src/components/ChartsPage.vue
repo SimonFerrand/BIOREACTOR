@@ -1,13 +1,6 @@
 <template>
-  <div class="container">
-    <div class="controls">
-      <label for="start-time">Start Time:</label>
-      <input type="datetime-local" id="start-time" v-model="startTime" />
-      <label for="end-time">End Time:</label>
-      <input type="datetime-local" id="end-time" v-model="endTime" />
-      <button @click="fetchData">Load Data</button>
-    </div>
-    <div id="chart" class="chart"></div>
+  <div class="chart-container">
+    <div ref="plotContainer" class="chart"></div>
   </div>
 </template>
 
@@ -18,153 +11,287 @@ export default {
   name: 'ChartsPage',
   data() {
     return {
-      startTime: this.getDefaultStartTime(),
-      endTime: this.getDefaultEndTime(),
-      data: null,
+      plotData: [],
+      updateInterval: null
     };
   },
   mounted() {
-    this.fetchData();
+    this.initializeChart();
+    window.addEventListener('resize', this.handleResize);
+  },
+  beforeUnmount() {
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
+    window.removeEventListener('resize', this.handleResize);
   },
   methods: {
-    getDefaultStartTime() {
-      const now = new Date();
-      now.setHours(now.getHours() - 48);
-      return now.toISOString().slice(0, 16);
+    handleResize() {
+      const update = {
+        height: window.innerHeight - 120, // 120px pour la navbar et les marges
+        width: window.innerWidth - 48     // 48px pour les marges latérales
+      };
+      Plotly.relayout(this.$refs.plotContainer, update);
     },
-    getDefaultEndTime() {
-      const now = new Date();
-      return now.toISOString().slice(0, 16);
+    
+    initializeChart() {
+      this.fetchAndPlotData();
+      this.updateInterval = setInterval(() => {
+        this.fetchAndPlotData();
+      }, 60000); // Actualisation toutes les minutes
     },
-    async fetchData() {
+
+    async fetchAndPlotData() {
       try {
-        const response = await fetch(
-          `http://192.168.1.25:8000/sensor_data?startTime=${this.startTime}&endTime=${this.endTime}`
-        );
-        if (response.ok) {
-          this.data = await response.json();
-          console.log('Raw data:', this.data);
-          this.plotData();
-        } else {
-          console.error(`Error fetching data: ${response.status} - ${response.statusText}`);
+        const response = await fetch('http://192.168.1.25:8000/sensor_data');
+        if (!response.ok) throw new Error('Failed to fetch data');
+        
+        const data = await response.json();
+        
+        // Trouver le dernier program_event
+        const programEvents = data.filter(row => row.Event_Type === 'program_event');
+        const lastProgramEvent = programEvents[programEvents.length - 1];
+
+        if (lastProgramEvent) {
+          const lastEventIndex = data.indexOf(lastProgramEvent);
+          const plotData = data
+            .slice(lastEventIndex)
+            .filter(row => row.currentProgram === 'Fermentation');
+
+          if (plotData.length > 0) {
+            const traces = [
+              {
+                x: plotData.map(row => row.Backend_Time),
+                y: plotData.map(row => parseFloat(row.waterTemp)),
+                name: 'Temperature',
+                line: { color: '#FF6B6B', width: 2 }
+              },
+              {
+                x: plotData.map(row => row.Backend_Time),
+                y: plotData.map(row => parseFloat(row.pH)),
+                name: 'pH',
+                xaxis: 'x2',
+                yaxis: 'y2',
+                line: { color: '#4DABF7', width: 2 }
+              },
+              {
+                x: plotData.map(row => row.Backend_Time),
+                y: plotData.map(row => parseFloat(row.oxygen)),
+                name: 'Oxygen',
+                xaxis: 'x3',
+                yaxis: 'y3',
+                line: { color: '#69DB7C', width: 2 }
+              },
+              {
+                x: plotData.map(row => row.Backend_Time),
+                y: plotData.map(row => parseFloat(row.turbidity)),
+                name: 'Turbidity',
+                xaxis: 'x4',
+                yaxis: 'y4',
+                line: { color: '#DA77F2', width: 2 }
+              }
+            ];
+
+            const layout = {
+              height: window.innerHeight - 120,
+              width: window.innerWidth - 48,
+              paper_bgcolor: '#121212',
+              plot_bgcolor: '#121212',
+              showlegend: true,
+              grid: {
+                rows: 4,
+                columns: 1,
+                pattern: 'independent',
+                roworder: 'top to bottom',
+                height: 0.8
+              },
+              title: {
+                text: 'Bioreactor Parameters Monitoring',
+                y: 0.98,
+                x: 0.5,
+                xanchor: 'center',
+                yanchor: 'top',
+                font: { 
+                  size: 24,
+                  color: '#E0E0E0',
+                  family: 'Inter, system-ui, sans-serif'
+                }
+              },
+              legend: {
+                orientation: "h",
+                yanchor: "bottom",
+                y: 1.02,
+                xanchor: "right",
+                x: 1,
+                font: { color: '#E0E0E0' },
+                bgcolor: '#1E1E1E',
+                bordercolor: '#2D2D2D'
+              },
+              margin: { 
+                t: 50,
+                l: 80,
+                r: 50,
+                b: 50,
+                pad: 0
+              },
+              
+              // Configuration des axes X
+              xaxis: { 
+                showgrid: true, 
+                gridwidth: 1, 
+                gridcolor: '#2D2D2D', 
+                showticklabels: false,
+                tickfont: { color: '#E0E0E0' },
+                zeroline: false
+              },
+              xaxis2: { 
+                showgrid: true, 
+                gridwidth: 1, 
+                gridcolor: '#2D2D2D', 
+                showticklabels: false,
+                tickfont: { color: '#E0E0E0' },
+                zeroline: false
+              },
+              xaxis3: { 
+                showgrid: true, 
+                gridwidth: 1, 
+                gridcolor: '#2D2D2D', 
+                showticklabels: false,
+                tickfont: { color: '#E0E0E0' },
+                zeroline: false
+              },
+              xaxis4: { 
+                showgrid: true, 
+                gridwidth: 1, 
+                gridcolor: '#2D2D2D', 
+                title: {
+                  text: 'Time',
+                  font: { 
+                    color: '#E0E0E0',
+                    family: 'Inter, system-ui, sans-serif'
+                  }
+                },
+                tickfont: { color: '#E0E0E0' },
+                zeroline: false
+              },
+              
+              // Configuration des axes Y
+              yaxis: { 
+                title: {
+                  text: 'Temperature (°C)',
+                  font: { 
+                    color: '#E0E0E0',
+                    family: 'Inter, system-ui, sans-serif'
+                  }
+                },
+                showgrid: true, 
+                gridwidth: 1, 
+                gridcolor: '#2D2D2D',
+                tickfont: { color: '#E0E0E0' },
+                zeroline: false
+              },
+              yaxis2: { 
+                title: {
+                  text: 'pH',
+                  font: { 
+                    color: '#E0E0E0',
+                    family: 'Inter, system-ui, sans-serif'
+                  }
+                },
+                showgrid: true, 
+                gridwidth: 1, 
+                gridcolor: '#2D2D2D',
+                tickfont: { color: '#E0E0E0' },
+                zeroline: false
+              },
+              yaxis3: { 
+                title: {
+                  text: 'DO (%)',
+                  font: { 
+                    color: '#E0E0E0',
+                    family: 'Inter, system-ui, sans-serif'
+                  }
+                },
+                showgrid: true, 
+                gridwidth: 1, 
+                gridcolor: '#2D2D2D',
+                tickfont: { color: '#E0E0E0' },
+                zeroline: false
+              },
+              yaxis4: { 
+                title: {
+                  text: 'Turbidity (NTU)',
+                  font: { 
+                    color: '#E0E0E0',
+                    family: 'Inter, system-ui, sans-serif'
+                  }
+                },
+                showgrid: true, 
+                gridwidth: 1, 
+                gridcolor: '#2D2D2D',
+                tickfont: { color: '#E0E0E0' },
+                zeroline: false
+              }
+            };
+
+            Plotly.newPlot(this.$refs.plotContainer, traces, layout, {
+              responsive: true,
+              displayModeBar: true,
+              modeBarButtonsToRemove: [
+                'zoom2d',
+                'pan2d',
+                'select2d',
+                'lasso2d',
+                'zoomIn2d',
+                'zoomOut2d',
+                'autoScale2d',
+                'resetScale2d',
+              ],
+              displaylogo: false,
+              toImageButtonOptions: {
+                format: 'png',
+                filename: 'bioreactor_data',
+                height: 1080,
+                width: 1920,
+                scale: 2
+              }
+            });
+          }
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching or plotting data:', error);
       }
-    },
-    plotData() {
-      if (!this.data || this.data.length === 0) {
-        console.error("No data or invalid data received");
-        return;
-      }
-
-      console.log('Raw data:', this.data);
-
-      const parsedData = this.data.map(row => {
-        console.log('Parsing row:', row);
-        return {
-          Backend_Time: row.Backend_Time,
-          turbidity: parseFloat(row.turbidity),
-          ph: parseFloat(row.ph),
-          oxygen: parseFloat(row.oxygen),
-          waterTemp: parseFloat(row.waterTemp),
-          airTemp: parseFloat(row.airTemp),
-          temperatureX: parseFloat(row.temperatureX),
-          temperatureY: parseFloat(row.temperatureY),
-        };
-      });
-
-      console.log('Parsed data:', parsedData);
-
-      const trace1 = {
-        x: parsedData.map(d => d.Backend_Time),
-        y: parsedData.map(d => d.turbidity),
-        name: 'Turbidity',
-        type: 'scatter',
-      };
-      const trace2 = {
-        x: parsedData.map(d => d.Backend_Time),
-        y: parsedData.map(d => d.ph),
-        name: 'pH',
-        type: 'scatter',
-        xaxis: 'x2',
-        yaxis: 'y2',
-      };
-      const trace3 = {
-        x: parsedData.map(d => d.Backend_Time),
-        y: parsedData.map(d => d.oxygen),
-        name: 'Oxygen',
-        type: 'scatter',
-        xaxis: 'x3',
-        yaxis: 'y3',
-      };
-      const trace4 = {
-        x: parsedData.map(d => d.Backend_Time),
-        y: parsedData.map(d => d.waterTemp),
-        name: 'Water Temperature',
-        type: 'scatter',
-        xaxis: 'x4',
-        yaxis: 'y4',
-      };
-      const trace5 = {
-        x: parsedData.map(d => d.Backend_Time),
-        y: parsedData.map(d => d.airTemp),
-        name: 'Air Temperature',
-        type: 'scatter',
-        xaxis: 'x4',
-        yaxis: 'y4',
-      };
-
-      const dataToPlot = [trace1, trace2, trace3, trace4, trace5];
-
-      const layout = {
-        grid: { rows: 4, columns: 1, pattern: 'independent' },
-        yaxis: { title: 'Turbidity', automargin: true },
-        yaxis2: { title: 'pH', automargin: true },
-        yaxis3: { title: 'Oxygen', automargin: true },
-        yaxis4: { title: 'Temperature', automargin: true },
-        xaxis4: { title: 'Time' },
-        height: (window.innerHeight - 50) * 0.8, // Adjust the height dynamically (reduced by 20%)
-        margin: { l: 80, r: 80, t: 50, b: 80 }, // Adjust margins for left, right, top, and bottom
-        showlegend: true,
-        width: window.innerWidth - 160, // Adjust the width dynamically to account for margins
-      };
-
-      // Update xaxes to hide labels for all but the last subplot
-      layout.xaxis = { showticklabels: false };
-      layout.xaxis2 = { showticklabels: false };
-      layout.xaxis3 = { showticklabels: false };
-
-      Plotly.newPlot('chart', dataToPlot, layout);
-
-      // Resize the plot when the window is resized
-      window.onresize = () => {
-        Plotly.Plots.resize(document.getElementById('chart'));
-      };
-    },
-  },
+    }
+  }
 };
 </script>
 
 <style scoped>
-.container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden; /* Prevent overflow */
-}
-
-.controls {
+.chart-container {
+  height: calc(100vh - 4rem);
   padding: 1rem;
-  background-color: #f1f1f1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
+  background-color: var(--dark-bg);
+  overflow: hidden;
 }
 
 .chart {
-  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Styles pour les éléments Plotly */
+:deep(.modebar) {
+  background-color: #1E1E1E !important;
+}
+
+:deep(.modebar-btn) {
+  color: #E0E0E0 !important;
+}
+
+:deep(.modebar-btn:hover) {
+  color: #FFFFFF !important;
+  background-color: #2D2D2D !important;
 }
 </style>

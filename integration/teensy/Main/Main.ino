@@ -78,7 +78,6 @@ PIDManager pidManager;
 StateMachine stateMachine(pidManager, volumeManager, espCommunication);
 SafetySystem safetySystem(0.85, 0.95, 0.40, stateMachine, volumeManager); // (totalVolume, maxVolumePercent, minVolume)
 
-
 // Program declarations
 TestsProgram testsProgram(pidManager);
 DrainProgram drainProgram;

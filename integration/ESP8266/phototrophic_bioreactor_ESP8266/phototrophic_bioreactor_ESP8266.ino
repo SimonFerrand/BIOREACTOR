@@ -43,13 +43,28 @@
   6. SPI: Serial Peripheral Interface for communication with SPI devices.
   7. UART: Universal Asynchronous Receiver/Transmitter for serial communication.
   8. Deep Sleep: Power-saving mode to reduce power consumption during inactivity.
+
+// config.h :
+#ifndef CONFIG_H
+#define CONFIG_H
+// WiFi credentials
+const char* ssid = "xxx";
+const char* password = "xxx";
+// MQTT Settings
+#define MQTT_HOST "192.168.1.25"  // Adresse de votre Raspberry Pi
+#define MQTT_PORT 1883
+#define MQTT_CLIENT_ID "phototropic_xs"
+#endif // CONFIG_H
 */
+
 
 // ======= Libraries =======
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <AsyncMqttClient.h>
+#include <Ticker.h>
 #include "config.h"
 
 // ======= Pin Definitions =======
@@ -61,6 +76,11 @@ const int fanPin = 4; // GPIO4 (D2 on ESP8266)
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600 * 2, 1800000); // Update every half hour, GMT+2 for CEST
 ESP8266WebServer server(80);
+AsyncMqttClient mqttClient;
+Ticker mqttReconnectTimer;
+Ticker wifiReconnectTimer;
+WiFiEventHandler wifiConnectHandler;
+WiFiEventHandler wifiDisconnectHandler;
 
 // ======= Time Control Settings =======
 int onStartHour = 5; // 5 AM
@@ -75,9 +95,54 @@ const int fanMinSpeed = 200; // Minimum RPM
 const int fanMaxSpeed = 3300; // Maximum RPM
 int targetFanSpeed = 400; // Target RPM
 
+void connectToWifi() {
+  Serial.println("Connecting to Wi-Fi...");
+  WiFi.begin(ssid, password);
+}
+
+void connectToMqtt() {
+  Serial.println("Connecting to MQTT...");
+  mqttClient.connect();
+}
+
+void onWifiConnect(const WiFiEventStationModeGotIP& event) {
+  Serial.println("Connected to Wi-Fi.");
+  connectToMqtt();
+}
+
+void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) {
+  Serial.println("Disconnected from Wi-Fi.");
+  mqttReconnectTimer.detach();
+  wifiReconnectTimer.once(2, connectToWifi);
+}
+
+void onMqttConnect(bool sessionPresent) {
+  Serial.println("Connected to MQTT.");
+  publishStatus();
+}
+
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+  Serial.println("Disconnected from MQTT.");
+  if (WiFi.isConnected()) {
+    mqttReconnectTimer.once(2, connectToMqtt);
+  }
+}
+
+void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
+  // Créer un buffer temporaire pour s'assurer d'avoir une chaîne terminée par null
+  char* temp = new char[len + 1];
+  memcpy(temp, payload, len);
+  temp[len] = '\0';
+  String message = String(temp);
+  delete[] temp;
+
+  Serial.printf("Message received on topic: %s\n", topic);
+  Serial.println(message);
+}
+
 void setup() {
   Serial.begin(115200);
-  delay(1000);  // Allow time for the serial connection to stabilize
+  delay(1000);
   
   Serial.println("\n--- SETUP START ---");
   
@@ -92,12 +157,24 @@ void setup() {
   Serial.println("Initializing fan speed...");
   updateFanSpeed();
 
+  // Setup MQTT
+  mqttClient.onConnect(onMqttConnect);
+  mqttClient.onDisconnect(onMqttDisconnect);
+  mqttClient.onMessage(onMqttMessage);
+  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+
+  // Setup WiFi events
+  wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+  wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
+
+  // Connect to WiFi
   Serial.println("Connecting to WiFi...");
-  WiFi.begin(ssid, password);
+  connectToWifi();
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
+  
   Serial.println("\nWiFi connected successfully!");
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
@@ -126,22 +203,14 @@ void setup() {
   Serial.println("--- SETUP COMPLETE ---\n");
 }
 
-void loop() {
-  server.handleClient();
-  timeClient.update();
-
-  if (!manualControl) {
-    int currentHour = (timeClient.getEpochTime() % 86400L) / 3600;
-    if (currentHour >= onStartHour && currentHour < offStartHour) {
-      digitalWrite(relayPin, LOW);
-      digitalWrite(builtInLed, LOW);
-    } else {
-      digitalWrite(relayPin, HIGH);
-      digitalWrite(builtInLed, HIGH);
-    }
-  }
-
-  delay(100); // Short delay for stability
+void publishStatus() {
+  String status = "{";
+  status += "\"light\":" + String(digitalRead(relayPin) == LOW ? "true" : "false") + ",";
+  status += "\"fanSpeed\":" + String(targetFanSpeed) + ",";
+  status += "\"timeControl\":" + String(!manualControl ? "true" : "false");
+  status += "}";
+  
+  mqttClient.publish("phototropic/status", 0, true, status.c_str());
 }
 
 void setupServer() {
@@ -175,7 +244,6 @@ void handleRoot() {
   html += "</head><body>";
   html += "<h1>ESP8266 Control Panel</h1>";
   
-  // Server functionality
   html += "<h2>Server Functionality:</h2>";
   html += "<ul>";
   html += "<li>Control LED Grow Light (ON/OFF/AUTO)</li>";
@@ -184,7 +252,6 @@ void handleRoot() {
   html += "<li>Display current status and time</li>";
   html += "</ul>";
   
-  // Current status
   html += "<h2>Current Status:</h2>";
   html += "<div class='status'>";
   html += "<p>Current time: " + timeClient.getFormattedTime() + "</p>";
@@ -195,7 +262,6 @@ void handleRoot() {
   html += "<p>LED OFF time: " + String(offStartHour) + ":00</p>";
   html += "</div>";
   
-  // Controls
   html += "<h2>Controls:</h2>";
   html += "<p><a href='/on'>Turn LED ON</a> | <a href='/off'>Turn LED OFF</a> | <a href='/auto'>Set to AUTO mode</a></p>";
   html += "<form action='/setfan'>";
@@ -208,7 +274,6 @@ void handleRoot() {
   html += "<input type='submit' value='Set'>";
   html += "</form>";
   
-  // Available commands
   html += "<h2>Available Commands:</h2>";
   html += "<div class='commands'>";
   html += "<table>";
@@ -289,4 +354,28 @@ void handleStatus() {
 void updateFanSpeed() {
   int pwmValue = map(targetFanSpeed, fanMinSpeed, fanMaxSpeed, 0, 1023);
   analogWrite(fanPin, pwmValue);
+}
+
+void loop() {
+  server.handleClient();
+  timeClient.update();
+
+  if (!manualControl) {
+    int currentHour = (timeClient.getEpochTime() % 86400L) / 3600;
+    if (currentHour >= onStartHour && currentHour < offStartHour) {
+      digitalWrite(relayPin, LOW);
+      digitalWrite(builtInLed, LOW);
+    } else {
+      digitalWrite(relayPin, HIGH);
+      digitalWrite(builtInLed, HIGH);
+    }
+  }
+
+  static unsigned long lastStatus = 0;
+  if (millis() - lastStatus > 30000) {
+    publishStatus();
+    lastStatus = millis();
+  }
+
+  delay(100);
 }

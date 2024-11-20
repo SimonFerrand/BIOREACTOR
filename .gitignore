@@ -1,14 +1,14 @@
 # Exclude specific config files
 development/wifi_communication/WIFI_ESP_32/ESP32/config.h
 development/wifi_communication/WIFI_ESP 12F (not working)/ESP12F/config.h
-integration/ESP32/config.h
 development/camera/ESP32-CAM/config.h
-integration/ESP8266/phototrophic_bioreactor_ESP8266/config.h
-integration/ESP32-S3/config.h
 development/wifi_communication/RangeExtender_NAPT_ESP8266/config.h
-
+integration/HETEROTROPHIC/XS/ESP32/config.h
+integration/HETEROTROPHIC/S/ESP32-S3/config.h
+integration/PHOTOTROPHIC/XS/phototrophic_bioreactor_ESP8266/config.h
 
 # Exclude specific images in docs
 docs/DynDNS.jpg
 docs/Ip local static.jpg
 docs/NAT.jpg
+docs/memory_optimisation.txt

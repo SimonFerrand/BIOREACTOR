@@ -27,3 +27,13 @@ rm package-lock.json
 npm install
 
 npm install webpack --save-dev
+
+npm install plotly.js-dist
+
+sudo apt-get install mosquitto mosquitto-clients
+sudo systemctl enable mosquitto
+sudo nano /etc/mosquitto/conf.d/local.conf
+	listener 1883
+	allow_anonymous true
+sudo systemctl restart mosquitto
+pip install paho-mqtt

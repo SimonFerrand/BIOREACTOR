@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, ValidationError
 import csv
 from datetime import datetime
@@ -10,6 +11,8 @@ import json
 import asyncio
 import logging
 from logging.handlers import RotatingFileHandler
+import paho.mqtt.client as mqtt
+from threading import Thread
 
 def flatten_dict(d, parent_key='', sep='_'):
     items = []
@@ -40,6 +43,37 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(log_formatter)
 logger.addHandler(console_handler)
 
+# MQTT Setup
+mqtt_client = mqtt.Client()
+mqtt_connected = False
+
+def on_mqtt_connect(client, userdata, flags, rc):
+    global mqtt_connected
+    mqtt_connected = True
+    logger.info("Connected to MQTT broker")
+    client.subscribe("bioreactor/status")
+    client.subscribe("bioreactor/sensors")
+
+def on_mqtt_message(client, userdata, msg):
+    try:
+        payload = json.loads(msg.payload.decode())
+        logger.debug(f"MQTT message received on {msg.topic}: {payload}")
+    except Exception as e:
+        logger.error(f"Error processing MQTT message: {e}")
+
+mqtt_client.on_connect = on_mqtt_connect
+mqtt_client.on_message = on_mqtt_message
+
+# Start MQTT in a separate thread
+def start_mqtt():
+    try:
+        mqtt_client.connect("localhost", 1883, 60)
+        mqtt_client.loop_start()
+    except Exception as e:
+        logger.error(f"Failed to connect to MQTT broker: {e}")
+
+Thread(target=start_mqtt, daemon=True).start()
+
 app = FastAPI()
 
 # Define the directory and file path
@@ -52,9 +86,9 @@ os.makedirs(data_dir, exist_ok=True)
 # Add the CORS middleware to allow requests from the frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://192.168.1.25:8080"],  # Adjust this based on your frontend origin
+    allow_origins=["http://192.168.1.25:8080", "http://localhost:8080"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
@@ -94,6 +128,72 @@ def ensure_csv_header():
                 "comment"
             ])
 
+class MixCommand(BaseModel):
+    speed: int
+
+class DrainCommand(BaseModel):
+    rate: int
+    duration: int
+
+class FermentationCommand(BaseModel):
+    temperature: float
+    pH: float
+    dissolvedOxygen: float
+    nutrientConcentration: float
+    baseConcentration: float
+    duration: int
+    nutrientDelay: float 
+    experimentName: str
+    comment: str
+
+@app.post("/execute/mix")
+async def execute_mix(command: MixCommand):
+    try:
+        logger.info(f"MQTT Connected: {mqtt_client.is_connected()}")
+        if not mqtt_client.is_connected():
+            mqtt_client.reconnect()
+        
+        message = {"program": "mix", "speed": command.speed}
+        mqtt_client.publish("bioreactor/commands", json.dumps(message))
+        return {"message": f"Mix program started with speed {command.speed}"}
+    except Exception as e:
+        logger.error(f"MQTT Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/execute/drain")
+async def execute_drain(command: DrainCommand):
+    logger.info(f"Received drain command: rate={command.rate}, duration={command.duration}")
+    
+    message = {"program": "drain", "rate": command.rate, "duration": command.duration}
+    mqtt_client.publish("bioreactor/commands", json.dumps(message))
+    return {"message": f"Drain program started with rate {command.rate} and duration {command.duration}"}
+
+@app.post("/execute/fermentation")
+async def execute_fermentation(command: FermentationCommand):
+    logger.info(f"Received fermentation command: {command}")
+    
+    message = {
+        "program": "fermentation",
+        "temperature": command.temperature,
+        "pH": command.pH,
+        "dissolvedOxygen": command.dissolvedOxygen,
+        "nutrientConcentration": command.nutrientConcentration,
+        "baseConcentration": command.baseConcentration,
+        "duration": command.duration,
+        "nutrientDelay": command.nutrientDelay,
+        "experimentName": command.experimentName,
+        "comment": command.comment
+    }
+    mqtt_client.publish("bioreactor/commands", json.dumps(message))
+    return {"message": "Fermentation program started"}
+
+@app.post("/execute/stop")
+async def execute_stop():
+    logger.info("Received stop command")
+    
+    message = {"program": "stop"}
+    mqtt_client.publish("bioreactor/commands", json.dumps(message))
+    return {"message": "All programs stopped"}
 
 @app.post("/sensor_data")
 async def receive_data(data: BioreactorData):
@@ -109,7 +209,7 @@ async def receive_data(data: BioreactorData):
 
         if not isinstance(bioreactor_data, dict):
             raise ValueError("arduino_value must be a dictionary")
-
+        
         # Determine event type and process program parameters
         event_type = "unknown"
         program_parameters = {}
@@ -198,122 +298,14 @@ async def get_sensor_data():
         logger.error(f"Error fetching sensor data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-class MixCommand(BaseModel):
-    speed: int
-
-class DrainCommand(BaseModel):
-    rate: int
-    duration: int
-
-class FermentationCommand(BaseModel):
-    temperature: float
-    pH: float
-    dissolvedOxygen: float
-    nutrientConcentration: float
-    baseConcentration: float
-    duration: int
-    nutrientDelay: float 
-    experimentName: str
-    comment: str
-
-esp32_connection = None
-frontend_connection = None
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    global esp32_connection, frontend_connection
-    
-    client_type = websocket.headers.get("X-Client-Type")
-    
-    if client_type == "ESP32":
-        esp32_connection = websocket
-        logger.info("ESP32 WebSocket connection established")
-    else:
-        frontend_connection = websocket
-        logger.info("Frontend WebSocket connection established")
-
-    try:
-        while True:
-            data = await websocket.receive_text()
-            logger.info(f"Received WebSocket message: {data}")
-            
-            if websocket == esp32_connection:
-                logger.info(f"Received message from ESP32: {data}")
-                if frontend_connection:
-                    await frontend_connection.send_text(data)
-            else:
-                if esp32_connection:
-                    await esp32_connection.send_text(data)
-                    logger.info(f"Sent message to ESP32: {data}")
-                else:
-                    logger.warning("Cannot send message to ESP32: No connection")
-            
-            await websocket.send_text(f"Message received: {data}")
-    except WebSocketDisconnect:
-        if websocket == esp32_connection:
-            logger.info("ESP32 WebSocket disconnected")
-            esp32_connection = None
-        else:
-            logger.info("Frontend WebSocket disconnected")
-            frontend_connection = None
-
-@app.post("/execute/mix")
-async def execute_mix(command: MixCommand):
-    logger.info(f"Received mix command: speed={command.speed}")
-    logger.info(f"ESP32 connection status: {'Connected' if esp32_connection else 'Not connected'}")
-    if esp32_connection:
-        await esp32_connection.send_text(json.dumps({"program": "mix", "speed": command.speed}))
-        logger.info(f"Sent mix command to ESP32: speed {command.speed}")
-        return {"message": f"Mix program started with speed {command.speed}"}
-    logger.warning("ESP32 not connected")
-    return {"message": "ESP32 not connected"}
-
-@app.post("/execute/drain")
-async def execute_drain(command: DrainCommand):
-    logger.info(f"Received drain command: rate={command.rate}, duration={command.duration}")
-    logger.info(f"ESP32 connection status: {'Connected' if esp32_connection else 'Not connected'}")
-    if esp32_connection:
-        await esp32_connection.send_text(json.dumps({"program": "drain", "rate": command.rate, "duration": command.duration}))
-        logger.info(f"Sent drain command to ESP32: rate {command.rate}, duration {command.duration}")
-        return {"message": f"Drain program started with rate {command.rate} and duration {command.duration}"}
-    logger.warning("ESP32 not connected")
-    return {"message": "ESP32 not connected"}
-
-@app.post("/execute/fermentation")
-async def execute_fermentation(command: FermentationCommand):
-    logger.info(f"Received fermentation command: {command}")
-    logger.info(f"ESP32 connection status: {'Connected' if esp32_connection else 'Not connected'}")
-    if esp32_connection:
-        await esp32_connection.send_text(json.dumps({
-            "program": "fermentation",
-            "temperature": command.temperature,
-            "pH": command.pH,
-            "dissolvedOxygen": command.dissolvedOxygen,
-            "nutrientConcentration": command.nutrientConcentration,
-            "baseConcentration": command.baseConcentration,
-            "duration": command.duration,
-            "nutrientDelay": command.nutrientDelay, 
-            "experimentName": command.experimentName,
-            "comment": command.comment
-        }))
-        logger.info("Sent fermentation command to ESP32")
-        return {"message": "Fermentation program started"}
-    logger.warning("ESP32 not connected")
-    return {"message": "ESP32 not connected"}
-
-@app.post("/execute/stop")
-async def execute_stop():
-    logger.info("Received stop command")
-    logger.info(f"ESP32 connection status: {'Connected' if esp32_connection else 'Not connected'}")
-    if esp32_connection:
-        await esp32_connection.send_text(json.dumps({"program": "stop"}))
-        logger.info("Sent stop command to ESP32")
-        return {"message": "All programs stopped"}
-    logger.warning("ESP32 not connected")
-    return {"message": "ESP32 not connected"}
-
 if __name__ == "__main__":
     import uvicorn
     logger.info("Starting FastAPI server")
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+@app.get("/mqtt_status")
+async def get_mqtt_status():
+    return {
+        "status": "Connected" if mqtt_client.is_connected() else "Disconnected",
+        "connected": mqtt_client.is_connected()
+    }

@@ -7,3 +7,6 @@ DFRobot_PH
 ArduinoJson
 ezTime
 Adafruit_MCP4728
+AsyncTCP
+
+AsyncMqttClient //  https://github.com/marvinroger/async-mqtt-client

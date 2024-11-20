@@ -13,6 +13,18 @@ sudo journalctl -u fastapi.service
 
 sudo systemctl stop fastapi.service
 
+>Nouvelles installations pour exécuter le frontend avec pm2:
+npm install -g pm2
+cd /Raspberry/Bioreactor/ServerFastAPI/frontend
+pm2 start npm --name "bioreactor-frontend" -- run serve
+pm2 startup
+pm2 save
+
+sudo crontab -e
+@reboot /bin/bash -c 'source /home/pi/.bashrc && /home/pi/network_check_and_server_restart.sh'
+
+
+
 1-Start FastAPI Backend:
 sudo systemctl start fastapi.service
 sudo systemctl status fastapi.service
@@ -21,6 +33,9 @@ sudo journalctl -u fastapi.service -f
 2- Start Vue.js Frontend:
 cd /Raspberry/Bioreactor/ServerFastAPI/frontend
 npm run serve
+# Ou Démarrer le front and avec PM2
+cd /Raspberry/Bioreactor/ServerFastAPI/frontend
+pm2 start npm --name "bioreactor-frontend" -- run serve
 
 
 Backend (FastAPI): http://192.168.1.25:8000/
@@ -34,9 +49,18 @@ cd /Raspberry/Bioreactor/ServerFastAPI/frontend
 sudo systemctl restart fastapi.service
 npm run serve
 
-x - script for network_check_and_server_restart (/home/pi/network_check_and_server_restart.sh) :
-ls -l /home/pi/network_check_and_server_restart.sh
+x - script for network_check, security_update, and server_restart :
+sudo nano /home/pi/bioreactor_monitor.sh
+sudo chmod +x /home/pi/bioreactor_monitor.sh
 
+
+
+x - log unique
+cat /home/pi/bioreactor.log #log unique
+
+sudo systemctl status mosquitto
+sudo tail -f /var/log/mosquitto/mosquitto.log
+mosquitto_sub -h localhost -t "bioreactor/#" -v
 
 
 

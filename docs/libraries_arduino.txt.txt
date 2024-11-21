@@ -12,3 +12,7 @@ AsyncMqttClient //  https://github.com/marvinroger/async-mqtt-client
 AsyncTCP
 Ticker
 ESPAsyncTCP
+
+Arduino_ESP32_OTA
+ElegantOTA
+

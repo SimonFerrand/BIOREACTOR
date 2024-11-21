@@ -6,6 +6,7 @@ development/wifi_communication/RangeExtender_NAPT_ESP8266/config.h
 integration/HETEROTROPHIC/XS/ESP32/config.h
 integration/HETEROTROPHIC/S/ESP32-S3/config.h
 integration/PHOTOTROPHIC/XS/phototrophic_bioreactor_ESP8266/config.h
+development/communication/OTA_ESP32/config.h
 
 # Exclude specific images in docs
 docs/DynDNS.jpg

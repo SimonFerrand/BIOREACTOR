@@ -13,6 +13,5 @@ AsyncTCP
 Ticker
 ESPAsyncTCP
 
-Arduino_ESP32_OTA
 ElegantOTA
-
+CircularBuffer

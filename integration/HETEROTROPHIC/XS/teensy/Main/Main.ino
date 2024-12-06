@@ -63,11 +63,11 @@ TurbiditySensorSEN0554 turbiditySensorSEN0554(&SerialTurbidity, "turbiditySensor
 DCPump airPump(MCP4728_CHANNEL_A, 6, 10, "airPump");        // Air pump (PWM: MCP4728_CHANNEL_A, Relay: 6, Min PWM: 15) - 12V
 DCPump drainPump(MCP4728_CHANNEL_B, 9, 10, "drainPump");    // Drain pump (PWM: MCP4728_CHANNEL_B, Relay: 29, Min PWM: 15) - 24V         //3  >9
 DCPump samplePump(MCP4728_CHANNEL_C, 8, 10, "samplePump");// Sample pump (PWM: MCP4728_CHANNEL_C, Relay: 28, Min PWM: 15) - 24V          //2  > 8
-DCPump fillPump(MCP4728_CHANNEL_D, 5, 10, "fillPump");// Fill pump (PWM: MCP4728_CHANNEL_D, Relay: 7, Min PWM: 15) - 24V
+DCPump fillPump(MCP4728_CHANNEL_D, 4, 10, "fillPump");// Fill pump (PWM: MCP4728_CHANNEL_D, Relay: 7, Min PWM: 15) - 24V
 PeristalticPump nutrientPump(0x61, 0, 1, 105.0, "nutrientPump"); // Nutrient pump (I2C: 0x61, Relay: 0, Min flow: 1, Max flow: 105.0) - 24V ; Allocate IC2 address by soldering A0 input to Vcc on MCP4725 board 
 PeristalticPump basePump(0x60, 1, 1, 105.0, "basePump");         // Base pump (I2C: 0x60, Relay: 8, Min flow: 1, Max flow: 105.0) ; NaOH @10% - 24V 
-StirringMotor stirringMotor(22, 7, 390, 500,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000) - 12V
-HeatingPlate heatingPlate(4, false, "heatingPlate");            // Heating plate (Relay: 12, Not PWM capable) - 24V
+StirringMotor stirringMotor(22, 7, 390, 420,"stirringMotor");   // Stirring motor (PWM: 9, Relay: 10, Min RPM: 390, Max RPM: 1000) - 12V
+HeatingPlate heatingPlate(5, false, "heatingPlate");            // Heating plate (Relay: 12, Not PWM capable) - 24V
 LEDGrowLight ledGrowLight(32, "ledGrowLight");                   // LED grow light (Relay: 27) 
 
 // System components
@@ -76,7 +76,7 @@ DataCollector dataCollector(volumeManager);
 Communication espCommunication(SerialESP, dataCollector);
 PIDManager pidManager;
 StateMachine stateMachine(pidManager, volumeManager, espCommunication);
-SafetySystem safetySystem(0.85, 0.95, 0.40, stateMachine, volumeManager); // (totalVolume, maxVolumePercent, minVolume)
+SafetySystem safetySystem(0.85, 0.95, 0.40, stateMachine, volumeManager, pidManager); // (totalVolume, maxVolumePercent, minVolume)
 
 // Program declarations
 TestsProgram testsProgram(pidManager);
@@ -145,7 +145,7 @@ void setup() {
     //Logger::log(LogLevel::INFO, "PID setup");
     Logger::log(LogLevel::INFO, F("PID setup"));
 
-    volumeManager.setInitialVolume(0.45);           // set an initial volume of 0.2 L     // 750
+    volumeManager.setInitialVolume(0.500);           // set an initial volume of 0.2 L     // 750
     //Logger::log(LogLevel::INFO, "Setup an initial volume");
 
     //Logger::log(LogLevel::INFO, "Setup completed");

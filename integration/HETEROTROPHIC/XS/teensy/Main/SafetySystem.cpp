@@ -2,9 +2,10 @@
 #include "SafetySystem.h"
 #include "StateMachine.h"
 
-SafetySystem::SafetySystem(float totalVolume, float maxVolumePercent, float minVolume, StateMachine& stateMachine, VolumeManager& volumeManager)
+SafetySystem::SafetySystem(float totalVolume, float maxVolumePercent, float minVolume, StateMachine& stateMachine, VolumeManager& volumeManager, PIDManager& pidManager)
     : stateMachine(stateMachine),
-      volumeManager(volumeManager),          
+      volumeManager(volumeManager), 
+      pidManager(pidManager),         
       totalVolume(totalVolume),            
       maxVolumePercent(maxVolumePercent),  
       minVolume(minVolume),                
@@ -113,20 +114,29 @@ void SafetySystem::checkHeatingEffectiveness() {
     float currentTemp = SensorController::readSensor("waterTempSensor");
     
     HeatingPlate* heatingPlate = (HeatingPlate*)ActuatorController::findActuatorByName("heatingPlate");
+    
+    // If PID control is close to target temperature, no need to check
+    if (pidManager.isTemperaturePIDRunning() && 
+        abs(currentTemp - pidManager.getTemperatureSetpoint()) < 1.0) {
+        heatingStatus.isMonitoring = false;
+        return;
+    }
+
+    // Checking the heating plate
     if (heatingPlate->isOn()) {
         if (!heatingStatus.isMonitoring) {
-            // Start new monitoring period
+            // Start new monitoring when heating plate lights up
             heatingStatus.isMonitoring = true;
             heatingStatus.monitorStartTime = millis();
             heatingStatus.initialTemp = currentTemp;
-            Logger::log(LogLevel::INFO, "Started heating monitoring at temperature: " + String(currentTemp));
+            Logger::log(LogLevel::INFO, "Starting heating monitoring at temperature: " + String(currentTemp));
         }
 
         unsigned long monitoringDuration = millis() - heatingStatus.monitorStartTime;
-        if (monitoringDuration >= HeatingMonitoringStatus::MONITOR_DURATION) {  // Changed here
+        if (monitoringDuration >= HeatingMonitoringStatus::MONITOR_DURATION) {
             float tempChange = currentTemp - heatingStatus.initialTemp;
-            if (tempChange < HeatingMonitoringStatus::MIN_TEMP_INCREASE) {      // Changed here
-                logAlert("Temperature not increasing while heating - possible sensor malfunction", LogLevel::ERROR);
+            if (tempChange < HeatingMonitoringStatus::MIN_TEMP_INCREASE) {
+                Logger::log(LogLevel::ERROR, "Temperature not increasing while heating - possible sensor or heating plate malfunction");
                 Logger::log(LogLevel::ERROR, "Initial temp: " + String(heatingStatus.initialTemp) + 
                                            ", Current temp: " + String(currentTemp) + 
                                            ", Change: " + String(tempChange));

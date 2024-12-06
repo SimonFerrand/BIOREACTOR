@@ -52,6 +52,10 @@ public:
 
     void setMinStirringSpeed(int speed) { minStirringSpeed = speed; }
     int getMinStirringSpeed() const { return minStirringSpeed; }
+
+    bool isTemperaturePIDRunning() const { return tempPIDRunning; }
+    double getTemperatureSetpoint() const { return tempSetpoint; }
+    
 private:
     PID tempPID;
     PID phPID;

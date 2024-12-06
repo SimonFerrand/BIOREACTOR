@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "SensorController.h"
 #include "ActuatorController.h"
+#include "PIDManager.h"
 
 // Forward declaration
 class StateMachine;
@@ -14,13 +15,13 @@ struct HeatingMonitoringStatus {
     bool isMonitoring;
     unsigned long monitorStartTime;
     float initialTemp;
-    static const unsigned long MONITOR_DURATION = 180000;  // 3 minutes
-    static constexpr float MIN_TEMP_INCREASE = 0.5;   // Minimum expected increase
+    static const unsigned long MONITOR_DURATION = 300000;  // 5 minutes
+    static constexpr float MIN_TEMP_INCREASE = 0.2;   // Minimum expected increase
 };
 
 class SafetySystem {
 public:
-    SafetySystem(float totalVolume, float maxVolumePercent, float minVolume, StateMachine& stateMachine, VolumeManager& volumeManager);
+    SafetySystem(float totalVolume, float maxVolumePercent, float minVolume, StateMachine& stateMachine, VolumeManager& volumeManager, PIDManager& pidManager);
     void checkLimits();
     static void setLogLevel(LogLevel level);
     void parseCommand(const String& command);
@@ -29,6 +30,7 @@ public:
 private:
     StateMachine& stateMachine;
     VolumeManager& volumeManager;
+    PIDManager& pidManager;
     float totalVolume;
     float maxVolumePercent;
     float minVolume;

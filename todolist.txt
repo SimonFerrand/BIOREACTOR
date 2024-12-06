@@ -1,0 +1,4 @@
+HIGH:
+	-erreur de sauvegarde des consignes des actueteurs en fonction sur le serveur.
+LOW:
+	-log warning/alarm sur un csv sur le serveur. Créer une page log sur le frontend

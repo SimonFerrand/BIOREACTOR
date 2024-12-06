@@ -3,10 +3,12 @@ development/wifi_communication/WIFI_ESP_32/ESP32/config.h
 development/wifi_communication/WIFI_ESP 12F (not working)/ESP12F/config.h
 development/camera/ESP32-CAM/config.h
 development/wifi_communication/RangeExtender_NAPT_ESP8266/config.h
+development/communication/OTA_ESP32/config.h
+development/communication/MQTT_FreeRTOS_OTA_WebControl_ESP32/MQTT_FreeRTOS_OTA_WebControl_ESP32/private_config.h
 integration/HETEROTROPHIC/XS/ESP32/config.h
 integration/HETEROTROPHIC/S/ESP32-S3/config.h
 integration/PHOTOTROPHIC/XS/phototrophic_bioreactor_ESP8266/config.h
-development/communication/OTA_ESP32/config.h
+
 
 # Exclude specific images in docs
 docs/DynDNS.jpg

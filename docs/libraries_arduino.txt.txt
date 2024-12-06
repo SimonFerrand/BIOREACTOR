@@ -9,9 +9,10 @@ ezTime
 Adafruit_MCP4728
 NTPClient
 AsyncMqttClient //  https://github.com/marvinroger/async-mqtt-client
-AsyncTCP
+AsyncTCP  // https://github.com/me-no-dev/AsyncTCP
 Ticker
 ESPAsyncTCP
-
 ElegantOTA
 CircularBuffer
+ESPAsyncWebServer //https://github.com/me-no-dev/ESPAsyncWebServer
+

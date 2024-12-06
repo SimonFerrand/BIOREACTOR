@@ -328,7 +328,7 @@ void PIDManager::updatePHPID() {
     if (!phPIDRunning) return;
     
     static unsigned long lastAdjustmentTime = 0;
-    const unsigned long adjustmentDelay = 120000; // 2 minutes delay between adjustments
+    const unsigned long adjustmentDelay = 60000; // 1 minutes delay between adjustments
     
     phInput = SensorController::readSensor("phSensor");
     
@@ -340,7 +340,7 @@ void PIDManager::updatePHPID() {
             double flowRate = convertPIDOutputToFlowRate(phOutput);
             
             // Limit the flow rate
-            const double maxAllowedFlowRate = 10.0; // ml/min, adjust as needed 
+            const double maxAllowedFlowRate = 20.0; // ml/min, adjust as needed 
             flowRate = min(flowRate, maxAllowedFlowRate);
             
             // Activate pump for a short duration

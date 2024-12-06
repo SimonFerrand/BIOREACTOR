@@ -250,9 +250,14 @@ async def receive_data(data: BioreactorData):
             # Actuator states
             "actuatorData_airPump", "actuatorData_drainPump", "actuatorData_samplePump",
             "actuatorData_nutrientPump", "actuatorData_basePump", "actuatorData_fillPump",
-            "actuatorData_stirringMotor", "actuatorData_heatingPlate", "actuatorData_ledGrowLight"
+            "actuatorData_stirringMotor", "actuatorData_heatingPlate", "actuatorData_ledGrowLight",
+            # Actuator setpoints
+            "actuatorSetpoints_airPumpValue", "actuatorSetpoints_drainPumpValue", 
+            "actuatorSetpoints_samplePumpValue", "actuatorSetpoints_nutrientPumpValue",
+            "actuatorSetpoints_basePumpValue", "actuatorSetpoints_fillPumpValue",
+            "actuatorSetpoints_stirringMotorValue", "actuatorSetpoints_heatingPlateValue",
+            "actuatorSetpoints_ledGrowLightValue"
         ]
-
         # Add standard fields
         for field in standard_fields:
             row.append(str(flat_data.get(field, "")))

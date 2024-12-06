@@ -13,6 +13,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import paho.mqtt.client as mqtt
 from threading import Thread
+import shutil  
 
 def flatten_dict(d, parent_key='', sep='_'):
     items = []
@@ -275,6 +276,27 @@ async def receive_data(data: BioreactorData):
             str(program_parameters.get("experimentName", "")),
             str(program_parameters.get("comment", ""))
         ])
+
+        if bioreactor_data.get("program") == "Fermentation" and event_type == "program_event":
+            history_file = os.path.join(data_dir, "data_history.csv")
+            try:
+                if os.path.exists(filename):
+                    if not os.path.exists(history_file):
+                        shutil.copy(filename, history_file)
+                    else:
+                        with open(filename, 'r', newline='') as source:
+                            next(source)
+                            content = source.read()
+                            with open(history_file, 'a', newline='') as target:
+                                target.write(content)
+
+                    # Réinitialiser fichier principal
+                    with open(filename, 'r', newline='') as f:
+                        header = next(f)
+                    with open(filename, 'w', newline='') as f:
+                        f.write(header)
+            except Exception as e:
+                logger.error(f"Error managing history file: {e}")
 
         # Write to CSV
         with open(filename, 'a', newline='') as file:

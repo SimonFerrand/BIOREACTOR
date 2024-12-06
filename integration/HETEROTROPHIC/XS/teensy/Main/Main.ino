@@ -87,9 +87,9 @@ FermentationProgram fermentationProgram(pidManager, volumeManager);
 CommandHandler commandHandler(stateMachine, safetySystem, volumeManager, pidManager);
 
 unsigned long previousMillis = 0;
-const long measurement_interval = 15000; // Interval for logging (30 seconds)
+const long measurement_interval = 15000; // Interval for logging (15 seconds)
 int measurementCounter = 0;  // Counter to track the number of measurements
-const int SAMPLE_FREQUENCY = 30;  // Take a turbiduty sample every 30 measurements/logging
+const int SAMPLE_FREQUENCY = 60;  // Take a turbiduty sample every 30 measurements/logging
 
 void setup() {
 

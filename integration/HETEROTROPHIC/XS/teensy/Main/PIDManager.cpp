@@ -394,8 +394,8 @@ void PIDManager::updateDOPID() {
 
     // If set to 0, maintain constant aeration of 20%.
     if (doSetpoint == 0) {
-        ActuatorController::runActuator("airPump", 20, 0);  // Maintain minimum aeration at 20% constant
-        Logger::log(LogLevel::INFO, F("DO setpoint is 0, maintaining constant aeration at 20%"));
+        ActuatorController::runActuator("airPump", 30, 0);  // Maintain minimum aeration at 30% constant
+        Logger::log(LogLevel::INFO, F("DO setpoint is 0, maintaining constant aeration at 30%"));
         return;
     }
 

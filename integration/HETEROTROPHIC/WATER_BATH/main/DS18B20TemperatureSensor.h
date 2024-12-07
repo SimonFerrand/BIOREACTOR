@@ -26,6 +26,7 @@ For the DS18B20 Temperature Sensor:
 #include "SensorInterface.h"
 #include <OneWire.h>
 #include <Arduino.h>
+#include "Logger.h"
 
 class DS18B20TemperatureSensor : public SensorInterface {
 public:

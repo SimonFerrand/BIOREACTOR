@@ -9,7 +9,7 @@
 Electric water heater control system based on ESP32, designed for industrial cleaning and sterilization applications. This system provides:
 
 Core Functions:
-- Precise water heating control through PID regulation (20-80°C)
+- Precise water heating control through PID regulation
 - Real-time pressure monitoring for safety
 - Automated Clean-In-Place (CIP) programs
 - Future-ready for sterilization cycles
@@ -145,43 +145,33 @@ The system integrates multiple network layers for robust control and monitoring:
 
 ```mermaid
 graph TD
-    subgraph Network Architecture
-        ESP[ESP32 Water Heater] 
-        MQTT[MQTT Broker]
-        DB[(Database)]
-        APP[Web/Mobile App]
-        
-        subgraph ESP32 System
-            WEB[Web Server]
-            PID[PID Controller]
-            SAFETY[Safety System]
-        end
-        
-        %% Connexions WiFi et réseau
-        ESP -- WiFi --> ROUTER[Router]
-        ROUTER --> MQTT
-        ROUTER --> APP
-        
-        %% Communication des données
-        ESP -- "Sensor Data\n(MQTT)" --> MQTT
-        ESP -- "Web Interface\n(HTTP)" --> APP
-        MQTT --> DB
-        APP -- "Commands\n(MQTT/HTTP)" --> ESP
-        
-        %% Sous-systèmes ESP32
-        ESP --> WEB
-        ESP --> PID
-        ESP --> SAFETY
-        
-        %% Styles - Couleurs plus contrastées
-        classDef system fill:#4fc3f7,stroke:#fff,stroke-width:2px,color:#000
-        classDef network fill:#81c784,stroke:#fff,stroke-width:2px,color:#000
-        classDef controller fill:#ffb74d,stroke:#fff,stroke-width:2px,color:#000
-        
-        class ESP,WEB,PID,SAFETY system
-        class ROUTER,MQTT network
-        class APP,DB controller
-    end
+    ESP[ESP32 Water Heater]
+    ROUTER[Router]
+    MQTT[MQTT Broker]
+    WEB[Web Interface]
+    DB[(Database)]
+    
+    %% Connections
+    ESP -- "WiFi" --> ROUTER
+    ESP -- "Sensor Data & Status" --> MQTT
+    ESP -- "Web Control & API" --> WEB
+    WEB -- "User Commands" --> ESP
+    MQTT -- "Commands" --> ESP
+    MQTT --> DB
+    ROUTER --> MQTT
+    ROUTER --> WEB
+    
+    %% Styles
+    classDef esp fill:#4fc3f7,stroke:#fff,stroke-width:2px,color:#000
+    classDef network fill:#81c784,stroke:#fff,stroke-width:2px,color:#000
+    classDef interface fill:#ffb74d,stroke:#fff,stroke-width:2px,color:#000
+    classDef text fill:#424242,color:#fff
+    
+    class ESP esp
+    class ROUTER,MQTT,DB network
+    class WEB interface
+
+    linkStyle default stroke-width:2px
 ```
 
 ---

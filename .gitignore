@@ -9,8 +9,7 @@ integration/HETEROTROPHIC/XS/ESP32/config.h
 integration/HETEROTROPHIC/S/ESP32-S3/config.h
 integration/PHOTOTROPHIC/XS/phototrophic_bioreactor_ESP8266/config.h
 integration/HETEROTROPHIC/WATER_BATH/main/private_config.h
-
-
+integration/PROCESS/WATER_HEATER/WATER_HEATER_ESP32/private_config.h
 
 # Exclude specific images in docs
 docs/DynDNS.jpg

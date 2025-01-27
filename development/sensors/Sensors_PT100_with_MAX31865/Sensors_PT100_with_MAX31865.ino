@@ -39,7 +39,9 @@
 #include <Adafruit_MAX31865.h>
 
 // Use software SPI: CS, DI, DO, CLK
-Adafruit_MAX31865 thermo = Adafruit_MAX31865(22, 23, 24, 25);
+//Adafruit_MAX31865 thermo = Adafruit_MAX31865(22, 23, 24, 25);
+Adafruit_MAX31865 thermo = Adafruit_MAX31865(5, 23, 19, 18);
+
 
 void setup() {
   Serial.begin(115200);  // Start the serial communication at 115200 baud rate

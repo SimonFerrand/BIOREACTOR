@@ -63,7 +63,7 @@
 #include "SensorController.h"
 
 // Pin Definitions
-const uint8_t PRESSURE_SENSOR_PIN = 18;  // ADC1_CH7
+const uint8_t PRESSURE_SENSOR_PIN = 35;  // ADC1_CH7
 
 // Global Objects
 PressureSensor pressureSensor(PRESSURE_SENSOR_PIN);

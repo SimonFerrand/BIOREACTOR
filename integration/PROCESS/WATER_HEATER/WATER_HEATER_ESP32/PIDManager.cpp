@@ -1,0 +1,336 @@
+// PIDManager.cpp
+#include "PIDManager.h"
+#include "Logger.h"
+#include <Arduino.h>
+#include "ActuatorController.h"
+
+PIDManager::PIDManager()
+    : tempPID(&tempInput, &tempOutput, &tempSetpoint, 0, 0, 0, DIRECT)
+    , tempInput(0)
+    , tempOutput(0)
+    , tempSetpoint(0)
+    , tempPIDRunning(false)
+    , anyPIDUpdated(false)
+    , tempHysteresis(0.5)
+    , minStirringSpeed(0)
+    , isStartupPhase(true)
+    , lastTempUpdateTime(0)
+{
+    tempPID.SetOutputLimits(0, 100);
+    tempPID.SetMode(AUTOMATIC);
+}
+
+void PIDManager::initialize(double tempKp, double tempKi, double tempKd) {
+    tempPID.SetTunings(tempKp * 1.5, tempKi * 0.5, tempKd * 2);  // Start-up parameters for temperature
+    Logger::log(Logger::LogLevel::INFO, F("PID initialized"));
+}
+                            //,double phKp, double phKi, double phKd
+                            //,double doKp, double doKi, double doKd
+                            //phPID.SetTunings(phKp * 1.5, phKi * 0.5, phKd * 2);  // Start-up parameters for pH
+                            //doPID.SetTunings(doKp * 1.5, doKi * 0.5, doKd * 2);  // Start-up parameters for  DO
+
+void PIDManager::setHysteresis(double tempHyst) {                                                                           
+    tempHysteresis = tempHyst;
+}
+    //,double phHyst, double doHyst
+    //phHysteresis = phHyst;
+    //doHysteresis = doHyst;
+
+void PIDManager::updateAllPIDControllers() {
+    unsigned long currentTime = millis();
+    bool anyPIDUpdated  = false;
+    if (tempPIDRunning && currentTime - lastTempUpdateTime >= UPDATE_INTERVAL_TEMP) {
+        updateTemperaturePID();
+        lastTempUpdateTime = currentTime;
+        anyPIDUpdated  = true;
+    }
+    /*
+    if (phPIDRunning && currentTime - lastPHUpdateTime >= UPDATE_INTERVAL_PH) {
+        updatePHPID();
+        lastPHUpdateTime = currentTime;
+        anyPIDUpdated  = true;
+    }
+    if (doPIDRunning && currentTime - lastDOUpdateTime >= UPDATE_INTERVAL_DO) {
+        updateDOPID();
+        lastDOUpdateTime = currentTime;
+        anyPIDUpdated  = true;
+
+    
+    }
+    if (anyPIDUpdated ) {
+        adjustPIDStirringSpeed();
+    }
+    */
+}
+
+void PIDManager::setTemperatureSetpoint(double setpoint) { tempSetpoint = setpoint; }
+//void PIDManager::setPHSetpoint(double setpoint) { phSetpoint = setpoint; }
+//void PIDManager::setDOSetpoint(double setpoint) { doSetpoint = setpoint; }
+
+double PIDManager::getTemperatureOutput() const { return tempOutput; } 
+//double PIDManager::getPHOutput() const { return phOutput; }             
+//double PIDManager::getDOOutput() const { return doOutput; }
+
+void PIDManager::startTemperaturePID(double setpoint) {
+    tempSetpoint = setpoint;
+    tempPIDRunning = true;
+    isStartupPhase = true;
+    Logger::log(Logger::LogLevel::INFO, "Temperature PID started with setpoint: " + String(setpoint));
+}
+
+/*
+void PIDManager::startPHPID(double setpoint) {
+    phSetpoint = setpoint;
+    phPIDRunning = true;
+    isStartupPhase = true;
+    Logger::log(Logger::LogLevel::INFO, "pH PID started with setpoint: " + String(setpoint));
+}
+
+void PIDManager::startDOPID(double setpoint) {
+    doSetpoint = setpoint;
+    doPIDRunning = true;
+    isStartupPhase = true;
+    Logger::log(Logger::LogLevel::INFO, "DO PID started with setpoint: " + String(setpoint));
+}
+*/
+
+void PIDManager::switchToMaintainMode() {
+    isStartupPhase = false;
+    double tempKp = tempPID.GetKp();
+    double tempKi = tempPID.GetKi();
+    double tempKd = tempPID.GetKd();
+    tempPID.SetTunings(tempKp * 0.5, tempKi * 0.1, tempKd * 2); 
+    Logger::log(Logger::LogLevel::INFO, F("Switched to maintain mode for temperature control"));
+}
+
+/*
+void PIDManager::adjustPIDStirringSpeed() {
+    if (!tempPIDRunning && !phPIDRunning && !doPIDRunning) {
+        // If no PID is active, use minimum speed
+        int minSpeed = getMinStirringSpeed();
+        ActuatorController::runActuator("stirringMotor", minSpeed, 0);
+        return;
+    }
+
+    // Check if readings are valid
+    bool validTemp = tempInput > -100 && tempInput < 100;  // Reasonable temperature range
+    bool validPH = phInput > 0 && phInput < 14 && phInput != -1;           // Valid pH range and explicitly exclude -1
+    bool validDO = ((doInput >= 0 && doInput <= 120) || doSetpoint == 0) && doInput != -1;// Valid if within range (0-120%) OR if setpoint = 0, and explicitly exclude -1
+
+    // Use maximum output but ignore PIDs with invalid readings
+    double tempOutputValid = validTemp ? abs(tempOutput) : 0;
+    double phOutputValid = validPH ? abs(phOutput) : 0;
+    double doOutputValid = (validDO && doSetpoint > 0) ? abs(doOutput) : 0;
+
+    double maxOutput = max(max(abs(tempOutput), abs(phOutput)), abs(doOutput));
+    int pidSpeed = map(maxOutput, 0, 100, ActuatorController::getStirringMotorMinRPM(), ActuatorController::getStirringMotorMaxRPM());
+    int finalSpeed = max(pidSpeed, getMinStirringSpeed());
+    finalSpeed = constrain(finalSpeed, ActuatorController::getStirringMotorMinRPM(), ActuatorController::getStirringMotorMaxRPM());
+    ActuatorController::runActuator("stirringMotor", finalSpeed, 0);
+    
+    //Logger::log(Logger::LogLevel::INFO, "Adjusted stirring motor speed: " + String(finalSpeed));
+}
+*/
+
+
+void PIDManager::updateTemperaturePID() {
+    if (!tempPIDRunning) return;
+    
+    tempInput = SensorController::readSensor("waterTempSensor");
+
+    Logger::log(Logger::LogLevel::INFO, "Temperature - Current: " + String(tempInput) + 
+                                  ", Target: " + String(tempSetpoint) + 
+                                  ", Hysteresis: " + String(tempHysteresis));
+
+    // Safety check for invalid readings
+    if (tempInput <= -100 || tempInput >= 100) {
+        ActuatorController::stopActuator("heatingPlate");
+        Logger::log(Logger::LogLevel::ERROR, F("Invalid temperature reading, heating stopped for safety"));
+        return;
+    }
+    
+    // Check if temperature is outside hysteresis range
+    if (abs(tempInput - tempSetpoint) > tempHysteresis) {
+        tempPID.Compute();  // Calculate new PID output
+
+        // Only activate heating if temperature is below setpoint
+        if (tempInput < tempSetpoint) {
+            // During startup phase, use aggressive heating if temp is significantly low
+            if (isStartupPhase && tempInput < tempSetpoint - 2.0) {
+                ActuatorController::runActuator("heatingPlate", 100, 0);
+                Logger::log(Logger::LogLevel::INFO, "Aggressive heating: 100%");
+            } else {
+                // Normal PID-controlled heating
+                ActuatorController::runActuator("heatingPlate", tempOutput, 0);
+            }
+        } else {
+            // Stop heating if temperature is above setpoint
+            ActuatorController::stopActuator("heatingPlate");
+            Logger::log(Logger::LogLevel::INFO, F("Temperature above setpoint, heating stopped"));
+        }
+
+        // Switch to maintain mode if temperature is close to setpoint during startup
+        if (isStartupPhase && abs(tempInput - tempSetpoint) < 1) {
+            switchToMaintainMode();
+        }
+
+        // Log PID status
+        Logger::log(Logger::LogLevel::INFO, "Temperature PID update - Setpoint: " + String(tempSetpoint) + 
+                    ", Input: " + String(tempInput) + ", Output: " + String(tempOutput) + "%, Startup: " + 
+                    String(isStartupPhase ? "Yes" : "No"));
+    } else {
+        // Stop heating when within hysteresis range
+        ActuatorController::stopActuator("heatingPlate");
+        Logger::log(Logger::LogLevel::INFO, "Temperature within hysteresis range (" + 
+                    String(tempHysteresis) + "°C). Heating paused.");
+    }
+}
+
+/*
+void PIDManager::updatePHPID() {
+    if (!phPIDRunning) return;
+    
+    static unsigned long lastAdjustmentTime = 0;
+    const unsigned long adjustmentDelay = 60000; // 1 minutes delay between adjustments
+    
+    phInput = SensorController::readSensor("phSensor");
+    
+    if (abs(phInput - phSetpoint) > phHysteresis && millis() - lastAdjustmentTime > adjustmentDelay) {
+        phPID.Compute();
+        
+        // Activate heating only if temperature is below setpoint
+        if (phInput < phSetpoint) {
+            double flowRate = convertPIDOutputToFlowRate(phOutput);
+            
+            // Limit the flow rate
+            const double maxAllowedFlowRate = 20.0; // ml/min, adjust as needed 
+            flowRate = min(flowRate, maxAllowedFlowRate);
+            
+            // Activate pump for a short duration
+            const unsigned long pumpDuration = 1000; // 1 second
+            ActuatorController::runActuator("basePump", flowRate, pumpDuration);
+            
+            lastAdjustmentTime = millis();
+            
+            Logger::log(Logger::LogLevel::INFO, "pH PID update - Setpoint: " + String(phSetpoint) + 
+                        ", Input: " + String(phInput) + ", Output: " + String(flowRate) + 
+                        ", Duration: " + String(pumpDuration));
+        } else {
+            ActuatorController::stopActuator("basePump");
+            Logger::log(Logger::LogLevel::INFO, "pH above setpoint, base dosing paused");
+        }
+    } else if (abs(phInput - phSetpoint) <= phHysteresis) {
+        ActuatorController::stopActuator("basePump");  // Just stop pump but keep PID active
+        Logger::log(Logger::LogLevel::INFO, "pH within hysteresis range (" +
+                    String(phHysteresis) + "). Base dosing paused.");
+    }
+}
+*/
+
+/*
+void PIDManager::updateDOPID() {
+    if (!doPIDRunning) return;
+
+    doInput = SensorController::readSensor("oxygenSensor");
+    doPID.Compute();
+
+    // If set to 0, maintain constant aeration of 20%.
+    if (doSetpoint == 0) {
+        ActuatorController::runActuator("airPump", 30, 0);  // Maintain minimum aeration at 30% constant
+        Logger::log(Logger::LogLevel::INFO, F("DO setpoint is 0, maintaining constant aeration at 30%"));
+        return;
+    }
+
+    // Normal PID behavior if setpoint is not 0
+    if (abs(doInput - doSetpoint) > doHysteresis) {
+        if (doInput < doSetpoint) {
+            ActuatorController::runActuator("airPump", doOutput, 0);
+            Logger::log(Logger::LogLevel::INFO, "DO PID update - Setpoint: " + String(doSetpoint) + 
+                       ", Input: " + String(doInput) + ", Output: " + String(doOutput));
+        } else {
+            ActuatorController::stopActuator("airPump");
+            Logger::log(Logger::LogLevel::INFO, "DO above setpoint, stopping aeration");
+        }
+    } else {
+        ActuatorController::stopActuator("airPump");
+        // ActuatorController::runActuator("airPump", 20, 0);  // Maintain minimum aeration
+        Logger::log(Logger::LogLevel::INFO, "DO within hysteresis range (" +
+                    String(doHysteresis) + "). Aeration stopped.");
+    }
+}
+*/
+
+void PIDManager::stopTemperaturePID() {
+    tempPIDRunning = false;
+    tempOutput = 0;
+    ActuatorController::stopActuator("heatingPlate");
+    Logger::log(Logger::LogLevel::INFO, F("Temperature PID stopped"));
+}
+
+/*
+void PIDManager::stopPHPID() {
+    phPIDRunning = false;
+    phOutput = 0;
+    ActuatorController::stopActuator("basePump");
+    //Logger::log(Logger::LogLevel::INFO, "pH PID stopped");
+    Logger::log(Logger::LogLevel::INFO, F("pH PID stopped"));
+}
+
+
+void PIDManager::stopDOPID() {
+    doPIDRunning = false;
+    doOutput = 0;
+    ActuatorController::stopActuator("airPump");
+    //Logger::log(Logger::LogLevel::INFO, "DO PID stopped");
+    Logger::log(Logger::LogLevel::INFO, F("DO PID stopped"));
+}
+*/
+
+//void PIDManager::stopAllPID() {
+void PIDManager::stop() {
+    stopTemperaturePID();
+    //stopPHPID();
+    //stopDOPID();
+    Logger::log(Logger::LogLevel::INFO, F("All PID controls stopped"));
+}
+
+void PIDManager::pauseAllPID() {
+    tempPID.SetMode(MANUAL);
+    //phPID.SetMode(MANUAL);
+    //doPID.SetMode(MANUAL);
+}
+
+void PIDManager::resumeAllPID() {
+    tempPID.SetMode(AUTOMATIC);
+    //phPID.SetMode(AUTOMATIC);
+    //doPID.SetMode(AUTOMATIC);
+}
+
+void PIDManager::adjustPIDParameters(const String& pidType, double Kp, double Ki, double Kd) {
+    if (pidType == "temperature") {
+        tempPID.SetTunings(Kp, Ki, Kd);
+    /*
+    } else if (pidType == "pH") {
+        phPID.SetTunings(Kp, Ki, Kd);
+    } else if (pidType == "DO") {
+        doPID.SetTunings(Kp, Ki, Kd);
+    */
+    }
+}
+
+// A sauvegarder/charger sur le serveur SI BESOIN de plus de data.
+void PIDManager::saveParameters(const char* filename) {
+    // Implement saving PID parameters to EEPROM or SD card
+    Logger::log(Logger::LogLevel::INFO, "Saving PID parameters to " + String(filename));
+}
+void PIDManager::loadParameters(const char* filename) {
+    // Implement loading PID parameters from EEPROM or SD card
+    Logger::log(Logger::LogLevel::INFO, "Loading PID parameters from " + String(filename));
+}
+/*
+double PIDManager::convertPIDOutputToFlowRate(double pidOutput) {
+    double minFlowRate = ActuatorController::getPumpMinFlowRate("basePump");
+    double maxFlowRate = ActuatorController::getPumpMaxFlowRate("basePump");
+    return map(pidOutput, 0, 100, minFlowRate, maxFlowRate);
+}
+*/

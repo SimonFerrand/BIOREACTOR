@@ -13,7 +13,7 @@ The Bioreactor Control System is a distributed control system designed for preci
 ![System Overview](integration/HETEROTROPHIC/XS/docs/diagram/bioreactor-system-overview.svg)
 
 
-- **Server Installation**: For more information on installing the server, go to [this folder](/SERVER/raspberry_pi/ServerFastAPI).
+- **Server Installation**: For more information on installing the server, go to [this folder](/integration/SERVER/raspberry_pi/ServerFastAPI).
 - **Teensy Files**: For more information on the various Teensy files, go to [this folder](/integration/HETEROTROPHIC/XS/teensy).
 
 ### Key Features

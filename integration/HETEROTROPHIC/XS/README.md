@@ -54,6 +54,8 @@ The system is structured in layers:
 - Volume management
 - Actuator control
 
+**Server Installation**: For more information on Teensy, go to [this folder](teensy).
+
 ### 2. Sensor Management (Arduino Uno)
 - pH and O2 sensor readings
 - Sensor calibration

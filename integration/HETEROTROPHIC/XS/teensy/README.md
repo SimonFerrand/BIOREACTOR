@@ -2,7 +2,7 @@
 
 The following diagram illustrates the overall architecture of the bioreactor control system implemented on Arduino, showing the relationships between different components:
 
-![Bioreactor System Architecture](diagram_arduino.png)
+![Bioreactor System Architecture]()
 
 *Figure 1: Detailed class diagram of the Arduino-based bioreactor control system, showing major components and their interactions.*
 
@@ -220,7 +220,7 @@ The system allows for various configuration and calibration procedures:
 
 ## Conclusion
 
-This bioreactor control system provides a comprehensive solution for managing complex fermentation processes. Its modular design, robust error handling, and flexible program structure make it suitable for a wide range of biotechnology applications. The system's ability to precisely control environmental parameters while ensuring safety and data logging capabilities makes it a valuable tool for both research and industrial fermentation processes.
+This bioreactor control system provides a comprehensive solution for managing complex fermentation processes. Its modular design, robust error handling, and flexible program structure make it suitable for a wide range of biotechnology applications. The system's ability to precisely control environmental parameters while ensuring safety and data logging capabilities makes it a tool for both research and industrial fermentation processes.
 
 
 ## Advanced Programming Techniques and Design Principles
@@ -257,57 +257,3 @@ class SimpleMap {
 };
 ```
 
-`static_cast` est utilisé avec parcimonie, principalement dans le `PIDManager` pour des conversions de types.
-
-### Software Architecture and Design Principles
-
-- **Static Methods** :
-  - Utilisées de manière extensive dans les classes contrôleurs (`SensorController`, `ActuatorController`) pour une gestion centralisée.
-  - Fournissent un point d'accès global sans utiliser de variables globales.
-
-- **Singleton-like Pattern** :
-  - Bien que n'étant pas de véritables singletons, des classes comme `Logger` et `SafetySystem` sont conçues pour n'avoir qu'une seule instance.
-
-- **Interface Segregation** :
-  - `SensorInterface` et `ActuatorInterface` offrent des interfaces claires et distinctes pour différents types de dispositifs.
-
-- **Dependency Inversion** :
-  - Les modules de haut niveau (comme `StateMachine`) dépendent des abstractions (`ProgramBase`) plutôt que des implémentations concrètes.
-
-- **Composition over Inheritance** :
-  - Le système favorise la composition (par exemple, `StateMachine` composé avec divers programmes) plutôt que des hiérarchies d'héritage profondes.
-
-### Inconsistencies and Potential Improvements
-
-- **Error Handling** :
-  - La gestion des erreurs n'est pas cohérente dans tout le système. Certaines parties utilisent le `Logger` pour les erreurs, tandis que d'autres ne gèrent pas explicitement les erreurs.
-  - Il n'y a pas d'utilisation systématique des exceptions ou des codes d'erreur.
-
-- **Memory Management** :
-  - L'utilisation de pointeurs bruts (par exemple, dans `SensorController` et `ActuatorController`) sans sémantique de propriété claire pourrait entraîner des fuites de mémoire ou des pointeurs pendants.
-
-- **Const Correctness** :
-  - Toutes les méthodes qui ne modifient pas l'état de l'objet ne sont pas marquées comme `const`, ce qui pourrait entraîner des modifications non intentionnelles.
-
-- **Naming Conventions** :
-  - Il y a une certaine incohérence dans les conventions de nommage, en particulier avec les variables membres privées (certaines utilisent un préfixe souligné, d'autres non).
-
-- **Code Duplication** :
-  - Il y a une certaine duplication dans le code lié au PID qui pourrait être refactorisée pour une meilleure maintenabilité.
-
-- **Testing** :
-  - Bien qu'il existe un `TestsProgram`, il n'est pas clair s'il existe des tests unitaires pour les composants individuels.
-
-- **Configuration Management** :
-  - Des valeurs codées en dur sont éparpillées dans le code. Un système de configuration centralisé pourrait améliorer la flexibilité.
-
-- **Sensor and Actuator Polymorphism** :
-  - Bien que des interfaces soient utilisées, le système ne tire pas pleinement parti du polymorphisme, en particulier dans les classes contrôleurs.
-
-- **State Machine Implementation** :
-  - La machine à états pourrait être plus robuste avec une implémentation plus formelle des transitions d'états et des gardes.
-
-- **Thread Safety** :
-  - Si ce code doit être utilisé dans un environnement multi-thread (par exemple, avec un RTOS), il n'y a pas de considération claire pour la sécurité des threads.
-
-Aborder ces points pourrait améliorer de manière significative la robustesse, la maintenabilité et l'extensibilité du système.

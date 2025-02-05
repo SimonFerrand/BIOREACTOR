@@ -5,7 +5,7 @@
   <img src="docs/photo_cabinet.jpg" width="45%" alt="Cabinet"/>
 </p>
 
-
+<br>
 
 ## I. Overview 🔬
 
@@ -41,7 +41,7 @@ The Bioreactor Control System is a distributed control system designed for preci
 - Web interface for control and monitoring
 - Data storage and analysis
 
-
+<br>
 
 ## II. System Architecture 🏗️
 
@@ -73,7 +73,7 @@ The system is structured in layers:
 
 For a detailed view of system architecture and component interactions, see [Detailed System Architecture](docs/diagram/bioreactor-system-detailed.svg).
 
-
+<br>
 
 ## III. Sensors and Actuators 🔌
 
@@ -125,7 +125,7 @@ For a detailed view of system architecture and component interactions, see [Deta
    - Intensity control
    - Timer-based operation
 
-
+<br>
 
 ## IV. Control Programs ⚙️
 
@@ -176,7 +176,7 @@ System testing and calibration procedures.
 - PID tuning capabilities
 - System diagnostics
 
-
+<br>
 
 ## V. Safety System ⚠️
 
@@ -211,7 +211,7 @@ System testing and calibration procedures.
    - Alert notification
    - Data logging
 
-
+<br>
 
 ## VI. Communication System 📡
 
@@ -295,7 +295,7 @@ For Fermentation Program:
 }
 ```
 
-
+<br>
 
 ## VII. Web Interface 💻
 ### 1. Dashboard
@@ -326,7 +326,7 @@ For Fermentation Program:
 - Calibration settings
 - System preferences
 
-
+<br>
 
 ## VIII. Installation and Setup 🛠️
 
@@ -403,7 +403,7 @@ const char* MQTT_HOST = "192.168.1.xxx";
 const uint16_t MQTT_PORT = 1883;
 ```
 
-
+<br>
 
 ## IX. Command Line Interface 🖥️
 
@@ -424,7 +424,7 @@ Type 'help' to access:
 - Sensor diagnostics
 - Raw sensor data
 
-
+<br>
 
 ## X. Calibration Procedures 📊
 
@@ -457,7 +457,7 @@ Type 'help' to access:
 - Security: WPA2-PSK
 - Port requirements: 1883 (MQTT), 8000 (API), 8080 (Web)
 
-
+<br>
 
 ## XI. Development Guide 👨‍💻
 
@@ -502,7 +502,7 @@ private:
 };
 ```
 
-
+<br>
 
 ## XII. API Documentation 📚
 
@@ -550,7 +550,7 @@ Data Events
 }
 ```
 
-
+<br>
 
 ## XIII. Diagram 📈
 

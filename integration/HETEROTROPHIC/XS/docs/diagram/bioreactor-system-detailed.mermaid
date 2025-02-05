@@ -1,0 +1,100 @@
+graph TB
+    subgraph Server["Server & Interface (Raspberry Pi 4)"]
+        FastAPI[FastAPI Backend]
+        Vue[Vue.js Frontend]
+        DB[(Data Storage)]
+        MQTT[MQTT Broker]
+        FastAPI --- Vue
+        FastAPI --- DB
+        FastAPI --- MQTT
+    end
+
+    subgraph Bridge["Communication Bridge (ESP32S)"]
+        ESP[ESP32S]
+        WIFICOM[WiFi Communication]
+        WS[WebSocket Client]
+        MQTTC[MQTT Client]
+        ESP --- WIFICOM
+        ESP --- WS
+        ESP --- MQTTC
+    end
+
+    subgraph MainController["Main Controller (Teensy 4.1)"]
+        Teensy[Teensy 4.1]
+        PIDM[PID Manager]
+        Safety[Safety System]
+        Volume[Volume Manager]
+        State[State Machine]
+        Logger[Logger System]
+        Programs[Programs<br/>Fermentation<br/>Mix<br/>Drain<br/>Tests]
+        Teensy --- PIDM
+        Teensy --- Safety
+        Teensy --- Volume
+        Teensy --- State
+        Teensy --- Logger
+        Teensy --- Programs
+    end
+
+    subgraph SensorTransmitter["Sensor Transmitter (Arduino Uno)"]
+        Arduino[Arduino Uno]
+        PH[pH Management]
+        O2[O2 Management]
+        Arduino --- PH
+        Arduino --- O2
+    end
+
+    subgraph Sensors["Sensors"]
+        WaterTemp[Water Temperature<br/>PT100]
+        AirTemp[Air Temperature<br/>DS18B20]
+        ElecTemp[Electronic Temperature<br/>DS18B20]
+        pHSensor[pH Sensor]
+        O2Sensor[Oxygen Sensor]
+        AirFlow[Air Flow Sensor]
+        Turbidity[Turbidity Sensor<br/>SEN0554]
+    end
+
+    subgraph Actuators["Actuators"]
+        AirPump[Air Pump]
+        DrainPump[Drain Pump]
+        SamplePump[Sample Pump]
+        NutrientPump[Nutrient Pump]
+        BasePump[Base Pump]
+        FillPump[Fill Pump]
+        Stirring[Stirring Motor]
+        Heating[Heating Plate]
+        LED[LED Grow Light]
+    end
+
+    %% Communication Links
+    Server <--WiFi--> Bridge
+    Bridge <--UART--> MainController
+    MainController <--UART--> SensorTransmitter
+    SensorTransmitter --- pHSensor
+    SensorTransmitter --- O2Sensor
+    MainController --- WaterTemp
+    MainController --- AirTemp
+    MainController --- ElecTemp
+    MainController --- AirFlow
+    MainController --- Turbidity
+    MainController --- AirPump
+    MainController --- DrainPump
+    MainController --- SamplePump
+    MainController --- NutrientPump
+    MainController --- BasePump
+    MainController --- FillPump
+    MainController --- Stirring
+    MainController --- Heating
+    MainController --- LED
+
+    %% Styling avec des couleurs plus vives et contrastées
+    classDef controller fill:#4361ee,stroke:#3f37c9,color:#ffffff
+    classDef sensor fill:#ffd60a,stroke:#ffc300,color:#000000
+    classDef actuator fill:#00b4d8,stroke:#0096c7,color:#ffffff
+    classDef server fill:#ff4d6d,stroke:#c9184a,color:#ffffff
+    classDef interface fill:#4cc9f0,stroke:#4895ef,color:#ffffff
+
+    class Teensy,Arduino,ESP controller
+    class WaterTemp,AirTemp,ElecTemp,pHSensor,O2Sensor,AirFlow,Turbidity sensor
+    class AirPump,DrainPump,SamplePump,NutrientPump,BasePump,FillPump,Stirring,Heating,LED actuator
+    class FastAPI,Vue,DB,MQTT server
+    class WIFICOM,WS,MQTTC,PIDM,Safety,Volume,State,Logger,Programs interface

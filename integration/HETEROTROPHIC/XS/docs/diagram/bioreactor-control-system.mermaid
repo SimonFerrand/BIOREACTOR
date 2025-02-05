@@ -1,0 +1,66 @@
+flowchart TD
+    subgraph PIDControllers["PID Control Systems"]
+        direction TB
+        TPID["Temperature PID"]
+        PHID["pH PID"]
+        OPID["DO2 PID"]
+    end
+
+    subgraph Sensors["Sensor Inputs"]
+        TempS["Water Temperature<br/>PT100"]
+        pHS["pH Sensor"]
+        DO2S["DO2 Sensor"]
+    end
+
+    subgraph Actuators["Control Outputs"]
+        Heat["Heating Plate<br/>0-100%"]
+        Base["Base Pump<br/>0-105 ml/min"]
+        Air["Air Pump<br/>15-100%"]
+        Stir["Stirring Motor<br/>390-1500 RPM"]
+    end
+
+    subgraph SafetyLimits["Safety System"]
+        TempL["Temperature<br/>15-40°C"]
+        pHL["pH<br/>5.0-8.5"]
+        DO2L["DO2<br/>0-120%"]
+    end
+
+    %% Sensor connections to PIDs
+    TempS -->|"Input"| TPID
+    pHS -->|"Input"| PHID
+    DO2S -->|"Input"| OPID
+
+    %% PID to Actuator connections
+    TPID -->|"Control"| Heat
+    PHID -->|"Control"| Base
+    OPID -->|"Control"| Air
+    
+    %% Safety System Connections
+    TempL -.->|"Limits"| TPID
+    pHL -.->|"Limits"| PHID
+    DO2L -.->|"Limits"| OPID
+
+    %% Stirring speed adjustments
+    TPID & PHID & OPID -->|"Speed<br/>Adjustment"| Stir
+
+    %% Annotations
+    KpKiKd1[/"Temperature PID<br/>Kp: 2.0, Ki: 5.0, Kd: 1.0"/]
+    KpKiKd2[/"pH PID<br/>Kp: 2.0, Ki: 3.0, Kd: 1.0"/]
+    KpKiKd3[/"DO2 PID<br/>Kp: 15.0, Ki: 8.0, Kd: 2.0"/]
+    
+    TPID --- KpKiKd1
+    PHID --- KpKiKd2
+    OPID --- KpKiKd3
+
+    %% Styling
+    classDef pidController fill:#4361ee,stroke:#3f37c9,color:#ffffff
+    classDef sensor fill:#ffd60a,stroke:#ffc300,color:#000000
+    classDef actuator fill:#00b4d8,stroke:#0077b6,color:#ffffff
+    classDef safety fill:#ef476f,stroke:#c9184a,color:#ffffff
+    classDef params fill:#2ec4b6,stroke:#20a4a4,color:#ffffff
+
+    class TPID,PHID,OPID pidController
+    class TempS,pHS,DO2S sensor
+    class Heat,Base,Air,Stir actuator
+    class TempL,pHL,DO2L safety
+    class KpKiKd1,KpKiKd2,KpKiKd3 params

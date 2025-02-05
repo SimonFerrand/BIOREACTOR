@@ -1,0 +1,68 @@
+sequenceDiagram
+    participant U as User
+    participant SM as State Machine
+    participant FP as Fermentation Program
+    participant PID as PID Manager
+    participant VM as Volume Manager
+    participant SS as Safety System
+    participant AC as Actuator Controller
+    participant SC as Sensor Controller
+
+    Note over U,SC: Fermentation Program Start
+
+    U->>+SM: Start Fermentation
+    SM->>+FP: Initialize Program
+    FP->>VM: Check Initial Volume
+    
+    alt Volume OK
+        FP->>+PID: Start Temperature PID
+        FP->>PID: Start pH PID
+        FP->>PID: Start DO2 PID
+        
+        rect rgb(200, 230, 255)
+            Note over FP,SC: Startup Phase
+            FP->>AC: Start Base Stirring Speed (390 RPM)
+            FP->>AC: Enable Air Pump (30%)
+            PID-->>AC: Adjust Heating Power
+            loop Every 5s
+                SC-->>PID: Temperature Reading
+                SC-->>PID: pH Reading
+                SC-->>PID: DO2 Reading
+            end
+        end
+
+        rect rgb(220, 255, 220)
+            Note over FP,SC: Main Fermentation Phase
+            loop Every 15s
+                SC-->>SS: Monitor Parameters
+                SS-->>FP: Safety Status
+                alt Parameters in Range
+                    PID-->>AC: Adjust Controls
+                    opt After Nutrient Delay
+                        FP->>AC: Add Nutrients (Fixed Rate)
+                        VM->>FP: Update Volume
+                    end
+                else Parameters Out of Range
+                    SS->>FP: Trigger Warning
+                end
+            end
+        end
+
+        opt Emergency Stop
+            SS->>FP: Critical Parameter Alert
+            FP->>PID: Stop All PIDs
+            FP->>AC: Stop All Actuators
+        end
+
+        rect rgb(255, 220, 220)
+            Note over FP,SC: Completion
+            FP->>PID: Stop All PIDs
+            FP->>AC: Stop All Actuators
+            FP->>SM: Program Complete
+        end
+        
+    else Volume Error
+        FP->>SM: Error: Invalid Volume
+    end
+
+    Note over U,SC: Program End

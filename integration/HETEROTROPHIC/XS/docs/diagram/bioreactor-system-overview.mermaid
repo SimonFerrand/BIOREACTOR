@@ -1,0 +1,37 @@
+graph TB
+    subgraph Server[Server Layer]
+        RPI[Raspberry Pi 4<br/>Web Interface & Data Storage]
+    end
+
+    subgraph Communication[Communication Layer]
+        ESP[ESP32S<br/>WiFi Bridge]
+    end
+
+    subgraph Control[Control Layer]
+        Teensy[Teensy 4.1<br/>Main Controller]
+        Arduino[Arduino Uno<br/>Sensor Transmitter]
+    end
+
+    subgraph Hardware[Hardware Layer]
+        Sensors[Sensors<br/>Temperature, pH, O2, etc.]
+        Actuators[Actuators<br/>Pumps, Motor, etc.]
+    end
+
+    %% Links
+    RPI <--WiFi--> ESP
+    ESP <--UART--> Teensy
+    Teensy <--UART--> Arduino
+    Arduino --- Sensors
+    Teensy --- Sensors
+    Teensy --- Actuators
+
+    %% Styling
+    classDef server fill:#ff4d6d,stroke:#c9184a,color:#ffffff
+    classDef communication fill:#4361ee,stroke:#3f37c9,color:#ffffff
+    classDef control fill:#00b4d8,stroke:#0096c7,color:#ffffff
+    classDef hardware fill:#ffd60a,stroke:#ffc300,color:#000000
+
+    class RPI server
+    class ESP communication
+    class Teensy,Arduino control
+    class Sensors,Actuators hardware

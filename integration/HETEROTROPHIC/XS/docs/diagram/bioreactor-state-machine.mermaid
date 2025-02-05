@@ -1,0 +1,65 @@
+stateDiagram-v2
+    [*] --> IDLE
+    
+    state "IDLE" as IDLE {
+        [*] --> Ready
+        Ready --> ProgramSelect
+    }
+    
+    state "RUNNING" as RUNNING {
+        state "Fermentation" as Ferm {
+            [*] --> Initialize
+            Initialize --> Running
+            Running --> Monitoring
+            Monitoring --> Running
+            Running --> Emergency : Safety Trigger
+        }
+        
+        state "Mix" as Mix {
+            [*] --> SpeedControl
+            SpeedControl --> Mixing
+        }
+        
+        state "Drain" as Drain {
+            [*] --> VolumeCheck
+            VolumeCheck --> Draining
+        }
+        
+        state "Tests" as Tests {
+            [*] --> SensorTest
+            SensorTest --> ActuatorTest
+            ActuatorTest --> PIDTest
+        }
+    }
+    
+    state "PAUSED" as PAUSED {
+        [*] --> HoldState
+        HoldState --> SafetyCheck
+    }
+    
+    state "ERROR" as ERROR {
+        [*] --> AlarmTrigger
+        AlarmTrigger --> SafetyProtocol
+    }
+
+    IDLE --> RUNNING : Start Program
+    RUNNING --> PAUSED : Pause
+    PAUSED --> RUNNING : Resume
+    RUNNING --> ERROR : Error Detected
+    ERROR --> IDLE : Reset
+    RUNNING --> IDLE : Program Complete
+    PAUSED --> IDLE : Stop
+    ERROR --> [*] : Emergency Stop
+
+    %% Styling
+    classDef idleState fill:#4cc9f0,stroke:#03045e,color:#000000
+    classDef runningState fill:#00b4d8,stroke:#0077b6,color:#ffffff
+    classDef pausedState fill:#ffd60a,stroke:#ffc300,color:#000000
+    classDef errorState fill:#ef476f,stroke:#c9184a,color:#ffffff
+    classDef transitionState fill:#118ab2,stroke:#073b4c,color:#ffffff
+
+    class IDLE idleState
+    class RUNNING runningState
+    class PAUSED pausedState
+    class ERROR errorState
+    class Initialize,VolumeCheck,SpeedControl,SensorTest transitionState

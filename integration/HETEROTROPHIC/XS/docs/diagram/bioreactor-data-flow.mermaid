@@ -1,0 +1,77 @@
+flowchart TD
+    subgraph Sensors[Sensor Layer]
+        direction LR
+        PT100[Water Temp PT100] -->|Analog| ST
+        DS1[Air Temp DS18B20] -->|Digital| ST
+        DS2[Electronic Temp DS18B20] -->|Digital| ST
+        PH[pH Sensor] -->|UART| AT
+        O2[O2 Sensor] -->|UART| AT
+        FLOW[Air Flow] -->|Digital| ST
+        TURB[Turbidity SEN0554] -->|UART| ST
+    end
+
+    subgraph Processing[Processing Layer]
+        direction LR
+        ST[Sensor Transmitter<br/>Arduino Uno]
+        AT[Analog Transmitter<br/>Arduino Uno]
+        MC[Main Controller<br/>Teensy 4.1]
+        ST -->|UART| MC
+        AT -->|UART| MC
+    end
+
+    subgraph Control[Control Layer]
+        direction LR
+        PID{PID Controllers}
+        SM{State Machine}
+        VM{Volume Manager}
+        SS{Safety System}
+        MC --> PID
+        MC --> SM
+        MC --> VM
+        MC --> SS
+    end
+
+    subgraph Actuators[Actuator Layer]
+        direction LR
+        PUMPS[Pumps]
+        MOTOR[Stirring Motor]
+        HEAT[Heating Plate]
+        LED[LED Light]
+    end
+
+    subgraph Communication[Communication Layer]
+        direction LR
+        ESP[ESP32S Bridge]
+        MC -->|UART| ESP
+    end
+
+    subgraph Server[Server Layer]
+        direction LR
+        API[FastAPI Backend]
+        DB[(Database)]
+        WS[WebSocket]
+        MQTT[MQTT Broker]
+        ESP -->|WiFi| API
+        ESP -->|WiFi| WS
+        ESP -->|WiFi| MQTT
+        API --> DB
+    end
+
+    PID -->|Control| Actuators
+    SM -->|Program Control| Actuators
+    SS -->|Safety Control| Actuators
+
+    %% Styling
+    classDef sensorNode fill:#ffd60a,stroke:#ffc300,color:#000000
+    classDef processingNode fill:#00b4d8,stroke:#0077b6,color:#ffffff
+    classDef controlNode fill:#4361ee,stroke:#3f37c9,color:#ffffff
+    classDef actuatorNode fill:#2ec4b6,stroke:#20a4a4,color:#ffffff
+    classDef commNode fill:#f72585,stroke:#b5179e,color:#ffffff
+    classDef serverNode fill:#ff4d6d,stroke:#c9184a,color:#ffffff
+
+    class PT100,DS1,DS2,PH,O2,FLOW,TURB sensorNode
+    class ST,AT,MC processingNode
+    class PID,SM,VM,SS controlNode
+    class PUMPS,MOTOR,HEAT,LED actuatorNode
+    class ESP commNode
+    class API,DB,WS,MQTT serverNode

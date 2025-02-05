@@ -1,0 +1,32 @@
+name: Generate Mermaid Diagrams
+on: 
+  push:
+    paths:
+      - 'docs/*.mermaid'
+      - '.github/workflows/mermaid.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      
+      - name: Install @mermaid-js/mermaid-cli
+        run: npm install -g @mermaid-js/mermaid-cli
+        
+      - name: Generate SVG diagrams
+        run: |
+          for file in docs/*.mermaid; do
+            mmdc -i "$file" -o "${file%.mermaid}.svg" -b transparent
+          done
+          
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add docs/*.svg
+          git commit -m "Update generated diagrams" || exit 0
+          git push

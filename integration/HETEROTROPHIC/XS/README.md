@@ -1,20 +1,20 @@
 # Bioreactor Control System
 
-<p align="center">
-  <img src="docs/photo_bioreactor.jpg" width="45%" />
-  <img src="photo_cabinet.jpg" width="45%" />
-</p>
+<div style="display: flex; justify-content: center; gap: 10px;">
+    <img src="docs/photo_bioreactor.jpg" alt="Bioreactor" width="400"/>
+    <img src="docs/photo_cabinet.jpg" alt="Cabinet" width="400"/>
+</div>
 
 
 ## Overview
 
 The Bioreactor Control System is a distributed control system designed for precise management of biological processes. It combines multiple microcontrollers and sensors to provide accurate control of temperature, pH, dissolved oxygen, and nutrient delivery.
 
-![System Overview](docs/bioreactor-system-overview.mermaid)
+![System Overview](docs/bioreactor-system-overview.svg)
 
 
-- **Server Installation**: For more information on installing the server, go to [this folder](../../../SERVER/raspberry_pi/ServerFastAPI).
-- **Teensy Files**: For more information on the various Teensy files, go to [this folder](./teensy).
+- **Server Installation**: For more information on installing the server, go to [this folder](/SERVER/raspberry_pi/ServerFastAPI).
+- **Teensy Files**: For more information on the various Teensy files, go to [this folder](/integration/HETEROTROPHIC/XS/teensy).
 
 ### Key Features
 - Temperature control (15-40°C)
@@ -263,6 +263,7 @@ System testing and calibration procedures.
         "removedVolume": float
     }
 }
+```
 
 ### Control Commands Format
 

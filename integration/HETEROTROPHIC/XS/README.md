@@ -6,7 +6,8 @@
 </p>
 
 
-## Overview
+
+## I. Overview 🔬
 
 The Bioreactor Control System is a distributed control system designed for precise management of biological processes. It combines multiple microcontrollers and sensors to provide accurate control of temperature, pH, dissolved oxygen, and nutrient delivery.
 
@@ -14,7 +15,7 @@ The Bioreactor Control System is a distributed control system designed for preci
   <img src="docs/diagram/bioreactor-system-overview.svg" width="70%"/>
 </p>
 
-### I. Key Features
+### Key Features 
 - Temperature control (15-40°C)
 - pH regulation (5.0-8.5)
 - Dissolved oxygen management
@@ -41,7 +42,8 @@ The Bioreactor Control System is a distributed control system designed for preci
 - Data storage and analysis
 
 
-## II. System Architecture
+
+## II. System Architecture 🏗️
 
 The system is structured in layers:
 
@@ -72,7 +74,8 @@ The system is structured in layers:
 For a detailed view of system architecture and component interactions, see [Detailed System Architecture](docs/diagram/bioreactor-system-detailed.svg).
 
 
-## III. Sensors and Actuators
+
+## III. Sensors and Actuators 🔌
 
 ### Sensors
 1. **Temperature Sensors**
@@ -123,7 +126,8 @@ For a detailed view of system architecture and component interactions, see [Deta
    - Timer-based operation
 
 
-## IV. Control Programs
+
+## IV. Control Programs ⚙️
 
 ### 1. Fermentation Program
 The main program for biological process control, managing multiple parameters simultaneously.
@@ -173,7 +177,8 @@ System testing and calibration procedures.
 - System diagnostics
 
 
-## V. Safety System
+
+## V. Safety System ⚠️
 
 ### Monitoring Parameters
 - Water temperature (15-40°C)
@@ -207,7 +212,8 @@ System testing and calibration procedures.
    - Data logging
 
 
-## VI. Communication System
+
+## VI. Communication System 📡
 
 ### 1. Serial Communication (UART)
 - Between Teensy and Arduino (Sensor data)
@@ -290,7 +296,8 @@ For Fermentation Program:
 ```
 
 
-## VII. Web Interface
+
+## VII. Web Interface 💻
 ### 1. Dashboard
 
 - Real-time sensor readings
@@ -320,7 +327,8 @@ For Fermentation Program:
 - System preferences
 
 
-## VIII. Installation and Setup
+
+## VIII. Installation and Setup 🛠️
 
 ### Prerequisites
 #### Hardware Requirements
@@ -396,7 +404,8 @@ const uint16_t MQTT_PORT = 1883;
 ```
 
 
-## IX. Command Line Interface
+
+## IX. Command Line Interface 🖥️
 
 ### Teensy CLI
 Connect to Teensy via USB serial connection (115200 baud) to access the command line interface.
@@ -416,7 +425,8 @@ Type 'help' to access:
 - Raw sensor data
 
 
-## X. Calibration Procedures
+
+## X. Calibration Procedures 📊
 
 ### 1. pH Calibration
 
@@ -448,7 +458,8 @@ Type 'help' to access:
 - Port requirements: 1883 (MQTT), 8000 (API), 8080 (Web)
 
 
-## XI. Development Guide
+
+## XI. Development Guide 👨‍💻
 
 ### Adding New Features
 
@@ -492,7 +503,8 @@ private:
 ```
 
 
-## XII. API Documentation
+
+## XII. API Documentation 📚
 
 ### REST API Endpoints
 
@@ -539,7 +551,8 @@ Data Events
 ```
 
 
-## XIII. Diagram
+
+## XIII. Diagram 📈
 
 The following diagrams illustrate different aspects of the bioreactor system.  
 

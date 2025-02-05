@@ -10,7 +10,7 @@
 
 The Bioreactor Control System is a distributed control system designed for precise management of biological processes. It combines multiple microcontrollers and sensors to provide accurate control of temperature, pH, dissolved oxygen, and nutrient delivery.
 
-![System Overview](/docs/diagram/bioreactor-system-overview.svg)
+![System Overview](docs/diagram/bioreactor-system-overview.svg)
 
 
 - **Server Installation**: For more information on installing the server, go to [this folder](/integration/SERVER/raspberry_pi/ServerFastAPI).
@@ -70,7 +70,7 @@ The system is structured in layers:
 - Long-term data storage
 - System configuration
 
-For a detailed view of system architecture and component interactions, see [Detailed System Architecture](docs/bioreactor-system-detailed.mermaid).
+For a detailed view of system architecture and component interactions, see [Detailed System Architecture](docs/diagram/bioreactor-system-detailed.svg).
 
 ## Sensors and Actuators
 
@@ -533,13 +533,13 @@ Data Events
 
 The following diagrams illustrate different aspects of the bioreactor system.  
 
-- **Fermentation Sequence Diagram**: [bioreactor-fermentation-sequence.mermaid](./docs/diagram/bioreactor-fermentation-sequence.mermaid)  
+- **Fermentation Sequence Diagram**: [bioreactor-fermentation-sequence.mermaid](docs/diagram/bioreactor-fermentation-sequence.svg)  
 
-- **State Machine Diagram**: [bioreactor-state-machine.mermaid](./docs/diagram/bioreactor-state-machine.mermaid) 
+- **State Machine Diagram**: [bioreactor-state-machine.mermaid](docs/diagram/bioreactor-state-machine.svg) 
 
-- **Control System Diagram**: [bioreactor-control-system.mermaid](./docs/diagram/bioreactor-control-system.mermaid)  
+- **Control System Diagram**: [bioreactor-control-system.mermaid](docs/diagram/bioreactor-control-system.svg)  
 
-- **Data Flow Diagram**: [bioreactor-data-flow.mermaid](./docs/diagram/bioreactor-data-flow.mermaid)  
+- **Data Flow Diagram**: [bioreactor-data-flow.mermaid](docs/diagram/bioreactor-data-flow.svg)  
 
  
 - For a complete technical overview of the system architecture, see the detailed system diagram.

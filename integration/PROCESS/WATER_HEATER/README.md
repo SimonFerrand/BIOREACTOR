@@ -1,4 +1,4 @@
-# ESP32 Advanced Water Heater Control System
+# ESP32 Water Heater Control System
 
 <p align="center">
   <img src="docs/photo1.jpg" width="45%" />
@@ -6,7 +6,7 @@
 </p>
 
 ## 📝 Description
-Electric water heater control system based on ESP32, designed for industrial cleaning and sterilization applications. This system provides:
+Electric water heater control system based on ESP32, designed for cleaning and sterilization applications. This system provides:
 
 Core Functions:
 - Precise water heating control through PID regulation
@@ -21,26 +21,24 @@ Control & Monitoring:
 - Real-time data streaming for process validation
 
 Primary Applications:
-- Industrial Clean-In-Place (CIP) operations
-- Sterilization testing and validation
 - Process water temperature control
-- Automated cleaning cycles
+- Clean-In-Place (CIP) operations
 
 The system heats water to precise temperatures, maintaining tight control for consistent cleaning and sterilization processes. All parameters are continuously monitored and logged, ensuring process validation and traceability.
 
 ## Key Features
 
-### Advanced Temperature Control
+### Temperature Control
 - PID control with auto-tuning capabilities
 - Separate startup and maintenance modes
 - Configurable hysteresis
-- High-precision PT100 temperature sensing
+- Precision PT100 temperature sensing
 
 ### Safety Systems
 - Real-time pressure monitoring
 - Temperature limit protection
 - Automated emergency shutdown
-- Comprehensive error detection
+- Error detection
 
 ### Remote Monitoring & Control
 - MQTT integration

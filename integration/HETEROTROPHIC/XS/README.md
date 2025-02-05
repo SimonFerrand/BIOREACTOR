@@ -9,7 +9,7 @@
 
 ## I. Overview 🔬
 
-The Bioreactor Control System is a distributed control system designed for precise management of biological processes. It combines multiple microcontrollers and sensors to provide accurate control of temperature, pH, dissolved oxygen, and nutrient delivery.
+The Bioreactor Control System is a distributed control system designed for management of biological processes. It combines multiple microcontrollers and sensors to provide accurate control of temperature, pH, dissolved oxygen, and nutrient delivery.
 
 <p align="center">
   <img src="docs/diagram/bioreactor-system-overview.svg" width="70%"/>
@@ -54,7 +54,7 @@ The system is structured in layers:
 - Volume management
 - Actuator control
 
-**Server Installation**: For more information on Teensy, go to [this folder](teensy).
+**Teensy**: For more information on Teensy, go to [this folder](teensy).
 
 ### 2. Sensor Management (Arduino Uno)
 - pH and O2 sensor readings

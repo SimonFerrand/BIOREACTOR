@@ -10,7 +10,7 @@
 
 The Bioreactor Control System is a distributed control system designed for precise management of biological processes. It combines multiple microcontrollers and sensors to provide accurate control of temperature, pH, dissolved oxygen, and nutrient delivery.
 
-![System Overview](integration/HETEROTROPHIC/XS/docs/bioreactor-system-overview.svg)
+![System Overview](integration/HETEROTROPHIC/XS/docs/diagram/bioreactor-system-overview.svg)
 
 
 - **Server Installation**: For more information on installing the server, go to [this folder](/SERVER/raspberry_pi/ServerFastAPI).

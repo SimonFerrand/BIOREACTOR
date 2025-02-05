@@ -14,7 +14,7 @@ The Bioreactor Control System is a distributed control system designed for preci
   <img src="docs/diagram/bioreactor-system-overview.svg" width="70%"/>
 </p>
 
-### Key Features
+### I. Key Features
 - Temperature control (15-40°C)
 - pH regulation (5.0-8.5)
 - Dissolved oxygen management
@@ -40,7 +40,8 @@ The Bioreactor Control System is a distributed control system designed for preci
 - Web interface for control and monitoring
 - Data storage and analysis
 
-## System Architecture
+
+## II. System Architecture
 
 The system is structured in layers:
 
@@ -70,14 +71,14 @@ The system is structured in layers:
 
 For a detailed view of system architecture and component interactions, see [Detailed System Architecture](docs/diagram/bioreactor-system-detailed.svg).
 
-## Sensors and Actuators
+
+## III. Sensors and Actuators
 
 ### Sensors
 1. **Temperature Sensors**
    - Water Temperature (PT100)
    - Air Temperature (DS18B20)
    - Electronic Temperature (DS18B20)
-   - Range: 15-40°C
 
 2. **pH Sensor**
    - Range: 0-14 pH
@@ -121,7 +122,8 @@ For a detailed view of system architecture and component interactions, see [Deta
    - Intensity control
    - Timer-based operation
 
-## Control Programs
+
+## IV. Control Programs
 
 ### 1. Fermentation Program
 The main program for biological process control, managing multiple parameters simultaneously.
@@ -170,7 +172,8 @@ System testing and calibration procedures.
 - PID tuning capabilities
 - System diagnostics
 
-## Safety System
+
+## V. Safety System
 
 ### Monitoring Parameters
 - Water temperature (15-40°C)
@@ -203,7 +206,8 @@ System testing and calibration procedures.
    - Alert notification
    - Data logging
 
-## Communication System
+
+## VI. Communication System
 
 ### 1. Serial Communication (UART)
 - Between Teensy and Arduino (Sensor data)
@@ -285,7 +289,8 @@ For Fermentation Program:
 }
 ```
 
-## Web Interface
+
+## VII. Web Interface
 ### 1. Dashboard
 
 - Real-time sensor readings
@@ -314,7 +319,8 @@ For Fermentation Program:
 - Calibration settings
 - System preferences
 
-## Installation and Setup
+
+## VIII. Installation and Setup
 
 ### Prerequisites
 #### Hardware Requirements
@@ -342,8 +348,7 @@ For Fermentation Program:
 git clone https://github.com/yourusername/bioreactor.git
 ```
 
-# Install required libraries for Arduino IDE
-
+Install required libraries for Arduino IDE
 - PID
 - DFRobot_PH
 - OneWire
@@ -390,7 +395,8 @@ const char* MQTT_HOST = "192.168.1.xxx";
 const uint16_t MQTT_PORT = 1883;
 ```
 
-## Command Line Interface
+
+## IX. Command Line Interface
 
 ### Teensy CLI
 Connect to Teensy via USB serial connection (115200 baud) to access the command line interface.
@@ -409,7 +415,8 @@ Type 'help' to access:
 - Sensor diagnostics
 - Raw sensor data
 
-## Calibration Procedures
+
+## X. Calibration Procedures
 
 ### 1. pH Calibration
 
@@ -440,7 +447,8 @@ Type 'help' to access:
 - Security: WPA2-PSK
 - Port requirements: 1883 (MQTT), 8000 (API), 8080 (Web)
 
-## Development Guide
+
+## XI. Development Guide
 
 ### Adding New Features
 
@@ -483,7 +491,8 @@ private:
 };
 ```
 
-## API Documentation
+
+## XII. API Documentation
 
 ### REST API Endpoints
 
@@ -529,7 +538,8 @@ Data Events
 }
 ```
 
-## Diagram
+
+## XIII. Diagram
 
 The following diagrams illustrate different aspects of the bioreactor system.  
 

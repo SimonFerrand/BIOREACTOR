@@ -14,7 +14,7 @@ A control system for managing biological processes through automated monitoring 
 
 #### Key features:  
 - 🧫 Sterilizable system (Autoclave 121°C, Chemical sensors)
-- 🌡️  Temperature control (15-40°C)  
+- 🌡️ Temperature control (15-40°C)  
 - ⚗️ pH regulation (5.0-8.5)  
 - 💨 Dissolved oxygen management  
 - 🔬 Optical density monitoring

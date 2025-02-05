@@ -2,7 +2,7 @@
 
 ## 🔬 Featured Projects
 
-### 🧫 Distributed Bioreactor Control System  
+### 🧫 Bioreactor Control System  
 <p align="center">
   <img src="/integration/HETEROTROPHIC/XS/docs/photo_bioreactor.jpg" width="20%" alt="Bioreactor" style="margin-right: 2%"/>
   <img src="/integration/HETEROTROPHIC/XS/docs/photo_cabinet.jpg" width="20%" alt="Cabinet"/>
@@ -13,7 +13,8 @@
 A control system for managing biological processes through automated monitoring and regulation of key parameters. 
 
 #### Key features:  
-- 🌡️ Temperature control (15-40°C)  
+- 🧫 Sterilizable system (Autoclave 121°C, Chemical sensors)
+- 🌡️  Temperature control (15-40°C)  
 - ⚗️ pH regulation (5.0-8.5)  
 - 💨 Dissolved oxygen management  
 - 🔬 Optical density monitoring

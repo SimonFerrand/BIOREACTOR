@@ -16,6 +16,7 @@ The Bioreactor Control System is a distributed control system designed for manag
 </p>
 
 ### Key Features 
+- Sterilizable system (Autoclave 121°C, Chemical sensors)
 - Temperature control (15-40°C)
 - pH regulation (5.0-8.5)
 - Dissolved oxygen management

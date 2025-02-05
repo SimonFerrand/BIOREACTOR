@@ -1,8 +1,8 @@
 # ESP32 Water Heater Control System
 
 <p align="center">
-  <img src="docs/photo1.jpg" width="45%" />
-  <img src="docs/photo2.jpg" width="45%" />
+  <img src="docs/photo1.jpg" width="60%" />
+  <img src="docs/photo2.jpg" width="60%" />
 </p>
 
 ## 📝 Description

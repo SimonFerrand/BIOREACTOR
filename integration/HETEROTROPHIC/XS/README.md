@@ -303,7 +303,7 @@ For Fermentation Program:
 ## VII. Web Interface 💻
 
 <p align="center">
-  <img src="docs/chart.PNG" width="60%"/>
+  <img src="docs/chart.PNG" width="100%"/>
 </p>
 
 ### 1. Dashboard

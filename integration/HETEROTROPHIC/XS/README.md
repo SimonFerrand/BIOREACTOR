@@ -301,6 +301,11 @@ For Fermentation Program:
 <br>
 
 ## VII. Web Interface 💻
+
+<p align="center">
+  <img src="docs/chart.PNG" width="60%"/>
+</p>
+
 ### 1. Dashboard
 
 - Real-time sensor readings
